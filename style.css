@@ -63,16 +63,11 @@ body{font:13px/1.6 'SF Mono','Menlo','Fira Code',monospace}
 .input-line{
   white-space:pre-wrap;
   line-height:1.65;
-  margin-top:2px;
   display:flex;align-items:baseline
 }
 .input-line .pr{color:#d4d4d4;flex-shrink:0}
 .input-line .typed{color:#fff}
-.input-line .cur{
-  animation:bl .7s step-end infinite;
-  color:#d4d4d4;
-  margin-left:1px
-}
+.input-line .cur{animation:bl .7s step-end infinite;color:#d4d4d4;margin-left:1px}
 @keyframes bl{50%{opacity:0}}
 
 .lnk a{
