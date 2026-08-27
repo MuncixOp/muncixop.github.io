@@ -9,15 +9,22 @@
 <body>
 <canvas id="c"></canvas>
 
-<div class="term" id="term">
-  <div class="bar">
-    <span class="d r"></span><span class="d y"></span><span class="d g"></span>
-    <span class="bar-t" data-t="muncixop@void:~$">muncixop@void:~$</span>
+<div class="win" id="win">
+  <div class="win-bar" id="bar">
+    <div class="btns">
+      <span class="btn close" id="btnClose"></span>
+      <span class="btn min" id="btnMin"></span>
+      <span class="btn max" id="btnMax"></span>
+    </div>
+    <span class="win-title">muncixop@void — zsh</span>
+    <div class="btns-r"></div>
   </div>
-  <div class="out" id="out"></div>
-  <div class="out" id="lnk"></div>
-  <div class="out"><span class="pr">➜</span> <span class="cur">_</span></div>
-  <div class="slices" id="slices"></div>
+  <div class="win-body" id="body">
+    <div id="out"></div>
+    <div id="lnk"></div>
+    <div class="prompt-line"><span class="pr">➜</span> <span class="cur">_</span></div>
+  </div>
+  <div class="glitch-overlay" id="gl"></div>
 </div>
 
 <script src="main.js"></script>
