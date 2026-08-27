@@ -10,7 +10,6 @@ body {
     justify-content: center;
 }
 
-/* Matrix rain */
 #matrix {
     position: fixed;
     top: 0; left: 0;
@@ -19,16 +18,17 @@ body {
     opacity: 0.15;
 }
 
-/* Terminal */
+/* === TERMINAL === */
 .terminal {
     position: relative;
     z-index: 1;
     width: 90%;
     max-width: 600px;
-    background: rgba(0, 20, 0, 0.9);
+    background: rgba(0, 20, 0, 0.92);
     border: 1px solid #0f0;
     border-radius: 8px;
-    box-shadow: 0 0 30px rgba(0, 255, 0, 0.3);
+    box-shadow: 0 0 30px rgba(0, 255, 0, 0.3),
+                inset 0 0 60px rgba(0, 255, 0, 0.03);
     animation: fadeIn 1s ease;
 }
 
@@ -37,6 +37,86 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 
+/* === GLITCH LAYERS === */
+.glitch-container {
+    position: relative;
+}
+
+.glitch-layer {
+    position: absolute;
+    inset: 0;
+    border-radius: 8px;
+    border: 1px solid #0f0;
+    pointer-events: none;
+    opacity: 0;
+}
+
+.glitch-layer:nth-child(1) {
+    animation: glitch1 3s infinite;
+}
+
+.glitch-layer:nth-child(2) {
+    animation: glitch2 3s infinite;
+}
+
+@keyframes glitch1 {
+    0%, 91%, 100% { opacity: 0; transform: translate(0); }
+    92% { opacity: 0.8; transform: translate(-3px, 2px); border-color: #f0f; }
+    93% { opacity: 0; transform: translate(0); }
+    95% { opacity: 0.6; transform: translate(3px, -1px); border-color: #0ff; }
+    96% { opacity: 0; }
+}
+
+@keyframes glitch2 {
+    0%, 88%, 100% { opacity: 0; transform: translate(0); }
+    89% { opacity: 0.7; transform: translate(2px, -3px); border-color: #f0f; }
+    90% { opacity: 0; }
+    94% { opacity: 0.5; transform: translate(-4px, 1px); border-color: #0ff; }
+    95% { opacity: 0; }
+}
+
+/* === GLITCH TEXT === */
+.glitch-text {
+    position: relative;
+    margin-left: 10px;
+    color: #0f0;
+    font-size: 0.8rem;
+    opacity: 0.7;
+}
+
+.glitch-text::before,
+.glitch-text::after {
+    content: attr(data-text);
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    opacity: 0;
+}
+
+.glitch-text::before {
+    color: #f0f;
+    animation: textGlitch1 4s infinite;
+}
+
+.glitch-text::after {
+    color: #0ff;
+    animation: textGlitch2 4s infinite;
+}
+
+@keyframes textGlitch1 {
+    0%, 93%, 100% { opacity: 0; transform: translate(0); clip-path: inset(0); }
+    94% { opacity: 1; transform: translate(-2px, 1px); clip-path: inset(20% 0 40% 0); }
+    95% { opacity: 0; }
+}
+
+@keyframes textGlitch2 {
+    0%, 90%, 100% { opacity: 0; transform: translate(0); clip-path: inset(0); }
+    91% { opacity: 1; transform: translate(2px, -1px); clip-path: inset(50% 0 10% 0); }
+    92% { opacity: 0; }
+}
+
+/* === HEADER === */
 .terminal-header {
     display: flex;
     align-items: center;
@@ -51,16 +131,8 @@ body {
 .dot.yellow { background: #febc2e; }
 .dot.green { background: #28c840; }
 
-.title {
-    margin-left: 10px;
-    color: #0f0;
-    font-size: 0.8rem;
-    opacity: 0.7;
-}
-
-.terminal-body {
-    padding: 20px;
-}
+/* === BODY === */
+.terminal-body { padding: 20px; }
 
 .line {
     color: #0f0;
@@ -82,7 +154,7 @@ body {
 
 .ok { color: #28c840; }
 
-/* Links */
+/* === LINKS === */
 .links {
     margin-top: 16px;
     display: flex;
@@ -108,10 +180,21 @@ body {
     transform: translateX(5px);
 }
 
-.cursor {
-    animation: blink 0.7s infinite;
-}
+.cursor { animation: blink 0.7s infinite; }
+@keyframes blink { 50% { opacity: 0; } }
 
-@keyframes blink {
-    50% { opacity: 0; }
+/* === SCANLINE OVERLAY === */
+.terminal::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 255, 0, 0.02) 2px,
+        rgba(0, 255, 0, 0.02) 4px
+    );
+    pointer-events: none;
+    border-radius: 8px;
 }   
