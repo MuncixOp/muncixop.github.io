@@ -42,10 +42,7 @@ function mkWin(o){
   const t={el:w,bar,body,gl,input:'',mode:'idle',hidden:false,prompt:'root@main:~#',nodeData:null};
   terms.push(t);
 
-  w.addEventListener('mousedown',()=>{
-    w.style.zIndex=++zc;
-    active=t
-  });
+  w.addEventListener('mousedown',()=>{w.style.zIndex=++zc;active=t});
 
   let dx,dy,drag=false;
   bar.addEventListener('mousedown',e=>{
@@ -85,7 +82,9 @@ function p(t,txt,cls){
   const el=document.createElement('div');
   el.className='out'+(cls?' '+cls:'');
   el.textContent=txt||'\u00a0';
-  t.body.appendChild(el);
+  const line=t.body.querySelector('.input-line');
+  if(line&&line.style.display!=='none')t.body.insertBefore(el,line);
+  else t.body.appendChild(el);
   t.body.scrollTop=t.body.scrollHeight
 }
 
@@ -93,7 +92,9 @@ function pHTML(t,html,cls){
   const el=document.createElement('div');
   el.className='out'+(cls?' '+cls:'');
   el.innerHTML=html;
-  t.body.appendChild(el);
+  const line=t.body.querySelector('.input-line');
+  if(line&&line.style.display!=='none')t.body.insertBefore(el,line);
+  else t.body.appendChild(el);
   t.body.scrollTop=t.body.scrollHeight
 }
 
@@ -103,12 +104,12 @@ function showIn(t){
     line=document.createElement('div');
     line.className='input-line';
     line.innerHTML='<span class="pr"></span> <span class="typed"></span><span class="cur">_</span>';
-    t.body.appendChild(line)
   }
   line.style.display='flex';
   line.querySelector('.pr').textContent=t.prompt;
   line.querySelector('.typed').textContent='';
   t.input='';
+  t.body.appendChild(line);
   t.body.scrollTop=t.body.scrollHeight
 }
 
@@ -124,7 +125,6 @@ function updateTyped(t){
   t.body.scrollTop=t.body.scrollHeight
 }
 
-// keyboard
 addEventListener('keydown',e=>{
   if(!active)return;
   const t=active;
@@ -139,7 +139,7 @@ addEventListener('keydown',e=>{
     line.querySelector('.typed').textContent='';
 
     if(t.mode==='login')doLogin(t,val);
-    else if(t.mode==='password'){p(t,'','dim');doPass(t)}
+    else if(t.mode==='password'){p(t,'');doPass(t)}
     else if(t.mode==='shell'){if(val.trim())doShell(t,val)}
     else if(t.mode==='node'){doNode(t,val)}
     return
@@ -167,7 +167,6 @@ addEventListener('keydown',e=>{
   }
 });
 
-// boot
 const boot=[
   ['dim','VOID BIOS v4.2.1 (C) 2026 VOID Systems Inc.'],
   ['dim',''],
@@ -254,7 +253,7 @@ const shell={
     p(t,'');
     p(t,'Available commands:','info');
     p(t,'');
-    p(t,'  ./init            Initialize system (verbose)');
+    p(t,'  ./init            Initialize system');
     p(t,'  ./scan            Scan for connected nodes');
     p(t,'  ./connect <id>    Open terminal for a node');
     p(t,'  ./status          Show system status');
@@ -441,7 +440,9 @@ function doNode(t,val){
     a.href=n.link;a.target='_blank';
     a.innerHTML=`<span class="n">→</span>${n.label}`;
     lnk.appendChild(a);
-    t.body.appendChild(lnk);
+    const line=t.body.querySelector('.input-line');
+    if(line&&line.style.display!=='none')t.body.insertBefore(lnk,line);
+    else t.body.appendChild(lnk);
     p(t,'');
     p(t,'Click the link above to open.','dim');
     p(t,'');
@@ -459,7 +460,6 @@ function doNode(t,val){
   p(t,'Enter auth token to proceed:','warn')
 }
 
-// glitch
 function glitch(){
   if(!active)return;
   const t=active;
