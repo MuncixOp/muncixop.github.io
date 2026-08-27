@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACCESS GRANTED</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="matrix"></div>
+
+    <div class="terminal">
+        <div class="terminal-header">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+            <span class="title">root@main:~$</span>
+        </div>
+        <div class="terminal-body">
+            <p class="line" id="line1">&gt; Iniciando sistema...</p>
+            <p class="line" id="line2">&gt; Verificando permisos... <span class="ok">OK</span></p>
+            <p class="line" id="line3">&gt; Acceso concedido ✓</p>
+            <p class="line" id="line4">&gt; Selecciona un destino:</p>
+
+            <div class="links" id="links">
+                <!-- ⚡ CAMBIA LOS LINKS AQUÍ -->
+                <a href="https://github.com/tu-usuario" class="link" data-text="[1] GITHUB">[1] GITHUB</a>
+                <a href="https://instagram.com/tu-usuario" class="link" data-text="[2] INSTAGRAM">[2] INSTAGRAM</a>
+                <a href="https://linkedin.com/in/tu-usuario" class="link" data-text="[3] LINKEDIN">[3] LINKEDIN</a>
+                <a href="https://discord.com/users/tu-id" class="link" data-text="[4] DISCORD">[4] DISCORD</a>
+            </div>
+
+            <p class="line typing" id="cursor">&gt; <span class="cursor">█</span></p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>   
