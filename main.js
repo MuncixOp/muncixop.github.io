@@ -2,20 +2,11 @@ const c=document.getElementById('c'),x=c.getContext('2d');
 let W,H,cols,drops;
 const ch='アイウエオカキクケコサシスセソ0123456789$#@';
 const fs=12;
-
-function rs(){
-  W=c.width=innerWidth;H=c.height=innerHeight;
-  cols=Math.floor(W/fs);
-  drops=Array(cols).fill(1)
-}
-rs();
-addEventListener('resize',rs);
-
+function rs(){W=c.width=innerWidth;H=c.height=innerHeight;cols=Math.floor(W/fs);drops=Array(cols).fill(1)}
+rs();addEventListener('resize',rs);
 (function mx(){
-  x.fillStyle='rgba(10,10,10,.07)';
-  x.fillRect(0,0,W,H);
-  x.fillStyle='#0f0';
-  x.font=fs+'px monospace';
+  x.fillStyle='rgba(10,10,10,.07)';x.fillRect(0,0,W,H);
+  x.fillStyle='#0f0';x.font=fs+'px monospace';
   for(let i=0;i<cols;i++){
     x.fillText(ch[Math.random()*ch.length|0],i*fs,drops[i]*fs);
     if(drops[i]*fs>H&&Math.random()>.974)drops[i]=0;
@@ -25,207 +16,159 @@ addEventListener('resize',rs);
 })();
 
 const winsEl=document.getElementById('wins');
-let zCounter=1;
-const terminals=[];
+let zc=1;
+const terms=[];
+let active=null;
 
-function createWin(opts){
+function mkWin(o){
   const w=document.createElement('div');
   w.className='win';
-  w.style.left=(opts.left||50)+'px';
-  w.style.top=(opts.top||80)+'px';
-  w.style.zIndex=++zCounter;
+  w.style.left=(o.left||80)+'px';
+  w.style.top=(o.top||60)+'px';
+  w.style.zIndex=++zc;
 
   const bar=document.createElement('div');
   bar.className='win-bar';
-  bar.innerHTML=`
-    <div class="btns">
-      <span class="btn close"></span>
-      <span class="btn min"></span>
-      <span class="btn max"></span>
-    </div>
-    <span class="win-title">${opts.title||'terminal'}</span>
-    <div class="btns-r"></div>
-  `;
+  bar.innerHTML=`<div class="btns"><span class="btn close"></span><span class="btn min"></span><span class="btn max"></span></div><span class="win-title">${o.title||'terminal'}</span><div class="btns-r"></div>`;
 
   const body=document.createElement('div');
   body.className='win-body';
-
   const gl=document.createElement('div');
   gl.className='glitch-overlay';
 
-  w.appendChild(bar);
-  w.appendChild(body);
-  w.appendChild(gl);
+  w.appendChild(bar);w.appendChild(body);w.appendChild(gl);
   winsEl.appendChild(w);
 
-  const term={
-    el:w,bar,body,gl,
-    input:'',mode:'idle',hidden:false,
-    prompt:'root@main:~#',
-    title:opts.title||'terminal',
-    onCommand:opts.onCommand||null,
-    active:false
-  };
-  terminals.push(term);
+  const t={el:w,bar,body,gl,input:'',mode:'idle',hidden:false,prompt:'root@main:~#',nodeData:null};
+  terms.push(t);
 
-  // focus
   w.addEventListener('mousedown',()=>{
-    w.style.zIndex=++zCounter;
-    terminals.forEach(t=>t.active=false);
-    term.active=true;
+    w.style.zIndex=++zc;
+    active=t
   });
 
-  // drag
   let dx,dy,drag=false;
   bar.addEventListener('mousedown',e=>{
     if(e.target.classList.contains('btn'))return;
-    drag=true;
-    dx=e.clientX-w.offsetLeft;
-    dy=e.clientY-w.offsetTop;
+    drag=true;dx=e.clientX-w.offsetLeft;dy=e.clientY-w.offsetTop;
     w.style.transition='none'
   });
   addEventListener('mousemove',e=>{
     if(!drag)return;
-    w.style.left=(e.clientX-dx)+'px';
-    w.style.top=(e.clientY-dy)+'px'
+    w.style.left=(e.clientX-dx)+'px';w.style.top=(e.clientY-dy)+'px'
   });
   addEventListener('mouseup',()=>{drag=false;w.style.transition=''});
 
   bar.addEventListener('touchstart',e=>{
     if(e.target.classList.contains('btn'))return;
-    const t=e.touches[0];
-    drag=true;dx=t.clientX-w.offsetLeft;dy=t.clientY-w.offsetTop;
+    const t2=e.touches[0];drag=true;dx=t2.clientX-w.offsetLeft;dy=t2.clientY-w.offsetTop;
   },{passive:true});
   addEventListener('touchmove',e=>{
     if(!drag)return;
-    const t=e.touches[0];
-    w.style.left=(t.clientX-dx)+'px';
-    w.style.top=(t.clientY-dy)+'px'
+    const t2=e.touches[0];
+    w.style.left=(t2.clientX-dx)+'px';w.style.top=(t2.clientY-dy)+'px'
   },{passive:true});
   addEventListener('touchend',()=>{drag=false});
 
-  // buttons
   bar.querySelector('.close').addEventListener('click',()=>{
-    w.style.transition='transform .3s,opacity .25s';
-    w.style.transform='scale(.88)';
-    w.style.opacity='0';
-    setTimeout(()=>w.remove(),300)
+    w.style.transition='transform .25s,opacity .2s';
+    w.style.transform='scale(.88)';w.style.opacity='0';
+    setTimeout(()=>{w.remove();terms.splice(terms.indexOf(t),1);if(active===t)active=null},250)
   });
-  bar.querySelector('.min').addEventListener('click',()=>{
-    w.classList.toggle('minimized')
-  });
-  bar.querySelector('.max').addEventListener('click',()=>{
-    w.classList.toggle('maximized')
-  });
+  bar.querySelector('.min').addEventListener('click',()=>w.classList.toggle('minimized'));
+  bar.querySelector('.max').addEventListener('click',()=>w.classList.toggle('maximized'));
 
-  return term;
+  return t
 }
 
-function termPrint(term,txt,cls){
+function p(t,txt,cls){
   const el=document.createElement('div');
   el.className='out'+(cls?' '+cls:'');
   el.textContent=txt||'\u00a0';
-  term.body.appendChild(el);
-  term.body.scrollTop=term.body.scrollHeight;
+  t.body.appendChild(el);
+  t.body.scrollTop=t.body.scrollHeight
 }
 
-function termPrintHTML(term,html,cls){
+function pHTML(t,html,cls){
   const el=document.createElement('div');
   el.className='out'+(cls?' '+cls:'');
   el.innerHTML=html;
-  term.body.appendChild(el);
-  term.body.scrollTop=term.body.scrollHeight;
+  t.body.appendChild(el);
+  t.body.scrollTop=t.body.scrollHeight
 }
 
-function termSetPrompt(term,p){
-  term.prompt=p;
-  const line=term.body.querySelector('.input-line');
-  if(line)line.querySelector('.pr').textContent=p+' '
-}
-
-function termShowInput(term){
-  let line=term.body.querySelector('.input-line');
+function showIn(t){
+  let line=t.body.querySelector('.input-line');
   if(!line){
     line=document.createElement('div');
     line.className='input-line';
-    line.innerHTML=`<span class="pr"></span> <span class="typed"></span><span class="cur">_</span>`;
-    term.body.appendChild(line)
+    line.innerHTML='<span class="pr"></span> <span class="typed"></span><span class="cur">_</span>';
+    t.body.appendChild(line)
   }
-  line.style.display='block';
-  line.querySelector('.pr').textContent=term.prompt+' ';
+  line.style.display='flex';
+  line.querySelector('.pr').textContent=t.prompt;
   line.querySelector('.typed').textContent='';
-  term.input='';
+  t.input='';
+  t.body.scrollTop=t.body.scrollHeight
 }
 
-function termHideInput(term){
-  const line=term.body.querySelector('.input-line');
+function hideIn(t){
+  const line=t.body.querySelector('.input-line');
   if(line)line.style.display='none'
 }
 
-function termGetInputLine(term){
-  return term.body.querySelector('.input-line')
+function updateTyped(t){
+  const line=t.body.querySelector('.input-line');
+  if(!line)return;
+  line.querySelector('.typed').textContent=t.hidden?''.padEnd(t.input.length,'*'):t.input;
+  t.body.scrollTop=t.body.scrollHeight
 }
 
-// === GLOBAL KEYBOARD (routes to active terminal) ===
+// keyboard
 addEventListener('keydown',e=>{
-  const active=terminals.find(t=>t.active&&!t.el.classList.contains('minimized'));
   if(!active)return;
+  const t=active;
+  if(t.el.classList.contains('minimized'))return;
 
   if(e.key==='Enter'){
-    const line=termGetInputLine(active);
+    const line=t.body.querySelector('.input-line');
     if(!line||line.style.display==='none')return;
+    const val=t.input;
+    p(t,t.prompt+' '+val,'cmd');
+    t.input='';
+    line.querySelector('.typed').textContent='';
 
-    const val=active.input;
-    termPrint(active,active.prompt+' '+val,'cmd');
-
-    if(active.mode==='login'){
-      handleLogin(active,val);
-    }else if(active.mode==='password'){
-      termPrint(active,'********','cmd');
-      handlePassword(active);
-    }else if(active.mode==='shell'){
-      if(val.trim())handleShell(active,val);
-    }else if(active.mode==='node'){
-      handleNode(active,val);
-    }
-    return;
+    if(t.mode==='login')doLogin(t,val);
+    else if(t.mode==='password'){p(t,'','dim');doPass(t)}
+    else if(t.mode==='shell'){if(val.trim())doShell(t,val)}
+    else if(t.mode==='node'){doNode(t,val)}
+    return
   }
 
   if(e.key==='Backspace'){
-    active.input=active.input.slice(0,-1);
-    updateTyped(active);
-    return;
+    t.input=t.input.slice(0,-1);
+    updateTyped(t);
+    return
   }
 
   if(e.key==='Tab'){
     e.preventDefault();
-    if(active.mode==='shell'){
-      const cmds=Object.keys(shellCmds).filter(c=>c.startsWith(active.input.trim().toLowerCase()));
-      if(cmds.length===1){
-        active.input=cmds[0]+' ';
-        updateTyped(active);
-      }else if(cmds.length>1){
-        termPrint(active,'  '+cmds.join('  '),'dim');
-      }
+    if(t.mode==='shell'){
+      const matches=Object.keys(shell).filter(c=>c.startsWith(t.input.trim().toLowerCase()));
+      if(matches.length===1){t.input=matches[0]+' ';updateTyped(t)}
+      else if(matches.length>1)p(t,matches.join('  '),'dim')
     }
-    return;
+    return
   }
 
   if(e.key.length===1){
-    active.input+=e.key;
-    updateTyped(active);
+    t.input+=e.key;
+    updateTyped(t)
   }
 });
 
-function updateTyped(term){
-  const line=termGetInputLine(term);
-  if(!line)return;
-  const t=line.querySelector('.typed');
-  t.textContent=term.hidden?''.padEnd(term.input.length,'*'):term.input;
-}
-
-// === BOOT ===
-const bootLines=[
+// boot
+const boot=[
   ['dim','VOID BIOS v4.2.1 (C) 2026 VOID Systems Inc.'],
   ['dim',''],
   ['dim','CPU: VOID-9 @ 4.20GHz (8c/16t)'],
@@ -258,81 +201,79 @@ const bootLines=[
   ['',''],
 ];
 
-const mainWin=createWin({title:'muncixop@void — zsh',left:80,top:60});
-mainWin.active=true;
-mainWin.mode='boot';
+const main=mkWin({title:'muncixop@void — zsh',left:80,top:60});
+active=main;
+main.mode='boot';
 
 let bi=0;
 (function bootStep(){
-  if(bi>=bootLines.length){
+  if(bi>=boot.length){
     setTimeout(()=>{
-      termSetPrompt(mainWin,'login:');
-      termShowInput(mainWin);
-      mainWin.mode='login';
+      main.prompt='login:';
+      showIn(main);
+      main.mode='login'
     },500);
-    return;
+    return
   }
-  const[cls,txt]=bootLines[bi];
-  termPrint(mainWin,txt,cls);
+  const[cls,txt]=boot[bi];
+  p(main,txt,cls);
   bi++;
   setTimeout(bootStep,txt===''?50:35+Math.random()*45)
 })();
 
-// === LOGIN ===
-function handleLogin(term,user){
+function doLogin(t,user){
   const u=user.trim().toLowerCase();
   if(u==='muncixop'||u==='root'){
-    termPrint(term,'');
-    termSetPrompt(term,"root@main's password:");
-    term.mode='password';
-    term.hidden=true;
-    termShowInput(term);
+    p(t,'');
+    t.prompt="root@main's password:";
+    t.mode='password';
+    t.hidden=true;
+    showIn(t)
   }else{
-    termPrint(term,`login failed for ${u||'(blank)'}`,'err');
-    termPrint(term,'');
-    termSetPrompt(term,'login:');
-    termShowInput(term);
+    p(t,`login failed for ${u||'(blank)'}`,'err');
+    p(t,'');
+    t.prompt='login:';
+    showIn(t)
   }
 }
 
-function handlePassword(term){
-  term.hidden=false;
-  termPrint(term,'');
-  termPrint(term,'Last login: Thu Aug 27 03:42:17 2026 from 192.168.1.42','dim');
-  termPrint(term,'');
-  termPrint(term,'Welcome to VOID SYSTEMS','info');
-  termPrint(term,'Type "help" to list available commands.','dim');
-  termPrint(term,'');
-  termSetPrompt(term,'root@main:~#');
-  term.mode='shell';
-  termShowInput(term);
+function doPass(t){
+  t.hidden=false;
+  p(t,'Last login: Thu Aug 27 03:42:17 2026 from 192.168.1.42','dim');
+  p(t,'');
+  p(t,'Welcome to VOID SYSTEMS','info');
+  p(t,'Type "help" to list available commands.','dim');
+  p(t,'');
+  t.prompt='root@main:~#';
+  t.mode='shell';
+  showIn(t)
 }
 
-// === SHELL ===
-const shellCmds={
+const shell={
   'help':t=>{
-    termPrint(t,'');
-    termPrint(t,'Commands:','info');
-    termPrint(t,'');
-    termPrint(t,'  ./init           Initialize system');
-    termPrint(t,'  ./scan           Scan for connected nodes');
-    termPrint(t,'  ./connect <id>   Open terminal for a node');
-    termPrint(t,'  ./status         Show system status');
-    termPrint(t,'  whoami           Current user');
-    termPrint(t,'  uname -a         System info');
-    termPrint(t,'  cat /etc/void    System config');
-    termPrint(t,'  ls               List files');
-    termPrint(t,'  echo <msg>       Print message');
-    termPrint(t,'  clear            Clear screen');
-    termPrint(t,'  exit             Disconnect');
-    termPrint(t,'  help             This message');
-    termPrint(t,'');
+    p(t,'');
+    p(t,'Available commands:','info');
+    p(t,'');
+    p(t,'  ./init            Initialize system (verbose)');
+    p(t,'  ./scan            Scan for connected nodes');
+    p(t,'  ./connect <id>    Open terminal for a node');
+    p(t,'  ./status          Show system status');
+    p(t,'  whoami            Current user');
+    p(t,'  uname -a          System info');
+    p(t,'  cat /etc/void     System config');
+    p(t,'  ls                List files');
+    p(t,'  echo <msg>        Print message');
+    p(t,'  clear             Clear screen');
+    p(t,'  exit              Disconnect');
+    p(t,'  help              This message');
+    p(t,'')
   },
 
   './init':t=>{
-    termPrint(t,'');
-    termPrint(t,'Initializing system...','info');
-    termPrint(t,'');
+    p(t,'');
+    p(t,'Initializing system...','info');
+    p(t,'');
+    hideIn(t);
     const steps=[
       '[ 1/8] Loading kernel modules',
       '[ 2/8] Mounting filesystems',
@@ -346,45 +287,39 @@ const shellCmds={
     let si=0;
     (function step(){
       if(si>=steps.length){
-        termPrint(t,'');
-        termPrint(t,'System ready. 0 errors.','ok');
-        termPrint(t,'');
-        termShowInput(t);
-        return;
+        p(t,'');p(t,'System ready. 0 errors.','ok');p(t,'');
+        showIn(t);return
       }
-      termPrint(t,steps[si],'ok');
-      si++;
+      p(t,steps[si],'ok');si++;
       setTimeout(step,150+Math.random()*100)
-    })();
-    termHideInput(t);
+    })()
   },
 
   './scan':t=>{
-    termPrint(t,'');
-    termPrint(t,'Scanning network for registered nodes...','dim');
-    termHideInput(t);
+    p(t,'');
+    p(t,'Scanning network for registered nodes...','dim');
+    hideIn(t);
     setTimeout(()=>{
-      termPrint(t,'');
-      termPrint(t,'  ID      HOST                  TOKEN         STATUS');
-      termPrint(t,'  ------  ----------------------  ------------  --------');
-      termPrint(t,'  0x01    curseforge.com          a3f8c21d      [ONLINE]');
-      termPrint(t,'  0x02    x.com                   7b2e91f4      [ONLINE]');
-      termPrint(t,'  0x03    tiktok.com              e41d08ab      [ONLINE]');
-      termPrint(t,'');
-      termPrint(t,'3 nodes found. Use ./connect <id> to open a session.','ok');
-      termPrint(t,'');
-      termShowInput(t);
-    },1200);
+      p(t,'');
+      p(t,'  ID      HOST                  TOKEN         STATUS');
+      p(t,'  ------  ----------------------  ------------  --------');
+      p(t,'  0x01    curseforge.com          a3f8c21d      [ONLINE]');
+      p(t,'  0x02    x.com                   7b2e91f4      [ONLINE]');
+      p(t,'  0x03    tiktok.com              e41d08ab      [ONLINE]');
+      p(t,'');
+      p(t,'3 nodes found. Use ./connect <id> to open a session.','ok');
+      p(t,'');
+      showIn(t)
+    },1200)
   },
 
   './connect':t=>{
     const parts=t.input.trim().split(/\s+/);
     const id=parts[1];
     if(!id){
-      termPrint(t,'Usage: ./connect <node-id>','warn');
-      termPrint(t,'Run ./scan to see available nodes.','dim');
-      termPrint(t,'');
-      return;
+      p(t,'Usage: ./connect <node-id>','warn');
+      p(t,'Run ./scan to see available nodes.','dim');
+      p(t,'');return
     }
     const nodes={
       '0x01':{host:'curseforge.com',token:'a3f8c21d',title:'node 0x01 — curseforge.com',link:'https://www.curseforge.com/members/muncixop/projects',label:'curseforge.com/members/muncixop/projects'},
@@ -392,176 +327,144 @@ const shellCmds={
       '0x03':{host:'tiktok.com',token:'e41d08ab',title:'node 0x03 — tiktok.com',link:'https://www.tiktok.com/@muncixop',label:'tiktok.com/@muncixop'},
     };
     const n=nodes[id];
-    if(!n){
-      termPrint(t,`Unknown node: ${id}`,'err');
-      termPrint(t,'');
-      return;
-    }
-    termPrint(t,`Connecting to ${n.host}...`,'dim');
-    termHideInput(t);
+    if(!n){p(t,`Unknown node: ${id}`,'err');p(t,'');return}
+    p(t,`Connecting to ${n.host}...`,'dim');
+    hideIn(t);
     setTimeout(()=>{
-      termPrint(t,'');
-      termPrint(t,'[OK] TCP handshake complete','ok');
-      termPrint(t,'[OK] TLS 1.3 established','ok');
-      termPrint(t,'[OK] Session token received: '+n.token,'ok');
-      termPrint(t,'');
-      termPrint(t,'Opening node terminal...','info');
-      termPrint(t,'');
+      p(t,'');
+      p(t,'[OK] TCP handshake complete','ok');
+      p(t,'[OK] TLS 1.3 established','ok');
+      p(t,'[OK] Session token: '+n.token,'ok');
+      p(t,'');
+      p(t,'Opening node terminal...','info');
+      p(t,'');
       setTimeout(()=>{
-        const off=terminals.length*30;
-        const nt=createWin({
-          title:n.title,
-          left:120+off,
-          top:100+off
-        });
-        nt.active=true;
+        const off=terms.length*35;
+        const nt=mkWin({title:n.title,left:120+off,top:100+off});
+        active=nt;
         nt.mode='node';
         nt.nodeData=n;
-        ntSetNodePrompt(nt);
-        termPrint(nt,`Connected to ${n.host}`,'ok');
-        termPrint(nt,`Session: ${n.token}`,'dim');
-        termPrint(nt,'');
-        termPrint(nt,'Enter auth token to proceed:','warn');
-        termShowInput(nt);
-        termShowInput(t);
-      },600);
-    },800);
+        nt.prompt=`[${n.host}] #`;
+        p(nt,`Connected to ${n.host}`,'ok');
+        p(nt,`Session: ${n.token}`,'dim');
+        p(nt,'');
+        p(nt,'Enter auth token to proceed:','warn');
+        showIn(nt);
+        showIn(t)
+      },600)
+    },800)
   },
 
   './status':t=>{
-    termPrint(t,'');
-    termPrint(t,'  UPTIME:    3d 14:22:07');
-    termPrint(t,'  LOAD:      0.02, 0.01, 0.00');
-    termPrint(t,'  MEM:       4.2GB / 64GB (6%)');
-    termPrint(t,'  DISK:      128GB / 2TB (6%)');
-    termPrint(t,'  NET:       eth0 10G up, wlan0 up');
-    termPrint(t,'  NODES:     3 online');
-    termPrint(t,'');
+    p(t,'');
+    p(t,'  UPTIME:    3d 14:22:07');
+    p(t,'  LOAD:      0.02, 0.01, 0.00');
+    p(t,'  MEM:       4.2GB / 64GB (6%)');
+    p(t,'  DISK:      128GB / 2TB (6%)');
+    p(t,'  NET:       eth0 10G up, wlan0 up');
+    p(t,'  NODES:     3 online');
+    p(t,'')
   },
 
-  'whoami':t=>{termPrint(t,'root');termPrint(t,'')},
-
-  'uname -a':t=>{termPrint(t,'Linux void 6.1.0-void #1 SMP VOID x86_64 GNU/Linux');termPrint(t,'')},
+  'whoami':t=>{p(t,'root');p(t,'')},
+  'uname -a':t=>{p(t,'Linux void 6.1.0-void #1 SMP VOID x86_64 GNU/Linux');p(t,'')},
 
   'ls':t=>{
-    termPrint(t,'');
-    termPrint(t,'total 12');
-    termPrint(t,'drwxr-xr-x  2 root root 4096 Aug 27 03:40 .');
-    termPrint(t,'drwxr-xr-x  1 root root 4096 Aug 27 03:40 ..');
-    termPrint(t,'-rwxr-xr-x  1 root root  248 Aug 27 03:39 init');
-    termPrint(t,'-rwxr-xr-x  1 root root  192 Aug 27 03:39 scan');
-    termPrint(t,'-rwxr-xr-x  1 root root  312 Aug 27 03:39 connect');
-    termPrint(t,'-rw-r--r--  1 root root  512 Aug 27 03:40 .voidrc');
-    termPrint(t,'');
+    p(t,'');
+    p(t,'total 12');
+    p(t,'drwxr-xr-x  2 root root 4096 Aug 27 03:40 .');
+    p(t,'drwxr-xr-x  1 root root 4096 Aug 27 03:40 ..');
+    p(t,'-rwxr-xr-x  1 root root  248 Aug 27 03:39 init');
+    p(t,'-rwxr-xr-x  1 root root  192 Aug 27 03:39 scan');
+    p(t,'-rwxr-xr-x  1 root root  312 Aug 27 03:39 connect');
+    p(t,'-rw-r--r--  1 root root  512 Aug 27 03:40 .voidrc');
+    p(t,'')
   },
 
   'cat /etc/void':t=>{
-    termPrint(t,'');
-    termPrint(t,'# /etc/void');
-    termPrint(t,'# modified: 2026-08-27 03:41:02 UTC');
-    termPrint(t,'');
-    termPrint(t,'[system]');
-    termPrint(t,'  name=void');
-    termPrint(t,'  owner=muncixop');
-    termPrint(t,'  kernel=6.1.0-void');
-    termPrint(t,'');
-    termPrint(t,'[network]');
-    termPrint(t,'  eth0=10.0.0.1/24');
-    termPrint(t,'  firewall=strict');
-    termPrint(t,'');
-    termPrint(t,'[nodes]');
-    termPrint(t,'  0x01=curseforge.com');
-    termPrint(t,'  0x02=x.com');
-    termPrint(t,'  0x03=tiktok.com');
-    termPrint(t,'');
-    termPrint(t,'[access]');
-    termPrint(t,'  level=root');
-    termPrint(t,'  2fa=enabled');
-    termPrint(t,'');
+    p(t,'');
+    p(t,'# /etc/void');
+    p(t,'# modified: 2026-08-27 03:41:02 UTC');
+    p(t,'');
+    p(t,'[system]');
+    p(t,'  name=void');
+    p(t,'  owner=muncixop');
+    p(t,'  kernel=6.1.0-void');
+    p(t,'');
+    p(t,'[network]');
+    p(t,'  eth0=10.0.0.1/24');
+    p(t,'  firewall=strict');
+    p(t,'');
+    p(t,'[nodes]');
+    p(t,'  0x01=curseforge.com');
+    p(t,'  0x02=x.com');
+    p(t,'  0x03=tiktok.com');
+    p(t,'');
+    p(t,'[access]');
+    p(t,'  level=root');
+    p(t,'  2fa=enabled');
+    p(t,'')
   },
 
-  'clear':t=>{t.body.innerHTML='';termShowInput(t)},
+  'clear':t=>{t.body.innerHTML='';showIn(t)},
 
   'exit':t=>{
-    termPrint(t,'');
-    termPrint(t,'Connection closed.','dim');
-    termHideInput(t);
-    t.mode='exited';
+    p(t,'');
+    p(t,'Connection closed.','dim');
+    hideIn(t);
+    t.mode='exited'
   },
 };
 
-function handleShell(term,cmd){
+function doShell(t,cmd){
   const key=cmd.trim().toLowerCase();
-  if(shellCmds[key]){
-    shellCmds[key](term);
-    return;
-  }
-  if(key.startsWith('echo ')){
-    termPrint(term,cmd.trim().slice(5));
-    termPrint(term,'');
-    return;
-  }
-  termPrint(term,`zsh: command not found: ${key}`,'err');
-  termPrint(term,'Type "help" for available commands.','dim');
-  termPrint(term,'');
+  if(shell[key]){shell[key](t);return}
+  if(key.startsWith('echo ')){p(t,cmd.trim().slice(5));p(t,'');return}
+  p(t,`zsh: command not found: ${key}`,'err');
+  p(t,'Type "help" for available commands.','dim');
+  p(t,'')
 }
 
-// === NODE TERMINAL ===
-function ntSetNodePrompt(t){
-  t.prompt=`[${t.nodeData.host}] #`
-}
-
-function handleNode(term,val){
+function doNode(t,val){
   const v=val.trim().toLowerCase();
-  const n=term.nodeData;
-
-  if(v===n.token||v==='auth '+n.token){
-    termPrint(term,'');
-    termPrint(term,'[OK] Token verified','ok');
-    termPrint(term,'[OK] Session authorized','ok');
-    termPrint(term,'');
-    termPrint(term,'Node resolved:','info');
-    termPrint(term,'');
+  const n=t.nodeData;
+  if(v===n.token){
+    p(t,'');
+    p(t,'[OK] Token verified','ok');
+    p(t,'[OK] Session authorized','ok');
+    p(t,'');
+    p(t,'Node resolved:','info');
+    p(t,'');
     const lnk=document.createElement('div');
     lnk.className='lnk';
     const a=document.createElement('a');
     a.href=n.link;a.target='_blank';
     a.innerHTML=`<span class="n">→</span>${n.label}`;
     lnk.appendChild(a);
-    term.body.appendChild(lnk);
-    termPrint(term,'');
-    termPrint(term,'Click the link or press Enter to open.','dim');
-    termHideInput(term);
-    term.mode='done';
-    setTimeout(()=>{
-      termPrint(term,'');
-      termPrint(term,'[session idle — press any key to return to main shell]','dim');
-      term.mode='shell';
-      termSetPrompt(term,'root@main:~#');
-      termShowInput(term);
-    },2000);
-    return;
+    t.body.appendChild(lnk);
+    p(t,'');
+    p(t,'Click the link above to open.','dim');
+    p(t,'');
+    hideIn(t);
+    t.mode='idle'
+    return
   }
-
   if(v==='help'||v==='?'){
-    termPrint(term,'');
-    termPrint(term,'Enter the auth token to proceed.','info');
-    termPrint(term,'(Hint: the token was displayed when you connected)');
-    termPrint(term,'');
-    return;
+    p(t,'');
+    p(t,'Enter the auth token displayed above to proceed.','info');
+    p(t,'');return
   }
-
-  termPrint(term,`[${n.host}] auth failed: invalid token`,'err');
-  termPrint(term,'');
-  termPrint(term,'Enter auth token to proceed:','warn');
+  p(t,`[${n.host}] auth failed: invalid token`,'err');
+  p(t,'');
+  p(t,'Enter auth token to proceed:','warn')
 }
 
-// === GLITCH ===
+// glitch
 function glitch(){
-  const active=terminals.find(t=>t.active&&!t.el.classList.contains('minimized'));
   if(!active)return;
-  const w=active.el;
-  const gl=active.gl;
+  const t=active;
+  if(t.el.classList.contains('minimized'))return;
+  const gl=t.gl,w=t.el;
   gl.innerHTML='';
   const n=3+(Math.random()*4|0);
   for(let i=0;i<n;i++){
@@ -573,12 +476,9 @@ function glitch(){
     s.style.cssText=`top:${top}%;height:${th}px;transform:translateX(${off}px)`;
     gl.appendChild(s)
   }
-  const tx=(Math.random()-.5)*8;
-  const ty=(Math.random()-.5)*4;
-  w.style.transform=`translate(${tx}px,${ty}px)`;
+  w.style.transform=`translate(${(Math.random()-.5)*8}px,${(Math.random()-.5)*4}px)`;
   w.style.boxShadow='0 20px 60px #000b,0 0 0 .5px #3ddc8440,0 0 60px #3ddc8418';
   gl.classList.add('on');
-
   setTimeout(()=>{
     gl.innerHTML='';
     const n2=2+(Math.random()*3|0);
@@ -593,7 +493,6 @@ function glitch(){
     }
     w.style.transform=`translate(${(Math.random()-.5)*12}px,${(Math.random()-.5)*6}px)`
   },50);
-
   setTimeout(()=>{
     gl.classList.remove('on');
     gl.innerHTML='';
@@ -601,7 +500,4 @@ function glitch(){
     w.style.boxShadow=''
   },130+Math.random()*70)
 }
-
-(function sched(){
-  setTimeout(()=>{glitch();sched()},3000+Math.random()*5000)
-})();   
+(function sched(){setTimeout(()=>{glitch();sched()},3000+Math.random()*5000)})();   
