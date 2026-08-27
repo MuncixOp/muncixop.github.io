@@ -1,40 +1,25 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ACCESS GRANTED</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>~/muncixop</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="matrix"></div>
+<canvas id="c"></canvas>
 
-    <div class="terminal glitch-container">
-        <div class="glitch-layer" aria-hidden="true"></div>
-        <div class="glitch-layer" aria-hidden="true"></div>
+<div class="term" id="term">
+  <div class="bar">
+    <span class="d r"></span><span class="d y"></span><span class="d g"></span>
+    <span class="bar-t" data-t="muncixop@void:~$">muncixop@void:~$</span>
+  </div>
+  <div class="out" id="out"></div>
+  <div class="out" id="lnk"></div>
+  <div class="out"><span class="pr">➜</span> <span class="cur">_</span></div>
+  <div class="slices" id="slices"></div>
+</div>
 
-        <div class="terminal-header">
-            <span class="dot red"></span>
-            <span class="dot yellow"></span>
-            <span class="dot green"></span>
-            <span class="title glitch-text" data-text="root@main:~$">root@main:~$</span>
-        </div>
-        <div class="terminal-body">
-            <p class="line" id="line1">&gt; Iniciando sistema...</p>
-            <p class="line" id="line2">&gt; Verificando permisos... <span class="ok">OK</span></p>
-            <p class="line" id="line3">&gt; Acceso concedido ✓</p>
-            <p class="line" id="line4">&gt; Selecciona un destino:</p>
-
-            <div class="links" id="links">
-                <a href="https://www.curseforge.com/members/muncixop/projects" class="link" target="_blank">[1] CURSEFORGE</a>
-                <a href="https://x.com/MuncixOp" class="link" target="_blank">[2] X (TWITTER)</a>
-                <a href="https://www.tiktok.com/@muncixop" class="link" target="_blank">[3] TIKTOK</a>
-            </div>
-
-            <p class="line typing" id="cursor">&gt; <span class="cursor">█</span></p>
-        </div>
-    </div>
-
-    <script src="script.js"></script>
+<script src="main.js"></script>
 </body>
 </html>   
