@@ -5,6 +5,17 @@ body{font:clamp(11px,1.4vw,14px)/1.6 'SF Mono','Menlo','Fira Code',monospace}
 #c{position:fixed;inset:0;opacity:.05;z-index:0;pointer-events:none}
 #wins{position:fixed;inset:0;z-index:1}
 
+#ki{
+  position:fixed;
+  bottom:0;left:0;
+  width:2px;height:2px;
+  opacity:0;
+  border:none;outline:none;
+  background:transparent;
+  z-index:9999;
+  pointer-events:none
+}
+
 .win{
   position:absolute;
   width:min(640px,92vw);
@@ -104,12 +115,16 @@ body{font:clamp(11px,1.4vw,14px)/1.6 'SF Mono','Menlo','Fira Code',monospace}
   pointer-events:none
 }
 .win.maximized{
-  width:100vw!important;max-width:none;
-  height:100vh;border-radius:0;
-  transition:width .25s,height .25s,border-radius .25s
+  position:fixed!important;
+  inset:0!important;
+  width:auto!important;max-width:none;
+  height:auto!important;max-height:none!important;
+  border-radius:0;
+  z-index:100
 }
 .win.maximized .win-bar{border-radius:0}
 .win.maximized .rz{display:none}
+.win.maximized .win-body{max-height:none!important;flex:1}
 
 .win::after{
   content:'';position:absolute;inset:0;border-radius:10px;pointer-events:none;
@@ -148,6 +163,32 @@ body{font:clamp(11px,1.4vw,14px)/1.6 'SF Mono','Menlo','Fira Code',monospace}
   border-bottom:2px solid #555
 }
 .rz:hover::after{border-color:#888}
+
+.dock{
+  position:fixed;bottom:0;left:0;right:0;
+  height:36px;
+  background:#1c1c1ecc;
+  backdrop-filter:blur(8px);
+  border-top:1px solid #333;
+  display:flex;align-items:center;
+  gap:8px;padding:0 12px;
+  z-index:9999;
+  opacity:0;pointer-events:none;
+  transition:opacity .2s
+}
+.dock.on{opacity:1;pointer-events:auto}
+.dock-item{
+  padding:4px 12px;
+  background:#2c2c2e;
+  border-radius:5px;
+  font-size:11px;color:#aaa;
+  cursor:pointer;
+  border:1px solid #444;
+  transition:.15s;
+  max-width:160px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap
+}
+.dock-item:hover{background:#3a3a3c;color:#fff;border-color:#666}
 
 @media(max-width:700px){
   .win{
