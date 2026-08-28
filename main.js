@@ -8,11 +8,9 @@ const os=(()=>{
   return'linux'
 })();
 const mob=os==='ios'||os==='android'||matchMedia('(max-width:700px)').matches;
-const isTouch='ontouchstart'in window||navigator.maxTouchPoints>0;
 const reducedMotion=matchMedia('(prefers-reduced-motion:reduce)').matches;
 document.body.classList.add('os-'+os);
 
-/* Random token generator */
 function genToken(){
   const c='abcdef0123456789';
   let r='';
@@ -58,7 +56,7 @@ const ki=document.getElementById('ki');
 let zc=1;
 const terms=[];
 let active=null;
-const LS='void_wins_v6';
+const LS='void_wins_v7';
 
 const dock=document.createElement('div');
 dock.className='dock';
@@ -123,8 +121,8 @@ function updateDock(){
 
 function save(){
   const d=terms.filter(t=>!t.el.classList.contains('minimized')).map(t=>({
-    id:t.id,l:t.el.style.left,t:t.el.style.top,
-    w:t.el.style.width,h:t.el.style.height,ti:t.title
+    id:t.id,l:t.el.style.left||'',t:t.el.style.top||'',
+    w:t.el.style.width||'',h:t.el.style.height||'',ti:t.title
   }));
   try{localStorage.setItem(LS,JSON.stringify(d))}catch{}
 }
@@ -189,23 +187,12 @@ ki.addEventListener('keydown',e=>{
 /* === WINDOW TILING === */
 let tiling=false;
 
-function tileWindows(){
+function applyTile(){
   const visible=terms.filter(t=>!t.el.classList.contains('minimized')&&!t.el.classList.contains('maximized'));
-  if(visible.length<2){
-    if(active)pr(active,'Tiling requires at least 2 visible windows.','warn');
-    return
-  }
-  tiling=!tiling;
-  if(!tiling){
-    visible.forEach(t=>{t.el.classList.remove('tiling')});
-    visible.forEach(t=>clamp(t));
-    save();
-    return
-  }
+  if(visible.length<2)return;
   const n=visible.length;
   let cols2,rows2;
   if(n===2){cols2=2;rows2=1}
-  else if(n===3){cols2=2;rows2=2}
   else if(n<=4){cols2=2;rows2=2}
   else{cols2=3;rows2=Math.ceil(n/3)}
 
@@ -217,21 +204,40 @@ function tileWindows(){
   visible.forEach((t,i)=>{
     const col=i%cols2;
     const row=Math.floor(i/cols2);
-    const l=gap+col*(cw+gap);
-    const tp=gap+row*(ch2+gap);
-    const w2=cw;
-    const h2=ch2;
-    t.el.classList.add('tiling');
-    t.el.style.left=l+'px';
-    t.el.style.top=tp+'px';
-    t.el.style.width=w2+'px';
-    t.el.style.height=h2+'px';
+    t.el.style.left=(gap+col*(cw+gap))+'px';
+    t.el.style.top=(gap+row*(ch2+gap))+'px';
+    t.el.style.width=cw+'px';
+    t.el.style.height=ch2+'px';
     t.el.style.maxHeight='none';
     t.body.style.maxHeight='none';
     t.body.style.flex='1'
-  });
-  save();
-  if(active)pr(active,`Tiled ${n} windows (${cols2}×${rows2}).`,'ok')
+  })
+}
+
+function toggleTile(){
+  const visible=terms.filter(t=>!t.el.classList.contains('minimized')&&!t.el.classList.contains('maximized'));
+  if(visible.length<2){
+    if(active)pr(active,'Tiling requires at least 2 visible windows.','warn');
+    return
+  }
+  tiling=!tiling;
+  if(tiling){
+    visible.forEach(t=>t.el.classList.add('tiling'));
+    applyTile();
+    if(active)pr(active,'Tiled '+visible.length+' windows.','ok')
+  }else{
+    visible.forEach(t=>{
+      t.el.classList.remove('tiling');
+      t.el.style.width='';
+      t.el.style.height='';
+      t.el.style.maxHeight='';
+      t.body.style.maxHeight='';
+      t.body.style.flex='';
+      clamp(t)
+    });
+    if(active)pr(active,'Tiling disabled.','dim')
+  }
+  save()
 }
 
 function mk(o){
@@ -295,7 +301,7 @@ function mk(o){
     w.style.top=(e.clientY-dy)+'px'
   });
   addEventListener('mouseup',()=>{
-    if(drag){drag=false;w.style.transition='';clamp(t);save()}
+    if(drag){drag=false;w.style.transition='';if(!tiling)clamp(t);save()}
   });
 
   bar.addEventListener('touchstart',e=>{
@@ -311,7 +317,7 @@ function mk(o){
     w.style.top=(t2.clientY-dy)+'px'
   },{passive:true});
   addEventListener('touchend',()=>{
-    if(drag){drag=false;clamp(t);save()}
+    if(drag){drag=false;if(!tiling)clamp(t);save()}
   });
 
   let rdx,rdy,rw,rh,rz2=false;
@@ -329,7 +335,7 @@ function mk(o){
     body.style.maxHeight='none';body.style.flex='1'
   });
   addEventListener('mouseup',()=>{
-    if(rz2){rz2=false;w.style.transition='';clamp(t);save()}
+    if(rz2){rz2=false;w.style.transition='';if(!tiling)clamp(t);save()}
   });
 
   rz.addEventListener('touchstart',e=>{
@@ -349,19 +355,46 @@ function mk(o){
     body.style.maxHeight='none';body.style.flex='1'
   },{passive:false});
   rz.addEventListener('touchend',()=>{
-    if(rz2){rz2=false;w.style.transition='';clamp(t);save()}
+    if(rz2){rz2=false;w.style.transition='';if(!tiling)clamp(t);save()}
   });
 
+  /* Close — corrupt animation, no actual close */
   const doClose=()=>{
-    w.style.transition='transform .3s cubic-bezier(.55,.06,.68,.19),opacity .25s';
-    w.style.transform='scale(.88) translateY(20px)';
-    w.style.opacity='0';
+    const btn=bar.querySelector('.close');
+    if(btn.classList.contains('corrupt'))return;
+    btn.classList.add('corrupt');
+    w.classList.add('corrupt-shake');
+
+    const els=body.querySelectorAll('.out');
+    const bad=[];
+    for(let i=0;i<Math.min(4,els.length);i++){
+      const idx=Math.random()*els.length|0;
+      const el=els[idx];
+      if(el.textContent.length>4){
+        const orig=el.textContent;
+        const pos=Math.random()*orig.length|0;
+        el.textContent=orig.slice(0,pos)+'▓▒░█▓'+orig.slice(pos+5);
+        bad.push([el,orig])
+      }
+    }
+
     setTimeout(()=>{
-      w.remove();
-      terms.splice(terms.indexOf(t),1);
-      if(active===t){active=null;blurKi()}
-      updateDock();save()
-    },300)
+      const err=document.createElement('div');
+      err.className='close-err';
+      err.innerHTML=`
+        <h4>⚠ FATAL: PROCESS PROTECTED</h4>
+        <p>Cannot terminate session.<br>Kernel lock active — retry denied.</p>
+        <div class="close-err-dim">errno=1 (EPERM) · pid=${Math.random()*9000+1000|0} · signal blocked</div>
+      `;
+      winsEl.appendChild(err);
+      setTimeout(()=>err.remove(),2000)
+    },200);
+
+    setTimeout(()=>{
+      btn.classList.remove('corrupt');
+      w.classList.remove('corrupt-shake');
+      bad.forEach(([el,o])=>{el.textContent=o})
+    },500)
   };
   bar.querySelector('.close').addEventListener('click',e=>{e.stopPropagation();doClose()});
   bar.querySelector('.close').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();doClose()}});
@@ -380,6 +413,7 @@ function mk(o){
     if(!w.classList.contains('maximized')){
       w.style.position='absolute';
       w.classList.remove('tiling');
+      w.style.width='';w.style.height='';
       clamp(t)
     }
     save()
@@ -434,8 +468,12 @@ const nids=['0x01','0x02','0x03'];
 function ac(t){
   const parts=t.input.trim().split(/\s+/);
   if(!parts[0])return;
+  const q=parts[0].toLowerCase();
   if(parts.length===1){
-    const m=Object.keys(shell).filter(c=>c.startsWith(parts[0].toLowerCase()));
+    const m=Object.keys(shell).filter(k=>{
+      const first=k.split(' ')[0];
+      return first.startsWith(q)||k.startsWith(q)
+    });
     if(m.length===1){
       t.input=m[0]+' ';
       if(mob)ki.value=t.input;
@@ -493,7 +531,7 @@ if(!mob){
     }
     if(e.key==='t'&&(e.ctrlKey||e.metaKey)){
       e.preventDefault();
-      tileWindows();
+      toggleTile();
       return
     }
     if(e.key.length===1){
@@ -507,7 +545,7 @@ if(!mob){
 addEventListener('resize',()=>{
   rs();
   if(tiling){
-    tileWindows();
+    applyTile()
   }else{
     terms.forEach(t=>{
       if(t.el.classList.contains('maximized'))return;
@@ -628,7 +666,6 @@ function pass(t,pw){
   }
 }
 
-/* Random tokens generated once per session */
 const tokens={
   '0x01':genToken(),
   '0x02':genToken(),
@@ -659,7 +696,7 @@ const shell={
   },
 
   './tile':t=>{
-    tileWindows();
+    toggleTile();
     show(t)
   },
 
@@ -766,7 +803,7 @@ const shell={
 
   ls:t=>{
     pr(t,'');
-    pr(t,'total 12');
+    pr(t,'total 16');
     pr(t,'drwxr-xr-x  2 root root 4096 Aug 27 03:40 .');
     pr(t,'drwxr-xr-x  1 root root 4096 Aug 27 03:40 ..');
     pr(t,'-rwxr-xr-x  1 root root  248 Aug 27 03:39 init');
@@ -823,9 +860,7 @@ function sh(t,cmd){
   pr(t,'')
 }
 
-/* === BRUTE FORCE (MOBILE) === */
 function bruteForce(t,correctToken){
-  const chars='abcdef0123456789';
   const attempts=Math.random()*40+20|0;
   let i=0;
   const bruteEl=document.createElement('div');
@@ -836,39 +871,33 @@ function bruteForce(t,correctToken){
 
   function step(){
     if(i>=attempts){
-      const fake=genToken();
-      bruteEl.textContent+=`  [${i}] ${fake} ✗\n`;
+      bruteEl.textContent+=`  [${i}] ${correctToken} ✓\n`;
       t.body.scrollTop=t.body.scrollHeight;
       setTimeout(()=>{
-        bruteEl.textContent+=`  [${i+1}] ${correctToken} ✓\n`;
-        t.body.scrollTop=t.body.scrollHeight;
-        setTimeout(()=>{
-          pr(t,'');
-          pr(t,'[OK] Token verified','ok');
-          pr(t,'[OK] Session authorized','ok');
-          pr(t,'');
-          pr(t,'Node resolved:','info');
-          pr(t,'');
-          const lnk=document.createElement('div');
-          lnk.className='lnk';
-          const a=document.createElement('a');
-          a.href=t.node.lk;a.target='_blank';
-          a.rel='noopener noreferrer';
-          a.innerHTML=`<span class="n">→</span>${t.node.lb}`;
-          lnk.appendChild(a);
-          const ln=t.body.querySelector('.input-line');
-          if(ln&&ln.style.display!=='none')t.body.insertBefore(lnk,ln);
-          else t.body.appendChild(lnk);
-          pr(t,'');
-          pr(t,'Click the link above to open.','dim');
-          pr(t,'');
-          t.mode='idle'
-        },300)
-      },100);
+        pr(t,'');
+        pr(t,'[OK] Token verified','ok');
+        pr(t,'[OK] Session authorized','ok');
+        pr(t,'');
+        pr(t,'Node resolved:','info');
+        pr(t,'');
+        const lnk=document.createElement('div');
+        lnk.className='lnk';
+        const a=document.createElement('a');
+        a.href=t.node.lk;a.target='_blank';
+        a.rel='noopener noreferrer';
+        a.innerHTML=`<span class="n">→</span>${t.node.lb}`;
+        lnk.appendChild(a);
+        const ln=t.body.querySelector('.input-line');
+        if(ln&&ln.style.display!=='none')t.body.insertBefore(lnk,ln);
+        else t.body.appendChild(lnk);
+        pr(t,'');
+        pr(t,'Click the link above to open.','dim');
+        pr(t,'');
+        t.mode='idle'
+      },300);
       return
     }
-    const fake=genToken();
-    bruteEl.textContent+=`  [${i}] ${fake} ✗\n`;
+    bruteEl.textContent+=`  [${i}] ${genToken()} ✗\n`;
     t.body.scrollTop=t.body.scrollHeight;
     i++;
     setTimeout(step,reducedMotion?5:20+Math.random()*40)
