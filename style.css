@@ -137,6 +137,7 @@ body{
   transition:transform .4s cubic-bezier(.55,.06,.68,.19),opacity .35s;
   pointer-events:none
 }
+.win.minimized .rz{display:none}
 
 .win.maximized{
   position:fixed!important;inset:0!important;
@@ -240,6 +241,58 @@ body{
 .err-pop .err-btn:hover{background:#ff453a25;color:#fff;transform:translateY(-2px);box-shadow:0 6px 20px #ff453a25}
 .err-pop .err-btn:active{transform:translateY(0);box-shadow:none}
 .err-pop .err-dim{font-size:clamp(9px,1vw,11px);color:#444;margin-top:14px;letter-spacing:.03em}
+
+.btn.close.corrupt{
+  animation:btnCorrupt .45s cubic-bezier(.25,.46,.45,.94) forwards
+}
+@keyframes btnCorrupt{
+  0%{transform:scale(1);background:#ff5f57}
+  20%{transform:scale(1.4) rotate(12deg);background:#f0f;box-shadow:0 0 12px #f0f}
+  40%{transform:scale(.6) rotate(-8deg);background:#0ff;box-shadow:0 0 16px #0ff}
+  60%{transform:scale(1.2) rotate(4deg);background:#f0f;box-shadow:0 0 20px #f0f}
+  80%{transform:scale(.8) rotate(-3deg);background:#ff453a}
+  100%{transform:scale(1) rotate(0);background:#ff5f57}
+}
+
+.win.corrupt-shake{
+  animation:winCorrupt .45s cubic-bezier(.25,.46,.45,.94)
+}
+@keyframes winCorrupt{
+  0%,100%{transform:none;filter:none}
+  15%{transform:translate(-4px,2px) skewX(2deg);filter:hue-rotate(90deg)}
+  30%{transform:translate(3px,-3px) skewX(-3deg);filter:hue-rotate(-60deg) saturate(2)}
+  45%{transform:translate(-2px,4px);filter:invert(.3)}
+  60%{transform:translate(4px,-1px) skewX(1deg);filter:hue-rotate(180deg)}
+  75%{transform:translate(-1px,2px);filter:none}
+}
+
+.close-err{
+  position:fixed;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  background:#18181c;
+  border:1px solid #ff453a80;
+  border-radius:10px;
+  padding:16px 24px;
+  z-index:99999;
+  box-shadow:0 0 0 1px #ff453a15,0 8px 32px #000000b0,0 0 60px #ff453a10;
+  animation:errIn .3s cubic-bezier(.22,1,.36,1);
+  text-align:center;
+  max-width:90vw
+}
+.close-err h4{
+  font-size:clamp(11px,1.2vw,13px);
+  color:#ff453a;
+  margin-bottom:6px;
+  letter-spacing:.04em
+}
+.close-err p{
+  font-size:clamp(10px,1.1vw,12px);
+  color:#777;
+  line-height:1.6
+}
+.close-err .close-err-dim{
+  font-size:9px;color:#444;margin-top:8px
+}
 
 .os-win .win{border-radius:8px}
 .os-win .win-bar{height:38px;background:linear-gradient(180deg,#2d2d32 0%,#1e1e24 100%);border-radius:8px 8px 0 0;border-bottom:1px solid #000000a0}
@@ -354,7 +407,7 @@ body{
 }
 
 @media print{
-  #c,.glitch-overlay,.rz,.dock,.err-pop{display:none!important}
+  #c,.glitch-overlay,.rz,.dock,.err-pop,.close-err{display:none!important}
   .win{position:static;width:100%;max-height:none;box-shadow:none;border:1px solid #333;animation:none}
 }
 
