@@ -1,97 +1,39 @@
-/* ============================================
-   RESET & BASE
-   ============================================ */
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-html{
-  height:100%;
-  -webkit-text-size-adjust:100%;
-  -webkit-tap-highlight-color:transparent
-}
+html{height:100%;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
 body{
-  height:100%;
-  overflow:hidden;
-  background:#060606;
+  height:100%;overflow:hidden;background:#060606;
   font:clamp(11px,1.3vw,13.5px)/1.65 'SF Mono','Menlo','Fira Code','Cascadia Code','JetBrains Mono','Consolas',monospace;
-  -webkit-font-smoothing:antialiased;
-  -moz-osx-font-smoothing:grayscale;
-  text-rendering:optimizeLegibility;
-  overscroll-behavior:none;
-  touch-action:manipulation
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+  text-rendering:optimizeLegibility;overscroll-behavior:none;touch-action:manipulation
 }
 
-/* ============================================
-   MATRIX CANVAS
-   ============================================ */
-#c{
-  position:fixed;inset:0;
-  opacity:.04;
-  z-index:0;
-  pointer-events:none;
-  will-change:opacity
-}
+#c{position:fixed;inset:0;opacity:.04;z-index:0;pointer-events:none;will-change:opacity}
+#wins{position:fixed;inset:0;z-index:1;-webkit-overflow-scrolling:touch}
 
-/* ============================================
-   WORKSPACE
-   ============================================ */
-#wins{
-  position:fixed;inset:0;
-  z-index:1;
-  -webkit-overflow-scrolling:touch
-}
-
-/* ============================================
-   HIDDEN INPUT (MOBILE KEYBOARD)
-   ============================================ */
 #ki{
-  position:fixed;
-  bottom:0;left:0;
-  width:2px;height:2px;
-  opacity:0;
-  border:none;outline:none;
-  background:transparent;
-  z-index:9999;
-  pointer-events:none;
-  font-size:16px
+  position:fixed;bottom:0;left:0;width:2px;height:2px;
+  opacity:0;border:none;outline:none;background:transparent;
+  z-index:9999;pointer-events:none;font-size:16px
 }
 
-/* ============================================
-   WINDOW
-   ============================================ */
 .win{
   position:absolute;
-  width:min(660px,92vw);
-  max-height:85vh;
-  background:#141416;
-  border-radius:12px;
-  box-shadow:
-    0 2px 8px #00000050,
-    0 8px 24px #00000070,
-    0 24px 64px #000000a0,
-    0 0 0 .5px #ffffff08,
-    0 0 100px #00ff4103;
-  user-select:none;
-  -webkit-user-select:none;
+  width:min(660px,92vw);max-height:85vh;
+  background:#141416;border-radius:12px;
+  box-shadow:0 2px 8px #00000050,0 8px 24px #00000070,0 24px 64px #000000a0,0 0 0 .5px #ffffff08,0 0 100px #00ff4103;
+  user-select:none;-webkit-user-select:none;
   animation:winIn .55s cubic-bezier(.22,1,.36,1);
-  display:flex;flex-direction:column;
-  overflow:hidden;
+  display:flex;flex-direction:column;overflow:hidden;
   transition:box-shadow .4s ease
 }
 .win:hover{
-  box-shadow:
-    0 2px 8px #00000050,
-    0 8px 24px #00000080,
-    0 24px 64px #000000b0,
-    0 0 0 .5px #ffffff10,
-    0 0 100px #00ff4106
+  box-shadow:0 2px 8px #00000050,0 8px 24px #00000080,0 24px 64px #000000b0,0 0 0 .5px #ffffff10,0 0 100px #00ff4106
 }
 @keyframes winIn{
   from{opacity:0;transform:scale(.92) translateY(24px) translateZ(0)}
   to{opacity:1;transform:scale(1) translateY(0) translateZ(0)}
 }
 
-/* ============================================
-   TITLE BAR
-   ============================================ */
 .win-bar{
   display:flex;align-items:center;
   height:clamp(34px,4.5vh,42px);
@@ -99,40 +41,23 @@ body{
   background:linear-gradient(180deg,#28282c 0%,#1c1c20 100%);
   border-radius:12px 12px 0 0;
   border-bottom:1px solid #00000090;
-  cursor:grab;
-  flex-shrink:0;
-  touch-action:none;
+  cursor:grab;flex-shrink:0;touch-action:none;
   position:relative;z-index:5;
   box-shadow:0 1px 0 #ffffff05 inset
 }
 .win-bar:active{cursor:grabbing}
 
-/* ============================================
-   WINDOW CONTROLS
-   ============================================ */
-.btns{
-  display:flex;
-  gap:clamp(6px,.9vw,9px);
-  align-items:center;
-  position:relative;z-index:6
-}
+.btns{display:flex;gap:clamp(6px,.9vw,9px);align-items:center;position:relative;z-index:6}
 .btns-r{width:clamp(42px,6vw,54px)}
 .btn{
-  width:clamp(10px,1.1vw,13px);
-  height:clamp(10px,1.1vw,13px);
+  width:clamp(10px,1.1vw,13px);height:clamp(10px,1.1vw,13px);
   border-radius:50%;
   transition:all .18s cubic-bezier(.25,.46,.45,.94);
-  cursor:pointer;
-  position:relative;z-index:6;
-  pointer-events:auto;
+  cursor:pointer;position:relative;z-index:6;pointer-events:auto;
   display:flex;align-items:center;justify-content:center;
-  font-size:0;
-  line-height:1
+  font-size:0;line-height:1
 }
-.btn:hover{
-  filter:brightness(1.5) saturate(1.3);
-  transform:scale(1.18)
-}
+.btn:hover{filter:brightness(1.5) saturate(1.3);transform:scale(1.18)}
 .btn:active{transform:scale(.85)}
 .close{background:#ff5f57;box-shadow:0 0 6px #ff5f5730}
 .min{background:#febc2e;box-shadow:0 0 6px #febc2e30}
@@ -140,50 +65,31 @@ body{
 
 .win-title{
   flex:1;text-align:center;
-  font-size:clamp(10px,1.1vw,12px);
-  color:#666;
+  font-size:clamp(10px,1.1vw,12px);color:#666;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-  letter-spacing:.025em;
-  font-weight:500
+  letter-spacing:.025em;font-weight:500
 }
 
-/* ============================================
-   TERMINAL BODY
-   ============================================ */
 .win-body{
   padding:clamp(10px,1.5vw,18px);
-  flex:1;
-  overflow-y:auto;overflow-x:hidden;
-  color:#c8c8cc;
-  cursor:text;
+  flex:1;overflow-y:auto;overflow-x:hidden;
+  color:#c8c8cc;cursor:text;
   min-height:clamp(80px,15vh,200px);
   -webkit-overflow-scrolling:touch;
   background:#141416;
-  scrollbar-width:thin;
-  scrollbar-color:#333 transparent
+  scrollbar-width:thin;scrollbar-color:#333 transparent
 }
 .win-body::-webkit-scrollbar{width:5px}
 .win-body::-webkit-scrollbar-track{background:transparent}
-.win-body::-webkit-scrollbar-thumb{
-  background:#2a2a2e;border-radius:10px;
-  transition:background .2s
-}
+.win-body::-webkit-scrollbar-thumb{background:#2a2a2e;border-radius:10px;transition:background .2s}
 .win-body::-webkit-scrollbar-thumb:hover{background:#444}
 
-/* ============================================
-   OUTPUT LINES
-   ============================================ */
 .out{
-  white-space:pre-wrap;
-  word-break:break-all;
-  line-height:1.7;
+  white-space:pre-wrap;word-break:break-all;line-height:1.7;
   animation:lineIn .25s cubic-bezier(.25,.46,.45,.94);
   transition:color .1s
 }
-@keyframes lineIn{
-  from{opacity:0;transform:translateY(3px)}
-  to{opacity:1;transform:none}
-}
+@keyframes lineIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
 .out.dim{color:#48484c}
 .out.ok{color:#3ddc84;text-shadow:0 0 16px #3ddc8412}
 .out.warn{color:#ffcc00;text-shadow:0 0 16px #ffcc0008}
@@ -191,89 +97,49 @@ body{
 .out.info{color:#5eaaff;text-shadow:0 0 16px #5eaaff08}
 .out.cmd{color:#e8e8ec;font-weight:500}
 
-/* ============================================
-   INPUT LINE
-   ============================================ */
 .input-line{
-  white-space:pre-wrap;
-  line-height:1.7;
+  white-space:pre-wrap;line-height:1.7;
   display:flex;align-items:baseline;
   animation:lineIn .25s cubic-bezier(.25,.46,.45,.94)
 }
-.input-line .pr{
-  color:#c8c8cc;
-  flex-shrink:0;
-  font-weight:500
-}
+.input-line .pr{color:#c8c8cc;flex-shrink:0;font-weight:500}
 .input-line .typed{color:#fff}
 .input-line .cur{
   animation:bl .8s step-end infinite;
-  color:#3ddc84;
-  margin-left:2px;
-  text-shadow:0 0 8px #3ddc8460;
-  font-weight:700
+  color:#3ddc84;margin-left:2px;
+  text-shadow:0 0 8px #3ddc8460;font-weight:700
 }
 @keyframes bl{50%{opacity:0}}
 
-/* ============================================
-   LINKS
-   ============================================ */
 .lnk a{
-  display:block;
-  color:#c8c8cc;
-  text-decoration:none;
+  display:block;color:#c8c8cc;text-decoration:none;
   padding:clamp(7px,1.1vw,11px) clamp(10px,1.5vw,16px);
-  margin:3px 0;
-  border-left:2px solid transparent;
+  margin:3px 0;border-left:2px solid transparent;
   border-radius:0 8px 8px 0;
   transition:all .22s cubic-bezier(.25,.46,.45,.94);
   position:relative
 }
 .lnk a::before{
-  content:'';
-  position:absolute;
-  inset:0;
+  content:'';position:absolute;inset:0;
   background:linear-gradient(90deg,#3ddc8408,transparent);
-  opacity:0;
-  transition:opacity .22s;
-  border-radius:0 8px 8px 0
+  opacity:0;transition:opacity .22s;border-radius:0 8px 8px 0
 }
-.lnk a:hover{
-  color:#fff;
-  transform:translateX(5px);
-  border-left-color:#3ddc84;
-  text-shadow:0 0 12px #3ddc8425
-}
+.lnk a:hover{color:#fff;transform:translateX(5px);border-left-color:#3ddc84;text-shadow:0 0 12px #3ddc8425}
 .lnk a:hover::before{opacity:1}
 .lnk a:active{transform:translateX(3px)}
-.lnk a .n{
-  color:#5eaaff;
-  margin-right:10px;
-  font-size:clamp(10px,1vw,12px);
-  opacity:.7;
-  font-weight:600
-}
+.lnk a .n{color:#5eaaff;margin-right:10px;font-size:clamp(10px,1vw,12px);opacity:.7;font-weight:600}
 
-/* ============================================
-   MINIMIZED STATE
-   ============================================ */
 .win.minimized{
-  transform:scale(.01) translateY(120vh);
-  opacity:0;
+  transform:scale(.01) translateY(120vh);opacity:0;
   transition:transform .4s cubic-bezier(.55,.06,.68,.19),opacity .35s;
   pointer-events:none
 }
 
-/* ============================================
-   MAXIMIZED STATE
-   ============================================ */
 .win.maximized{
-  position:fixed!important;
-  inset:0!important;
+  position:fixed!important;inset:0!important;
   width:auto!important;max-width:none;
   height:auto!important;max-height:none!important;
-  border-radius:0;
-  z-index:100;
+  border-radius:0;z-index:100;
   transition:all .35s cubic-bezier(.22,1,.36,1)
 }
 .win.maximized .win-bar{border-radius:0}
@@ -281,231 +147,102 @@ body{
 .win.maximized .win-body{max-height:none!important;flex:1}
 .win.maximized::after{border-radius:0}
 
-/* ============================================
-   SCANLINES
-   ============================================ */
 .win::after{
-  content:'';
-  position:absolute;inset:0;
-  border-radius:12px;
-  pointer-events:none;
-  background:repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 3px,
-    #00000005 3px,
-    #00000005 4px
-  );
-  mix-blend-mode:multiply;
-  z-index:3
+  content:'';position:absolute;inset:0;border-radius:12px;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,#00000005 3px,#00000005 4px);
+  mix-blend-mode:multiply;z-index:3
 }
 
-/* ============================================
-   GLITCH OVERLAY
-   ============================================ */
 .glitch-overlay{
-  position:absolute;inset:0;
-  border-radius:12px;
-  pointer-events:none;
-  overflow:hidden;
-  opacity:0;
-  z-index:4;
-  transition:opacity .04s
+  position:absolute;inset:0;border-radius:12px;
+  pointer-events:none;overflow:hidden;opacity:0;
+  z-index:4;transition:opacity .04s
 }
 .glitch-overlay.on{opacity:1}
 .glitch-overlay .sl{
-  position:absolute;
-  left:-10%;right:-10%;
+  position:absolute;left:-10%;right:-10%;
   background:#141416;
-  border-top:1px solid #00000060;
-  border-bottom:1px solid #00000060;
+  border-top:1px solid #00000060;border-bottom:1px solid #00000060;
   box-shadow:0 0 12px #00000050
 }
 
-/* ============================================
-   RESIZE HANDLE
-   ============================================ */
 .rz{
-  position:absolute;
-  bottom:0;right:0;
-  width:clamp(20px,2.5vw,28px);
-  height:clamp(20px,2.5vw,28px);
-  cursor:nwse-resize;
-  z-index:5;
-  touch-action:none
+  position:absolute;bottom:0;right:0;
+  width:clamp(20px,2.5vw,28px);height:clamp(20px,2.5vw,28px);
+  cursor:nwse-resize;z-index:5;touch-action:none
 }
 .rz::after{
-  content:'';
-  position:absolute;
-  bottom:5px;right:5px;
-  width:clamp(8px,1vw,11px);
-  height:clamp(8px,1vw,11px);
-  border-right:1.5px solid #3a3a3e;
-  border-bottom:1.5px solid #3a3a3e;
-  border-radius:0 0 3px 0;
-  transition:all .2s
+  content:'';position:absolute;bottom:5px;right:5px;
+  width:clamp(8px,1vw,11px);height:clamp(8px,1vw,11px);
+  border-right:1.5px solid #3a3a3e;border-bottom:1.5px solid #3a3a3e;
+  border-radius:0 0 3px 0;transition:all .2s
 }
-.rz:hover::after{
-  border-color:#888;
-  width:clamp(10px,1.2vw,13px);
-  height:clamp(10px,1.2vw,13px)
-}
+.rz:hover::after{border-color:#888;width:clamp(10px,1.2vw,13px);height:clamp(10px,1.2vw,13px)}
 
-/* ============================================
-   DOCK (MINIMIZED WINDOWS)
-   ============================================ */
 .dock{
-  position:fixed;
-  bottom:env(safe-area-inset-bottom,0);
-  left:0;right:0;
+  position:fixed;bottom:env(safe-area-inset-bottom,0);left:0;right:0;
   height:clamp(40px,5vh,48px);
   background:#141416dd;
   backdrop-filter:blur(16px) saturate(1.3);
   -webkit-backdrop-filter:blur(16px) saturate(1.3);
   border-top:1px solid #ffffff08;
-  display:flex;align-items:center;
-  gap:8px;
+  display:flex;align-items:center;gap:8px;
   padding:0 clamp(12px,2vw,20px);
-  z-index:9999;
-  opacity:0;
-  pointer-events:none;
+  z-index:9999;opacity:0;pointer-events:none;
   transform:translateY(100%);
   transition:all .35s cubic-bezier(.22,1,.36,1)
 }
-.dock.on{
-  opacity:1;
-  pointer-events:auto;
-  transform:translateY(0)
-}
+.dock.on{opacity:1;pointer-events:auto;transform:translateY(0)}
 .dock-item{
   padding:clamp(5px,.8vw,8px) clamp(12px,1.5vw,16px);
-  background:#242428;
-  border-radius:8px;
-  font-size:clamp(10px,1.1vw,12px);
-  color:#999;
-  cursor:pointer;
-  border:1px solid #ffffff08;
+  background:#242428;border-radius:8px;
+  font-size:clamp(10px,1.1vw,12px);color:#999;
+  cursor:pointer;border:1px solid #ffffff08;
   transition:all .22s cubic-bezier(.25,.46,.45,.94);
-  max-width:180px;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-  user-select:none;
-  -webkit-user-select:none
+  max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  user-select:none;-webkit-user-select:none
 }
-.dock-item:hover{
-  background:#333338;
-  color:#fff;
-  border-color:#ffffff15;
-  transform:translateY(-3px);
-  box-shadow:0 6px 16px #00000060
-}
-.dock-item:active{
-  transform:translateY(-1px);
-  box-shadow:0 2px 8px #00000040
-}
+.dock-item:hover{background:#333338;color:#fff;border-color:#ffffff15;transform:translateY(-3px);box-shadow:0 6px 16px #00000060}
+.dock-item:active{transform:translateY(-1px);box-shadow:0 2px 8px #00000040}
 
-/* ============================================
-   ERROR POPUP
-   ============================================ */
 .err-pop{
-  position:fixed;
-  top:50%;left:50%;
+  position:fixed;top:50%;left:50%;
   transform:translate(-50%,-50%);
-  background:#18181c;
-  border:1px solid #ff453a70;
-  border-radius:12px;
+  background:#18181c;border:1px solid #ff453a70;border-radius:12px;
   padding:clamp(20px,3.5vw,32px) clamp(24px,4vw,38px);
   z-index:99999;
-  box-shadow:
-    0 0 0 1px #ff453a15,
-    0 12px 40px #000000b0,
-    0 0 80px #ff453a10;
+  box-shadow:0 0 0 1px #ff453a15,0 12px 40px #000000b0,0 0 80px #ff453a10;
   animation:errIn .4s cubic-bezier(.22,1,.36,1);
   max-width:min(90vw,420px);
-  backdrop-filter:blur(8px);
-  -webkit-backdrop-filter:blur(8px)
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)
 }
-@keyframes errIn{
-  from{opacity:0;transform:translate(-50%,-50%) scale(.85)}
-  to{opacity:1;transform:translate(-50%,-50%) scale(1)}
-}
+@keyframes errIn{from{opacity:0;transform:translate(-50%,-50%) scale(.85)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
 .err-pop h3{
-  font-size:clamp(11px,1.3vw,13px);
-  color:#ff453a;
-  margin-bottom:12px;
-  font-weight:600;
-  letter-spacing:.04em;
+  font-size:clamp(11px,1.3vw,13px);color:#ff453a;
+  margin-bottom:12px;font-weight:600;letter-spacing:.04em;
   text-shadow:0 0 16px #ff453a25;
   display:flex;align-items:center;gap:8px
 }
-.err-pop h3::before{
-  content:'⚠';
-  font-size:1.2em
-}
-.err-pop p{
-  font-size:clamp(11px,1.2vw,12.5px);
-  color:#777;
-  margin-bottom:18px;
-  line-height:1.7
-}
+.err-pop h3::before{content:'⚠';font-size:1.2em}
+.err-pop p{font-size:clamp(11px,1.2vw,12.5px);color:#777;margin-bottom:18px;line-height:1.7}
 .err-pop .err-btn{
   display:inline-block;
   padding:clamp(7px,1vw,10px) clamp(18px,2.5vw,24px);
-  background:#ff453a12;
-  border:1px solid #ff453a70;
-  border-radius:8px;
-  color:#ff453a;
-  font-size:clamp(11px,1.2vw,13px);
-  cursor:pointer;
-  transition:all .22s cubic-bezier(.25,.46,.45,.94);
-  font-family:inherit;
-  letter-spacing:.03em;
-  font-weight:500
+  background:#ff453a12;border:1px solid #ff453a70;border-radius:8px;
+  color:#ff453a;font-size:clamp(11px,1.2vw,13px);
+  cursor:pointer;transition:all .22s cubic-bezier(.25,.46,.45,.94);
+  font-family:inherit;letter-spacing:.03em;font-weight:500
 }
-.err-pop .err-btn:hover{
-  background:#ff453a25;
-  color:#fff;
-  transform:translateY(-2px);
-  box-shadow:0 6px 20px #ff453a25
-}
-.err-pop .err-btn:active{
-  transform:translateY(0);
-  box-shadow:none
-}
-.err-pop .err-dim{
-  font-size:clamp(9px,1vw,11px);
-  color:#444;
-  margin-top:14px;
-  letter-spacing:.03em
-}
+.err-pop .err-btn:hover{background:#ff453a25;color:#fff;transform:translateY(-2px);box-shadow:0 6px 20px #ff453a25}
+.err-pop .err-btn:active{transform:translateY(0);box-shadow:none}
+.err-pop .err-dim{font-size:clamp(9px,1vw,11px);color:#444;margin-top:14px;letter-spacing:.03em}
 
-/* ============================================
-   OS: WINDOWS
-   ============================================ */
 .os-win .win{border-radius:8px}
-.os-win .win-bar{
-  height:38px;
-  background:linear-gradient(180deg,#2d2d32 0%,#1e1e24 100%);
-  border-radius:8px 8px 0 0;
-  border-bottom:1px solid #000000a0
-}
-.os-win .btns{order:3}
-.os-win .btns-r{display:none}
+.os-win .win-bar{height:38px;background:linear-gradient(180deg,#2d2d32 0%,#1e1e24 100%);border-radius:8px 8px 0 0;border-bottom:1px solid #000000a0}
+.os-win .btns{order:3}.os-win .btns-r{display:none}
 .os-win .win-title{order:1;text-align:left;padding-left:12px}
-.os-win .btn{
-  width:40px;height:28px;
-  border-radius:0;
-  font-size:11px;
-  color:#aaa;
-  box-shadow:none;
-  background:transparent;
-  transition:background .12s
-}
-.os-win .btn:hover{
-  background:#ffffff12;
-  transform:none;
-  filter:none;
-  color:#fff
-}
+.os-win .btn{width:40px;height:28px;border-radius:0;font-size:11px;color:#aaa;box-shadow:none;background:transparent;transition:background .12s}
+.os-win .btn:hover{background:#ffffff12;transform:none;filter:none;color:#fff}
 .os-win .btn:active{background:#ffffff1e}
 .os-win .close{background:transparent;color:#aaa}
 .os-win .close:hover{background:#e81123!important;color:#fff}
@@ -519,34 +256,12 @@ body{
 .os-win .win.maximized{border-radius:0}
 .os-win .win.maximized .win-bar{border-radius:0}
 
-/* ============================================
-   OS: LINUX
-   ============================================ */
 .os-linux .win{border-radius:8px}
-.os-linux .win-bar{
-  height:36px;
-  background:linear-gradient(180deg,#2a2a30 0%,#1c1c22 100%);
-  border-radius:8px 8px 0 0;
-  border-bottom:1px solid #000000a0
-}
-.os-linux .btns{order:3}
-.os-linux .btns-r{display:none}
+.os-linux .win-bar{height:36px;background:linear-gradient(180deg,#2a2a30 0%,#1c1c22 100%);border-radius:8px 8px 0 0;border-bottom:1px solid #000000a0}
+.os-linux .btns{order:3}.os-linux .btns-r{display:none}
 .os-linux .win-title{order:1;text-align:left;padding-left:12px}
-.os-linux .btn{
-  width:32px;height:26px;
-  border-radius:6px;
-  font-size:10px;
-  color:#888;
-  box-shadow:none;
-  background:transparent;
-  transition:all .12s
-}
-.os-linux .btn:hover{
-  background:#ffffff10;
-  transform:none;
-  filter:none;
-  color:#ccc
-}
+.os-linux .btn{width:32px;height:26px;border-radius:6px;font-size:10px;color:#888;box-shadow:none;background:transparent;transition:all .12s}
+.os-linux .btn:hover{background:#ffffff10;transform:none;filter:none;color:#ccc}
 .os-linux .btn:active{background:#ffffff18}
 .os-linux .close{background:transparent;color:#888}
 .os-linux .min{background:transparent;color:#888}
@@ -560,30 +275,13 @@ body{
 .os-linux .win.maximized{border-radius:0}
 .os-linux .win.maximized .win-bar{border-radius:0}
 
-/* ============================================
-   OS: MACOS (default)
-   ============================================ */
 .os-mac .win{border-radius:12px}
-.os-mac .btns{order:1}
-.os-mac .btns-r{display:none}
+.os-mac .btns{order:1}.os-mac .btns-r{display:none}
 .os-mac .win-title{order:2}
 
-/* ============================================
-   OS: ANDROID
-   ============================================ */
 .os-android .win{border-radius:16px}
-.os-android .win-bar{
-  height:44px;
-  border-radius:16px 16px 0 0
-}
-.os-android .btn{
-  width:36px;height:32px;
-  border-radius:8px;
-  font-size:12px;
-  color:#aaa;
-  box-shadow:none;
-  background:transparent
-}
+.os-android .win-bar{height:44px;border-radius:16px 16px 0 0}
+.os-android .btn{width:36px;height:32px;border-radius:8px;font-size:12px;color:#aaa;box-shadow:none;background:transparent}
 .os-android .btn:hover{background:#ffffff10;transform:none;filter:none}
 .os-android .close::before{content:'✕'}
 .os-android .min::before{content:'—'}
@@ -591,63 +289,24 @@ body{
 .os-android .win::after{border-radius:16px}
 .os-android .glitch-overlay{border-radius:16px}
 
-/* ============================================
-   OS: IOS
-   ============================================ */
-.os-ios .win{
-  border-radius:0;
-  top:env(safe-area-inset-top,0)!important;
-  height:calc(100vh - env(safe-area-inset-top,0) - env(safe-area-inset-bottom,0));
-  max-height:none
-}
-.os-ios .win-bar{
-  border-radius:0;
-  padding-top:env(safe-area-inset-top,0);
-  height:calc(44px + env(safe-area-inset-top,0))
-}
+.os-ios .win{border-radius:0;top:env(safe-area-inset-top,0)!important;height:calc(100vh - env(safe-area-inset-top,0) - env(safe-area-inset-bottom,0));max-height:none}
+.os-ios .win-bar{border-radius:0;padding-top:env(safe-area-inset-top,0);height:calc(44px + env(safe-area-inset-top,0))}
 .os-ios .win::after{border-radius:0}
 .os-ios .glitch-overlay{border-radius:0}
-.os-ios .dock{
-  bottom:env(safe-area-inset-bottom,0);
-  padding-bottom:env(safe-area-inset-bottom,0)
-}
+.os-ios .dock{bottom:env(safe-area-inset-bottom,0);padding-bottom:env(safe-area-inset-bottom,0)}
 
-/* ============================================
-   RESPONSIVE: MOBILE
-   ============================================ */
 @media(max-width:700px){
-  .win{
-    width:100vw!important;
-    max-width:100vw;
-    left:0!important;top:0!important;
-    border-radius:0;
-    height:100vh;
-    height:100dvh;
-    max-height:100vh;
-    max-height:100dvh;
-    box-shadow:none
-  }
+  .win{width:100vw!important;max-width:100vw;left:0!important;top:0!important;border-radius:0;height:100vh;height:100dvh;max-height:100vh;max-height:100dvh;box-shadow:none}
   .win-bar{border-radius:0;height:44px}
-  .win-body{
-    max-height:none;flex:1;
-    padding:10px 12px;
-    padding-bottom:calc(10px + env(safe-area-inset-bottom,0))
-  }
+  .win-body{max-height:none;flex:1;padding:10px 12px;padding-bottom:calc(10px + env(safe-area-inset-bottom,0))}
   .rz{display:none}
   .glitch-overlay .sl{left:-4%;right:-4%}
   .win::after{border-radius:0}
   .dock{height:48px}
   .dock-item{padding:7px 14px;font-size:12px}
-  .err-pop{
-    margin:0 16px;
-    max-width:none;
-    border-radius:10px
-  }
+  .err-pop{margin:0 16px;max-width:none;border-radius:10px}
 }
 
-/* ============================================
-   RESPONSIVE: SMALL MOBILE
-   ============================================ */
 @media(max-width:380px){
   body{font-size:11px}
   .win-body{padding:8px 10px}
@@ -657,17 +316,11 @@ body{
   .dock-item{max-width:120px;font-size:10px}
 }
 
-/* ============================================
-   RESPONSIVE: TABLET
-   ============================================ */
 @media(min-width:701px) and (max-width:1024px){
   .win{width:min(560px,90vw)}
   .win-body{padding:12px 14px}
 }
 
-/* ============================================
-   RESPONSIVE: LARGE DESKTOP
-   ============================================ */
 @media(min-width:1400px){
   .win{width:min(720px,60vw)}
   .win-body{padding:16px 22px}
@@ -675,23 +328,13 @@ body{
   .win-title{font-size:12px}
 }
 
-/* ============================================
-   REDUCED MOTION
-   ============================================ */
 @media(prefers-reduced-motion:reduce){
-  *,*::before,*::after{
-    animation-duration:.01ms!important;
-    animation-iteration-count:1!important;
-    transition-duration:.01ms!important
-  }
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
   .win{animation:none}
   .out{animation:none}
   .input-line{animation:none}
 }
 
-/* ============================================
-   HIGH CONTRAST
-   ============================================ */
 @media(prefers-contrast:more){
   .out{color:#fff}
   .out.dim{color:#888}
@@ -700,46 +343,15 @@ body{
   .input-line .pr{color:#fff}
 }
 
-/* ============================================
-   DARK SCHEME (native)
-   ============================================ */
-@media(prefers-color-scheme:light){
-  body{background:#0a0a0a}
-}
-
-/* ============================================
-   PRINT (fallback)
-   ============================================ */
 @media print{
   #c,.glitch-overlay,.rz,.dock,.err-pop{display:none!important}
-  .win{
-    position:static;
-    width:100%;max-height:none;
-    box-shadow:none;
-    border:1px solid #333;
-    animation:none
-  }
+  .win{position:static;width:100%;max-height:none;box-shadow:none;border:1px solid #333;animation:none}
 }
 
-/* ============================================
-   SELECTION
-   ============================================ */
-::selection{
-  background:#3ddc8430;
-  color:#fff
-}
-.win-body ::selection{
-  background:#5eaaff30
-}
+::selection{background:#3ddc8430;color:#fff}
+.win-body ::selection{background:#5eaaff30}
 
-/* ============================================
-   FOCUS VISIBLE
-   ============================================ */
-:focus-visible{
-  outline:2px solid #5eaaff;
-  outline-offset:2px;
-  border-radius:4px
-}
+:focus-visible{outline:2px solid #5eaaff;outline-offset:2px;border-radius:4px}
 .win-bar:focus-visible{outline:none}
 .btn:focus-visible{outline:2px solid #5eaaff;outline-offset:2px}
 .dock-item:focus-visible{outline:2px solid #5eaaff;outline-offset:2px}
