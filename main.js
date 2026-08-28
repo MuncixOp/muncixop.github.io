@@ -12,6 +12,14 @@ const isTouch='ontouchstart'in window||navigator.maxTouchPoints>0;
 const reducedMotion=matchMedia('(prefers-reduced-motion:reduce)').matches;
 document.body.classList.add('os-'+os);
 
+/* Random token generator */
+function genToken(){
+  const c='abcdef0123456789';
+  let r='';
+  for(let i=0;i<8;i++)r+=c[Math.random()*16|0];
+  return r
+}
+
 const c=document.getElementById('c'),x=c.getContext('2d');
 let W,H,cols,drops;
 const ch='アイウエオカキクケコサシスセソ0123456789$#@%&*+=<>';
@@ -50,7 +58,7 @@ const ki=document.getElementById('ki');
 let zc=1;
 const terms=[];
 let active=null;
-const LS='void_wins_v5';
+const LS='void_wins_v6';
 
 const dock=document.createElement('div');
 dock.className='dock';
@@ -138,7 +146,7 @@ function clamp(t){
 function focusKi(){
   if(!mob)return;
   ki.value='';
-  setTimeout(()=>ki.focus(),100)
+  setTimeout(()=>ki.focus(),150)
 }
 function blurKi(){
   if(!mob)return;
@@ -177,6 +185,54 @@ ki.addEventListener('keydown',e=>{
     upd(t)
   }
 });
+
+/* === WINDOW TILING === */
+let tiling=false;
+
+function tileWindows(){
+  const visible=terms.filter(t=>!t.el.classList.contains('minimized')&&!t.el.classList.contains('maximized'));
+  if(visible.length<2){
+    if(active)pr(active,'Tiling requires at least 2 visible windows.','warn');
+    return
+  }
+  tiling=!tiling;
+  if(!tiling){
+    visible.forEach(t=>{t.el.classList.remove('tiling')});
+    visible.forEach(t=>clamp(t));
+    save();
+    return
+  }
+  const n=visible.length;
+  let cols2,rows2;
+  if(n===2){cols2=2;rows2=1}
+  else if(n===3){cols2=2;rows2=2}
+  else if(n<=4){cols2=2;rows2=2}
+  else{cols2=3;rows2=Math.ceil(n/3)}
+
+  const vw=innerWidth,vh=innerHeight;
+  const gap=4;
+  const cw=(vw-gap*(cols2+1))/cols2;
+  const ch2=(vh-gap*(rows2+1))/rows2;
+
+  visible.forEach((t,i)=>{
+    const col=i%cols2;
+    const row=Math.floor(i/cols2);
+    const l=gap+col*(cw+gap);
+    const tp=gap+row*(ch2+gap);
+    const w2=cw;
+    const h2=ch2;
+    t.el.classList.add('tiling');
+    t.el.style.left=l+'px';
+    t.el.style.top=tp+'px';
+    t.el.style.width=w2+'px';
+    t.el.style.height=h2+'px';
+    t.el.style.maxHeight='none';
+    t.body.style.maxHeight='none';
+    t.body.style.flex='1'
+  });
+  save();
+  if(active)pr(active,`Tiled ${n} windows (${cols2}×${rows2}).`,'ok')
+}
 
 function mk(o){
   const w=document.createElement('div');
@@ -323,6 +379,7 @@ function mk(o){
     w.classList.toggle('maximized');
     if(!w.classList.contains('maximized')){
       w.style.position='absolute';
+      w.classList.remove('tiling');
       clamp(t)
     }
     save()
@@ -434,6 +491,11 @@ if(!mob){
       if(t.mode==='shell'||t.mode==='node')ac(t);
       return
     }
+    if(e.key==='t'&&(e.ctrlKey||e.metaKey)){
+      e.preventDefault();
+      tileWindows();
+      return
+    }
     if(e.key.length===1){
       t.input+=e.key;
       t.hi=t.hist.length;
@@ -444,10 +506,14 @@ if(!mob){
 
 addEventListener('resize',()=>{
   rs();
-  terms.forEach(t=>{
-    if(t.el.classList.contains('maximized'))return;
-    clamp(t)
-  })
+  if(tiling){
+    tileWindows();
+  }else{
+    terms.forEach(t=>{
+      if(t.el.classList.contains('maximized'))return;
+      clamp(t)
+    })
+  }
 },{passive:true});
 
 const boot=[
@@ -562,6 +628,13 @@ function pass(t,pw){
   }
 }
 
+/* Random tokens generated once per session */
+const tokens={
+  '0x01':genToken(),
+  '0x02':genToken(),
+  '0x03':genToken()
+};
+
 const shell={
   help:t=>{
     pr(t,'');
@@ -570,6 +643,7 @@ const shell={
     pr(t,'  ./init            Initialize system');
     pr(t,'  ./scan            Scan for connected nodes');
     pr(t,'  ./connect <id>    Open terminal for a node');
+    pr(t,'  ./tile            Tile all visible windows');
     pr(t,'  ./status          Show system status');
     pr(t,'  whoami            Current user');
     pr(t,'  uname -a          System info');
@@ -580,8 +654,13 @@ const shell={
     pr(t,'  exit              Disconnect');
     pr(t,'  help              This message');
     pr(t,'');
-    if(!mob)pr(t,'Tips: Tab = autocomplete, Up/Down = history','dim');
+    if(!mob)pr(t,'Tips: Tab = autocomplete, Up/Down = history, Ctrl+T = tile','dim');
     pr(t,'')
+  },
+
+  './tile':t=>{
+    tileWindows();
+    show(t)
   },
 
   './init':t=>{
@@ -616,9 +695,9 @@ const shell={
       pr(t,'');
       pr(t,'  ID      HOST                  TOKEN         STATUS');
       pr(t,'  ------  ----------------------  ------------  --------');
-      pr(t,'  0x01    curseforge.com          a3f8c21d      [ONLINE]');
-      pr(t,'  0x02    x.com                   7b2e91f4      [ONLINE]');
-      pr(t,'  0x03    tiktok.com              e41d08ab      [ONLINE]');
+      pr(t,'  0x01    curseforge.com          '+tokens['0x01']+'      [ONLINE]');
+      pr(t,'  0x02    x.com                   '+tokens['0x02']+'      [ONLINE]');
+      pr(t,'  0x03    tiktok.com              '+tokens['0x03']+'      [ONLINE]');
       pr(t,'');
       pr(t,'3 nodes found. Use ./connect <id> to open a session.','ok');
       pr(t,'');
@@ -634,9 +713,9 @@ const shell={
       pr(t,'');return
     }
     const nodes={
-      '0x01':{h:'curseforge.com',tk:'a3f8c21d',ti:'node 0x01 — curseforge.com',lk:'https://www.curseforge.com/members/muncixop/projects',lb:'curseforge.com/members/muncixop/projects'},
-      '0x02':{h:'x.com',tk:'7b2e91f4',ti:'node 0x02 — x.com',lk:'https://x.com/MuncixOp',lb:'x.com/MuncixOp'},
-      '0x03':{h:'tiktok.com',tk:'e41d08ab',ti:'node 0x03 — tiktok.com',lk:'https://www.tiktok.com/@muncixop',lb:'tiktok.com/@muncixop'}
+      '0x01':{h:'curseforge.com',tk:tokens['0x01'],ti:'node 0x01 — curseforge.com',lk:'https://www.curseforge.com/members/muncixop/projects',lb:'curseforge.com/members/muncixop/projects'},
+      '0x02':{h:'x.com',tk:tokens['0x02'],ti:'node 0x02 — x.com',lk:'https://x.com/MuncixOp',lb:'x.com/MuncixOp'},
+      '0x03':{h:'tiktok.com',tk:tokens['0x03'],ti:'node 0x03 — tiktok.com',lk:'https://www.tiktok.com/@muncixop',lb:'tiktok.com/@muncixop'}
     };
     const n=nodes[id];
     if(!n){pr(t,`Unknown node: ${id}`,'err');pr(t,'');return}
@@ -658,8 +737,15 @@ const shell={
         pr(nt,`Connected to ${n.h}`,'ok');
         pr(nt,`Session: ${n.tk}`,'dim');
         pr(nt,'');
-        pr(nt,'Enter auth token to proceed:','warn');
-        show(nt);show(t);save()
+        if(mob){
+          pr(nt,'[AUTO] Brute-force mode engaged...','info');
+          pr(nt,'','dim');
+          bruteForce(nt,n.tk);
+        }else{
+          pr(nt,'Enter auth token to proceed:','warn');
+          show(nt);
+        }
+        show(t);save()
       },reducedMotion?50:600)
     },reducedMotion?50:800)
   },
@@ -686,6 +772,7 @@ const shell={
     pr(t,'-rwxr-xr-x  1 root root  248 Aug 27 03:39 init');
     pr(t,'-rwxr-xr-x  1 root root  192 Aug 27 03:39 scan');
     pr(t,'-rwxr-xr-x  1 root root  312 Aug 27 03:39 connect');
+    pr(t,'-rwxr-xr-x  1 root root   96 Aug 27 03:39 tile');
     pr(t,'-rw-r--r--  1 root root  512 Aug 27 03:40 .voidrc');
     pr(t,'')
   },
@@ -734,6 +821,59 @@ function sh(t,cmd){
   pr(t,`zsh: command not found: ${k}`,'err');
   pr(t,'Type "help" for available commands.','dim');
   pr(t,'')
+}
+
+/* === BRUTE FORCE (MOBILE) === */
+function bruteForce(t,correctToken){
+  const chars='abcdef0123456789';
+  const attempts=Math.random()*40+20|0;
+  let i=0;
+  const bruteEl=document.createElement('div');
+  bruteEl.className='out brute';
+  const line=t.body.querySelector('.input-line');
+  if(line)t.body.insertBefore(bruteEl,line);
+  else t.body.appendChild(bruteEl);
+
+  function step(){
+    if(i>=attempts){
+      const fake=genToken();
+      bruteEl.textContent+=`  [${i}] ${fake} ✗\n`;
+      t.body.scrollTop=t.body.scrollHeight;
+      setTimeout(()=>{
+        bruteEl.textContent+=`  [${i+1}] ${correctToken} ✓\n`;
+        t.body.scrollTop=t.body.scrollHeight;
+        setTimeout(()=>{
+          pr(t,'');
+          pr(t,'[OK] Token verified','ok');
+          pr(t,'[OK] Session authorized','ok');
+          pr(t,'');
+          pr(t,'Node resolved:','info');
+          pr(t,'');
+          const lnk=document.createElement('div');
+          lnk.className='lnk';
+          const a=document.createElement('a');
+          a.href=t.node.lk;a.target='_blank';
+          a.rel='noopener noreferrer';
+          a.innerHTML=`<span class="n">→</span>${t.node.lb}`;
+          lnk.appendChild(a);
+          const ln=t.body.querySelector('.input-line');
+          if(ln&&ln.style.display!=='none')t.body.insertBefore(lnk,ln);
+          else t.body.appendChild(lnk);
+          pr(t,'');
+          pr(t,'Click the link above to open.','dim');
+          pr(t,'');
+          t.mode='idle'
+        },300)
+      },100);
+      return
+    }
+    const fake=genToken();
+    bruteEl.textContent+=`  [${i}] ${fake} ✗\n`;
+    t.body.scrollTop=t.body.scrollHeight;
+    i++;
+    setTimeout(step,reducedMotion?5:20+Math.random()*40)
+  }
+  step()
 }
 
 function nd(t,val){
@@ -796,7 +936,7 @@ function glitch(){
   w.style.opacity=String(.85+Math.random()*.15);
   gl.classList.add('on');
 
-  const els=t.body.querySelectorAll('.out');
+  const els=t.body.querySelectorAll('.out:not(.brute)');
   const bad=[];
   for(let i=0;i<Math.min(3,els.length);i++){
     const idx=Math.random()*els.length|0;
