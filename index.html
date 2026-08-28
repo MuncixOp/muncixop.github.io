@@ -2,14 +2,21 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#060606">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="VOID">
+<meta name="description" content="VOID SYSTEMS — Terminal">
+<meta name="format-detection" content="telephone=no">
 <title>~/muncixop</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<canvas id="c"></canvas>
-<div id="wins"></div>
-<input id="ki" type="text" autocomplete="off" autocapitalize="none" autocorrect="off">
+<canvas id="c" aria-hidden="true"></canvas>
+<div id="wins" role="application" aria-label="Terminal workspace"></div>
+<input id="ki" type="text" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" aria-hidden="true">
 <script src="main.js"></script>
 </body>
 </html>   
