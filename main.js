@@ -19,10 +19,35 @@ rs();addEventListener('resize',rs);
 })();
 
 const winsEl=document.getElementById('wins');
+const ki=document.getElementById('ki');
 let zc=1;
 const terms=[];
 let active=null;
-const LS='void_wins_v3';
+const LS='void_wins_v4';
+
+const dock=document.createElement('div');
+dock.className='dock';
+winsEl.appendChild(dock);
+
+function updateDock(){
+  const mins=terms.filter(t=>t.el.classList.contains('minimized'));
+  dock.innerHTML='';
+  if(!mins.length){dock.classList.remove('on');return}
+  dock.classList.add('on');
+  mins.forEach(t=>{
+    const d=document.createElement('div');
+    d.className='dock-item';
+    d.textContent=t.title;
+    d.addEventListener('click',()=>{
+      t.el.classList.remove('minimized');
+      t.el.style.zIndex=++zc;
+      active=t;
+      if(mob)focusKi();
+      updateDock();save()
+    });
+    dock.appendChild(d)
+  })
+}
 
 function save(){
   const d=terms.filter(t=>!t.el.classList.contains('minimized')).map(t=>({
@@ -45,6 +70,46 @@ function clamp(t){
   if(tp+wh>vh)tp=Math.max(0,vh-wh-8);
   w.style.left=l+'px';w.style.top=tp+'px'
 }
+
+function focusKi(){
+  if(!mob)return;
+  ki.value='';
+  ki.focus()
+}
+function blurKi(){
+  if(!mob)return;
+  ki.blur()
+}
+
+ki.addEventListener('input',()=>{
+  if(!active)return;
+  const t=active;
+  if(t.el.classList.contains('minimized'))return;
+  const line=t.body.querySelector('.input-line');
+  if(!line||line.style.display==='none')return;
+  t.input=ki.value;
+  t.hi=t.hist.length;
+  upd(t)
+});
+
+ki.addEventListener('keydown',e=>{
+  if(e.key==='Enter'){
+    e.preventDefault();
+    if(!active)return;
+    const t=active;
+    const line=t.body.querySelector('.input-line');
+    if(!line||line.style.display==='none')return;
+    const v=t.input;
+    pr(t,t.prompt+' '+v,'cmd');
+    if(v.trim()){t.hist.push(v);t.hi=t.hist.length}
+    t.input='';ki.value='';
+    line.querySelector('.typed').textContent='';
+    if(t.mode==='login')login(t,v);
+    else if(t.mode==='pass'){pr(t,'');pass(t,v)}
+    else if(t.mode==='shell'){if(v.trim())sh(t,v)}
+    else if(t.mode==='node'){nd(t,v)}
+  }
+});
 
 function mk(o){
   const w=document.createElement('div');
@@ -82,7 +147,10 @@ function mk(o){
   terms.push(t);
 
   w.addEventListener('mousedown',()=>{w.style.zIndex=++zc;active=t});
-  w.addEventListener('touchstart',()=>{w.style.zIndex=++zc;active=t},{passive:true});
+  w.addEventListener('touchstart',()=>{
+    w.style.zIndex=++zc;active=t;
+    if(mob)focusKi()
+  },{passive:true});
 
   let dx,dy,drag=false;
   bar.addEventListener('mousedown',e=>{
@@ -144,16 +212,24 @@ function mk(o){
     w.style.transform='scale(.88)';w.style.opacity='0';
     setTimeout(()=>{
       w.remove();terms.splice(terms.indexOf(t),1);
-      if(active===t)active=null;save()
+      if(active===t){active=null;blurKi()}
+      updateDock();save()
     },250)
   });
   bar.querySelector('.min').addEventListener('click',e=>{
     e.stopPropagation();
-    w.classList.toggle('minimized');save()
+    w.classList.toggle('minimized');
+    if(active===t)blurKi();
+    updateDock();save()
   });
   bar.querySelector('.max').addEventListener('click',e=>{
     e.stopPropagation();
-    w.classList.toggle('maximized');save()
+    w.classList.toggle('maximized');
+    if(!w.classList.contains('maximized')){
+      w.style.position='absolute';
+      clamp(t)
+    }
+    save()
   });
 
   return t
@@ -163,16 +239,6 @@ function pr(t,txt,cls){
   const el=document.createElement('div');
   el.className='out'+(cls?' '+cls:'');
   el.textContent=txt||'\u00a0';
-  const line=t.body.querySelector('.input-line');
-  if(line&&line.style.display!=='none')t.body.insertBefore(el,line);
-  else t.body.appendChild(el);
-  t.body.scrollTop=t.body.scrollHeight
-}
-
-function prH(t,html,cls){
-  const el=document.createElement('div');
-  el.className='out'+(cls?' '+cls:'');
-  el.innerHTML=html;
   const line=t.body.querySelector('.input-line');
   if(line&&line.style.display!=='none')t.body.insertBefore(el,line);
   else t.body.appendChild(el);
@@ -191,12 +257,14 @@ function show(t){
   line.querySelector('.typed').textContent='';
   t.input='';t.hi=-1;
   t.body.appendChild(line);
-  t.body.scrollTop=t.body.scrollHeight
+  t.body.scrollTop=t.body.scrollHeight;
+  if(mob&&active===t)focusKi()
 }
 
 function hide(t){
   const line=t.body.querySelector('.input-line');
-  if(line)line.style.display='none'
+  if(line)line.style.display='none';
+  if(mob&&active===t)blurKi()
 }
 
 function upd(t){
@@ -213,48 +281,49 @@ function ac(t){
   if(!parts[0])return;
   if(parts.length===1){
     const m=Object.keys(shell).filter(c=>c.startsWith(parts[0].toLowerCase()));
-    if(m.length===1){t.input=m[0]+' ';upd(t)}
+    if(m.length===1){t.input=m[0]+' ';ki.value=t.input;upd(t)}
     else if(m.length>1)pr(t,m.join('  '),'dim')
   }else if(parts[0]==='./connect'&&parts[1]){
     const m=nids.filter(id=>id.startsWith(parts[1]));
-    if(m.length===1){t.input='./connect '+m[0];upd(t)}
+    if(m.length===1){t.input='./connect '+m[0];ki.value=t.input;upd(t)}
     else if(m.length>1)pr(t,m.join('  '),'dim')
   }
 }
 
-addEventListener('keydown',e=>{
-  if(!active)return;
-  const t=active;
-  if(t.el.classList.contains('minimized'))return;
+if(!mob){
+  addEventListener('keydown',e=>{
+    if(!active)return;
+    const t=active;
+    if(t.el.classList.contains('minimized'))return;
 
-  if(e.key==='Enter'){
-    const line=t.body.querySelector('.input-line');
-    if(!line||line.style.display==='none')return;
-    const v=t.input;
-    pr(t,t.prompt+' '+v,'cmd');
-    if(v.trim()){t.hist.push(v);t.hi=t.hist.length}
-    t.input='';line.querySelector('.typed').textContent='';
-
-    if(t.mode==='login')login(t,v);
-    else if(t.mode==='pass'){pr(t,'');pass(t,v)}
-    else if(t.mode==='shell'){if(v.trim())sh(t,v)}
-    else if(t.mode==='node'){nd(t,v)}
-    return
-  }
-  if(e.key==='Backspace'){t.input=t.input.slice(0,-1);upd(t);return}
-  if(e.key==='ArrowUp'){
-    e.preventDefault();
-    if(t.hist.length&&t.hi>-1){t.hi--;t.input=t.hist[t.hi]||'';upd(t)}
-    return
-  }
-  if(e.key==='ArrowDown'){
-    e.preventDefault();
-    if(t.hi<t.hist.length){t.hi++;t.input=t.hist[t.hi]||'';upd(t)}
-    return
-  }
-  if(e.key==='Tab'){e.preventDefault();if(t.mode==='shell'||t.mode==='node')ac(t);return}
-  if(e.key.length===1){t.input+=e.key;t.hi=t.hist.length;upd(t)}
-});
+    if(e.key==='Enter'){
+      const line=t.body.querySelector('.input-line');
+      if(!line||line.style.display==='none')return;
+      const v=t.input;
+      pr(t,t.prompt+' '+v,'cmd');
+      if(v.trim()){t.hist.push(v);t.hi=t.hist.length}
+      t.input='';line.querySelector('.typed').textContent='';
+      if(t.mode==='login')login(t,v);
+      else if(t.mode==='pass'){pr(t,'');pass(t,v)}
+      else if(t.mode==='shell'){if(v.trim())sh(t,v)}
+      else if(t.mode==='node'){nd(t,v)}
+      return
+    }
+    if(e.key==='Backspace'){t.input=t.input.slice(0,-1);upd(t);return}
+    if(e.key==='ArrowUp'){
+      e.preventDefault();
+      if(t.hist.length&&t.hi>-1){t.hi--;t.input=t.hist[t.hi]||'';upd(t)}
+      return
+    }
+    if(e.key==='ArrowDown'){
+      e.preventDefault();
+      if(t.hi<t.hist.length){t.hi++;t.input=t.hist[t.hi]||'';upd(t)}
+      return
+    }
+    if(e.key==='Tab'){e.preventDefault();if(t.mode==='shell'||t.mode==='node')ac(t);return}
+    if(e.key.length===1){t.input+=e.key;t.hi=t.hist.length;upd(t)}
+  })
+}
 
 addEventListener('resize',()=>{
   rs();
@@ -312,9 +381,24 @@ if(!hasMain){
 
 let bi=0;
 const mt=terms[0];
+
+function startLogin(){
+  if(mob){
+    pr(mt,'Last login: auto (mobile)','dim');
+    pr(mt,'');
+    pr(mt,'Welcome to VOID SYSTEMS','info');
+    pr(mt,'Type "help" to list available commands.','dim');
+    pr(mt,'');
+    mt.prompt='root@main:~#';mt.mode='shell';
+    show(mt);
+    return
+  }
+  mt.prompt='login:';show(mt);mt.mode='login'
+}
+
 (function bs(){
   if(bi>=boot.length){
-    setTimeout(()=>{mt.prompt='login:';show(mt);mt.mode='login'},500);
+    setTimeout(startLogin,500);
     return
   }
   const[cls,txt]=boot[bi];
@@ -374,7 +458,7 @@ const shell={
     pr(t,'  exit              Disconnect');
     pr(t,'  help              This message');
     pr(t,'');
-    pr(t,'Tips: Tab = autocomplete, Up/Down = history','dim');
+    if(!mob)pr(t,'Tips: Tab = autocomplete, Up/Down = history','dim');
     pr(t,'')
   },
 
