@@ -1,6 +1,3 @@
-/* ============================================
-   ENVIRONMENT DETECTION
-   ============================================ */
 const ua=navigator.userAgent;
 const os=(()=>{
   if(/iPhone|iPad|iPod/.test(ua))return'ios';
@@ -15,20 +12,18 @@ const isTouch='ontouchstart'in window||navigator.maxTouchPoints>0;
 const reducedMotion=matchMedia('(prefers-reduced-motion:reduce)').matches;
 document.body.classList.add('os-'+os);
 
-/* ============================================
-   MATRIX RAIN
-   ============================================ */
 const c=document.getElementById('c'),x=c.getContext('2d');
 let W,H,cols,drops;
 const ch='アイウエオカキクケコサシスセソ0123456789$#@%&*+=<>';
 const fs=12;
 
 function rs(){
-  W=c.width=innerWidth*devicePixelRatio;
-  H=c.height=innerHeight*devicePixelRatio;
+  const dpr=devicePixelRatio||1;
+  W=c.width=innerWidth*dpr;
+  H=c.height=innerHeight*dpr;
   c.style.width=innerWidth+'px';
   c.style.height=innerHeight+'px';
-  cols=Math.floor(W/(fs*devicePixelRatio));
+  cols=Math.floor(innerWidth/fs);
   drops=Array(cols).fill(1)
 }
 rs();
@@ -36,11 +31,12 @@ addEventListener('resize',rs,{passive:true});
 
 (function mx(){
   if(document.hidden)return;
+  const dpr=devicePixelRatio||1;
+  const f=fs*dpr;
   x.fillStyle='rgba(6,6,6,.06)';
   x.fillRect(0,0,W,H);
   x.fillStyle='#0f0';
-  x.font=(fs*devicePixelRatio)+'px monospace';
-  const f=fs*devicePixelRatio;
+  x.font=f+'px monospace';
   for(let i=0;i<cols;i++){
     x.fillText(ch[Math.random()*ch.length|0],i*f,drops[i]*f);
     if(drops[i]*f>H&&Math.random()>.974)drops[i]=0;
@@ -49,9 +45,6 @@ addEventListener('resize',rs,{passive:true});
   requestAnimationFrame(mx)
 })();
 
-/* ============================================
-   WORKSPACE & STATE
-   ============================================ */
 const winsEl=document.getElementById('wins');
 const ki=document.getElementById('ki');
 let zc=1;
@@ -59,9 +52,6 @@ const terms=[];
 let active=null;
 const LS='void_wins_v5';
 
-/* ============================================
-   DOCK
-   ============================================ */
 const dock=document.createElement('div');
 dock.className='dock';
 dock.setAttribute('role','toolbar');
@@ -123,9 +113,6 @@ function updateDock(){
   })
 }
 
-/* ============================================
-   PERSISTENCE
-   ============================================ */
 function save(){
   const d=terms.filter(t=>!t.el.classList.contains('minimized')).map(t=>({
     id:t.id,l:t.el.style.left,t:t.el.style.top,
@@ -137,9 +124,6 @@ function load(){
   try{return JSON.parse(localStorage.getItem(LS)||'[]')}catch{return[]}
 }
 
-/* ============================================
-   VIEWPORT CLAMP
-   ============================================ */
 function clamp(t){
   if(mob)return;
   const w=t.el,vw=innerWidth,vh=innerHeight;
@@ -151,9 +135,6 @@ function clamp(t){
   w.style.left=l+'px';w.style.top=tp+'px'
 }
 
-/* ============================================
-   MOBILE KEYBOARD
-   ============================================ */
 function focusKi(){
   if(!mob)return;
   ki.value='';
@@ -176,10 +157,11 @@ ki.addEventListener('input',()=>{
 });
 
 ki.addEventListener('keydown',e=>{
+  if(!active)return;
+  const t=active;
+  if(t.el.classList.contains('minimized'))return;
   if(e.key==='Enter'){
     e.preventDefault();
-    if(!active)return;
-    const t=active;
     const line=t.body.querySelector('.input-line');
     if(!line||line.style.display==='none')return;
     const v=t.input;
@@ -196,9 +178,6 @@ ki.addEventListener('keydown',e=>{
   }
 });
 
-/* ============================================
-   WINDOW FACTORY
-   ============================================ */
 function mk(o){
   const w=document.createElement('div');
   w.className='win';
@@ -242,14 +221,12 @@ function mk(o){
   };
   terms.push(t);
 
-  /* Focus */
   w.addEventListener('mousedown',()=>{w.style.zIndex=++zc;active=t});
   w.addEventListener('touchstart',()=>{
     w.style.zIndex=++zc;active=t;
     if(mob)focusKi()
   },{passive:true});
 
-  /* Drag (mouse) */
   let dx,dy,drag=false;
   bar.addEventListener('mousedown',e=>{
     if(e.target.closest('.btns'))return;
@@ -265,7 +242,6 @@ function mk(o){
     if(drag){drag=false;w.style.transition='';clamp(t);save()}
   });
 
-  /* Drag (touch) */
   bar.addEventListener('touchstart',e=>{
     if(e.target.closest('.btns'))return;
     const t2=e.touches[0];
@@ -282,7 +258,6 @@ function mk(o){
     if(drag){drag=false;clamp(t);save()}
   });
 
-  /* Resize (mouse) */
   let rdx,rdy,rw,rh,rz2=false;
   rz.addEventListener('mousedown',e=>{
     e.preventDefault();e.stopPropagation();
@@ -301,7 +276,6 @@ function mk(o){
     if(rz2){rz2=false;w.style.transition='';clamp(t);save()}
   });
 
-  /* Resize (touch) */
   rz.addEventListener('touchstart',e=>{
     e.preventDefault();e.stopPropagation();
     rz2=true;
@@ -322,7 +296,6 @@ function mk(o){
     if(rz2){rz2=false;w.style.transition='';clamp(t);save()}
   });
 
-  /* Close */
   const doClose=()=>{
     w.style.transition='transform .3s cubic-bezier(.55,.06,.68,.19),opacity .25s';
     w.style.transform='scale(.88) translateY(20px)';
@@ -337,7 +310,6 @@ function mk(o){
   bar.querySelector('.close').addEventListener('click',e=>{e.stopPropagation();doClose()});
   bar.querySelector('.close').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();doClose()}});
 
-  /* Minimize */
   const doMin=()=>{
     w.classList.add('minimized');
     if(active===t){active=null;blurKi()}
@@ -347,7 +319,6 @@ function mk(o){
   bar.querySelector('.min').addEventListener('click',e=>{e.stopPropagation();doMin()});
   bar.querySelector('.min').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();doMin()}});
 
-  /* Maximize */
   const doMax=()=>{
     w.classList.toggle('maximized');
     if(!w.classList.contains('maximized')){
@@ -362,9 +333,6 @@ function mk(o){
   return t
 }
 
-/* ============================================
-   OUTPUT FUNCTIONS
-   ============================================ */
 function pr(t,txt,cls){
   const el=document.createElement('div');
   el.className='out'+(cls?' '+cls:'');
@@ -404,9 +372,6 @@ function upd(t){
   t.body.scrollTop=t.body.scrollHeight
 }
 
-/* ============================================
-   COMMAND ROUTING
-   ============================================ */
 const nids=['0x01','0x02','0x03'];
 
 function ac(t){
@@ -436,9 +401,6 @@ function route(t,v){
   else if(t.mode==='node'){nd(t,v)}
 }
 
-/* ============================================
-   DESKTOP KEYBOARD
-   ============================================ */
 if(!mob){
   addEventListener('keydown',e=>{
     if(!active)return;
@@ -480,9 +442,6 @@ if(!mob){
   })
 }
 
-/* ============================================
-   VIEWPORT RESIZE
-   ============================================ */
 addEventListener('resize',()=>{
   rs();
   terms.forEach(t=>{
@@ -491,9 +450,6 @@ addEventListener('resize',()=>{
   })
 },{passive:true});
 
-/* ============================================
-   BOOT SEQUENCE
-   ============================================ */
 const boot=[
   ['dim','VOID BIOS v4.2.1 (C) 2026 VOID Systems Inc.'],
   ['dim',''],
@@ -527,9 +483,6 @@ const boot=[
   ['','']
 ];
 
-/* ============================================
-   INIT
-   ============================================ */
 const saved=load();
 let hasMain=false;
 saved.forEach(s=>{
@@ -574,9 +527,6 @@ function startLogin(){
   setTimeout(bs,delay)
 })();
 
-/* ============================================
-   AUTH
-   ============================================ */
 function login(t,user){
   const u=user.trim().toLowerCase();
   if(u==='root'){
@@ -612,9 +562,6 @@ function pass(t,pw){
   }
 }
 
-/* ============================================
-   SHELL COMMANDS
-   ============================================ */
 const shell={
   help:t=>{
     pr(t,'');
@@ -679,9 +626,8 @@ const shell={
     },reducedMotion?50:1200)
   },
 
-  './connect':t=>{
-    const parts=t.input.trim().split(/\s+/);
-    const id=parts[1];
+  './connect':(t,args)=>{
+    const id=args[0];
     if(!id){
       pr(t,'Usage: ./connect <node-id>','warn');
       pr(t,'Run ./scan to see available nodes.','dim');
@@ -778,17 +724,18 @@ const shell={
 };
 
 function sh(t,cmd){
-  const k=cmd.trim().toLowerCase();
-  if(shell[k]){shell[k](t);return}
-  if(k.startsWith('echo ')){pr(t,cmd.trim().slice(5));pr(t,'');return}
+  const full=cmd.trim().toLowerCase();
+  const parts=full.split(/\s+/);
+  const k=parts[0];
+  const args=parts.slice(1);
+  if(shell[full]){shell[full](t,args);return}
+  if(shell[k]){shell[k](t,args);return}
+  if(k==='echo'){pr(t,args.join(' '));pr(t,'');return}
   pr(t,`zsh: command not found: ${k}`,'err');
   pr(t,'Type "help" for available commands.','dim');
   pr(t,'')
 }
 
-/* ============================================
-   NODE AUTH
-   ============================================ */
 function nd(t,val){
   const v=val.trim().toLowerCase();
   const n=t.node;
@@ -824,9 +771,6 @@ function nd(t,val){
   pr(t,'Enter auth token to proceed:','warn')
 }
 
-/* ============================================
-   GLITCH ENGINE
-   ============================================ */
 function glitch(){
   if(reducedMotion)return;
   if(!active)return;
@@ -892,15 +836,9 @@ function glitch(){
   setTimeout(()=>{glitch();sc()},2000+Math.random()*4000)
 })();
 
-/* ============================================
-   VISIBILITY API (pause matrix when hidden)
-   ============================================ */
 document.addEventListener('visibilitychange',()=>{
   if(!document.hidden)rs()
 });
 
-/* ============================================
-   PERSIST ON EXIT
-   ============================================ */
 addEventListener('beforeunload',save);
 addEventListener('pagehide',save);   
