@@ -22,7 +22,7 @@ const winsEl=document.getElementById('wins');
 let zc=1;
 const terms=[];
 let active=null;
-const LS='void_wins_v2';
+const LS='void_wins_v3';
 
 function save(){
   const d=terms.filter(t=>!t.el.classList.contains('minimized')).map(t=>({
@@ -86,7 +86,7 @@ function mk(o){
 
   let dx,dy,drag=false;
   bar.addEventListener('mousedown',e=>{
-    if(e.target.classList.contains('btn'))return;
+    if(e.target.closest('.btns'))return;
     drag=true;dx=e.clientX-w.offsetLeft;dy=e.clientY-w.offsetTop;
     w.style.transition='none'
   });
@@ -97,7 +97,7 @@ function mk(o){
   addEventListener('mouseup',()=>{if(drag){drag=false;w.style.transition='';clamp(t);save()}});
 
   bar.addEventListener('touchstart',e=>{
-    if(e.target.classList.contains('btn'))return;
+    if(e.target.closest('.btns'))return;
     const t2=e.touches[0];drag=true;dx=t2.clientX-w.offsetLeft;dy=t2.clientY-w.offsetTop;
   },{passive:true});
   addEventListener('touchmove',e=>{
@@ -138,7 +138,8 @@ function mk(o){
   },{passive:false});
   rz.addEventListener('touchend',()=>{if(rz2){rz2=false;w.style.transition='';clamp(t);save()}});
 
-  bar.querySelector('.close').addEventListener('click',()=>{
+  bar.querySelector('.close').addEventListener('click',e=>{
+    e.stopPropagation();
     w.style.transition='transform .25s,opacity .2s';
     w.style.transform='scale(.88)';w.style.opacity='0';
     setTimeout(()=>{
@@ -146,8 +147,14 @@ function mk(o){
       if(active===t)active=null;save()
     },250)
   });
-  bar.querySelector('.min').addEventListener('click',()=>{w.classList.toggle('minimized');save()});
-  bar.querySelector('.max').addEventListener('click',()=>{w.classList.toggle('maximized');save()});
+  bar.querySelector('.min').addEventListener('click',e=>{
+    e.stopPropagation();
+    w.classList.toggle('minimized');save()
+  });
+  bar.querySelector('.max').addEventListener('click',e=>{
+    e.stopPropagation();
+    w.classList.toggle('maximized');save()
+  });
 
   return t
 }
@@ -229,7 +236,7 @@ addEventListener('keydown',e=>{
     t.input='';line.querySelector('.typed').textContent='';
 
     if(t.mode==='login')login(t,v);
-    else if(t.mode==='pass'){pr(t,'');pass(t)}
+    else if(t.mode==='pass'){pr(t,'');pass(t,v)}
     else if(t.mode==='shell'){if(v.trim())sh(t,v)}
     else if(t.mode==='node'){nd(t,v)}
     return
@@ -329,8 +336,9 @@ function login(t,user){
   }
 }
 
-function pass(t){
-  if(t.input.trim().toLowerCase()==='root'){
+function pass(t,pw){
+  const v=pw.trim().toLowerCase();
+  if(v==='root'){
     t.hidden=false;
     pr(t,'Last login: Thu Aug 27 03:42:17 2026 from 192.168.1.42','dim');
     pr(t,'');
@@ -340,7 +348,6 @@ function pass(t){
     t.prompt='root@main:~#';t.mode='shell';
     show(t)
   }else{
-    pr(t,'','dim');
     pr(t,'Authentication failed.','err');
     pr(t,'');
     t.hidden=true;
