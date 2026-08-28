@@ -1,33 +1,102 @@
+/* ============================================
+   ENVIRONMENT DETECTION
+   ============================================ */
+const ua=navigator.userAgent;
+const os=(()=>{
+  if(/iPhone|iPad|iPod/.test(ua))return'ios';
+  if(/Android/.test(ua))return'android';
+  if(/Mac|Darwin/.test(ua))return'mac';
+  if(/Win/.test(ua))return'win';
+  if(/Linux/.test(ua))return'linux';
+  return'linux'
+})();
+const mob=os==='ios'||os==='android'||matchMedia('(max-width:700px)').matches;
+const isTouch='ontouchstart'in window||navigator.maxTouchPoints>0;
+const reducedMotion=matchMedia('(prefers-reduced-motion:reduce)').matches;
+document.body.classList.add('os-'+os);
+
+/* ============================================
+   MATRIX RAIN
+   ============================================ */
 const c=document.getElementById('c'),x=c.getContext('2d');
 let W,H,cols,drops;
-const ch='アイウエオカキクケコサシスセソ0123456789$#@%&';
+const ch='アイウエオカキクケコサシスセソ0123456789$#@%&*+=<>';
 const fs=12;
-const mob=matchMedia('(max-width:700px)').matches;
 
-function rs(){W=c.width=innerWidth;H=c.height=innerHeight;cols=Math.floor(W/fs);drops=Array(cols).fill(1)}
-rs();addEventListener('resize',rs);
+function rs(){
+  W=c.width=innerWidth*devicePixelRatio;
+  H=c.height=innerHeight*devicePixelRatio;
+  c.style.width=innerWidth+'px';
+  c.style.height=innerHeight+'px';
+  cols=Math.floor(W/(fs*devicePixelRatio));
+  drops=Array(cols).fill(1)
+}
+rs();
+addEventListener('resize',rs,{passive:true});
 
 (function mx(){
-  x.fillStyle='rgba(10,10,10,.07)';x.fillRect(0,0,W,H);
-  x.fillStyle='#0f0';x.font=fs+'px monospace';
+  if(document.hidden)return;
+  x.fillStyle='rgba(6,6,6,.06)';
+  x.fillRect(0,0,W,H);
+  x.fillStyle='#0f0';
+  x.font=(fs*devicePixelRatio)+'px monospace';
+  const f=fs*devicePixelRatio;
   for(let i=0;i<cols;i++){
-    x.fillText(ch[Math.random()*ch.length|0],i*fs,drops[i]*fs);
-    if(drops[i]*fs>H&&Math.random()>.974)drops[i]=0;
+    x.fillText(ch[Math.random()*ch.length|0],i*f,drops[i]*f);
+    if(drops[i]*f>H&&Math.random()>.974)drops[i]=0;
     drops[i]++
   }
   requestAnimationFrame(mx)
 })();
 
+/* ============================================
+   WORKSPACE & STATE
+   ============================================ */
 const winsEl=document.getElementById('wins');
 const ki=document.getElementById('ki');
 let zc=1;
 const terms=[];
 let active=null;
-const LS='void_wins_v4';
+const LS='void_wins_v5';
 
+/* ============================================
+   DOCK
+   ============================================ */
 const dock=document.createElement('div');
 dock.className='dock';
+dock.setAttribute('role','toolbar');
+dock.setAttribute('aria-label','Minimized windows');
 winsEl.appendChild(dock);
+
+let errPop=null;
+
+function showErr(t){
+  if(errPop)errPop.remove();
+  errPop=document.createElement('div');
+  errPop.className='err-pop';
+  errPop.setAttribute('role','alertdialog');
+  errPop.setAttribute('aria-label','Connection error');
+  const pid=Math.random()*9000+1000|0;
+  const up=Math.random()*999|0;
+  errPop.innerHTML=`
+    <h3>SESSION ${t.id.slice(-4).toUpperCase()} — CONNECTION LOST</h3>
+    <p>Terminal process terminated unexpectedly.<br>Session data preserved in memory buffer.</p>
+    <span class="err-btn" tabindex="0" role="button">[ RECONNECT ]</span>
+    <div class="err-dim">PID ${pid} · uptime ${up}s · exit code 137 · signal SIGKILL</div>
+  `;
+  winsEl.appendChild(errPop);
+  const btn=errPop.querySelector('.err-btn');
+  const restore=()=>{
+    t.el.classList.remove('minimized');
+    t.el.style.zIndex=++zc;
+    active=t;
+    if(mob)focusKi();
+    errPop.remove();errPop=null;
+    updateDock();save()
+  };
+  btn.addEventListener('click',restore);
+  btn.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();restore()}})
+}
 
 function updateDock(){
   const mins=terms.filter(t=>t.el.classList.contains('minimized'));
@@ -38,17 +107,25 @@ function updateDock(){
     const d=document.createElement('div');
     d.className='dock-item';
     d.textContent=t.title;
-    d.addEventListener('click',()=>{
+    d.setAttribute('role','button');
+    d.setAttribute('tabindex','0');
+    d.setAttribute('aria-label','Restore '+t.title);
+    const restore=()=>{
       t.el.classList.remove('minimized');
       t.el.style.zIndex=++zc;
       active=t;
       if(mob)focusKi();
       updateDock();save()
-    });
+    };
+    d.addEventListener('click',restore);
+    d.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();restore()}});
     dock.appendChild(d)
   })
 }
 
+/* ============================================
+   PERSISTENCE
+   ============================================ */
 function save(){
   const d=terms.filter(t=>!t.el.classList.contains('minimized')).map(t=>({
     id:t.id,l:t.el.style.left,t:t.el.style.top,
@@ -60,6 +137,9 @@ function load(){
   try{return JSON.parse(localStorage.getItem(LS)||'[]')}catch{return[]}
 }
 
+/* ============================================
+   VIEWPORT CLAMP
+   ============================================ */
 function clamp(t){
   if(mob)return;
   const w=t.el,vw=innerWidth,vh=innerHeight;
@@ -71,10 +151,13 @@ function clamp(t){
   w.style.left=l+'px';w.style.top=tp+'px'
 }
 
+/* ============================================
+   MOBILE KEYBOARD
+   ============================================ */
 function focusKi(){
   if(!mob)return;
   ki.value='';
-  ki.focus()
+  setTimeout(()=>ki.focus(),100)
 }
 function blurKi(){
   if(!mob)return;
@@ -104,16 +187,23 @@ ki.addEventListener('keydown',e=>{
     if(v.trim()){t.hist.push(v);t.hi=t.hist.length}
     t.input='';ki.value='';
     line.querySelector('.typed').textContent='';
-    if(t.mode==='login')login(t,v);
-    else if(t.mode==='pass'){pr(t,'');pass(t,v)}
-    else if(t.mode==='shell'){if(v.trim())sh(t,v)}
-    else if(t.mode==='node'){nd(t,v)}
+    route(t,v)
+  }
+  if(e.key==='Backspace'){
+    t.input=t.input.slice(0,-1);
+    ki.value=t.input;
+    upd(t)
   }
 });
 
+/* ============================================
+   WINDOW FACTORY
+   ============================================ */
 function mk(o){
   const w=document.createElement('div');
   w.className='win';
+  w.setAttribute('role','dialog');
+  w.setAttribute('aria-label',o.ti||'terminal');
   if(!mob){
     w.style.left=(o.l||80)+'px';
     w.style.top=(o.t||60)+'px';
@@ -124,14 +214,20 @@ function mk(o){
 
   const bar=document.createElement('div');
   bar.className='win-bar';
-  bar.innerHTML=`<div class="btns"><span class="btn close"></span><span class="btn min"></span><span class="btn max"></span></div><span class="win-title">${o.ti||'terminal'}</span><div class="btns-r"></div>`;
+  bar.setAttribute('role','toolbar');
+  bar.setAttribute('aria-label','Window controls');
+  bar.innerHTML=`<div class="btns"><span class="btn close" tabindex="0" role="button" aria-label="Close"></span><span class="btn min" tabindex="0" role="button" aria-label="Minimize"></span><span class="btn max" tabindex="0" role="button" aria-label="Maximize"></span></div><span class="win-title">${o.ti||'terminal'}</span><div class="btns-r"></div>`;
 
   const body=document.createElement('div');
   body.className='win-body';
+  body.setAttribute('role','log');
+  body.setAttribute('aria-live','polite');
   const gl=document.createElement('div');
   gl.className='glitch-overlay';
+  gl.setAttribute('aria-hidden','true');
   const rz=document.createElement('div');
   rz.className='rz';
+  rz.setAttribute('aria-hidden','true');
 
   w.appendChild(bar);w.appendChild(body);w.appendChild(gl);w.appendChild(rz);
   winsEl.appendChild(w);
@@ -146,12 +242,14 @@ function mk(o){
   };
   terms.push(t);
 
+  /* Focus */
   w.addEventListener('mousedown',()=>{w.style.zIndex=++zc;active=t});
   w.addEventListener('touchstart',()=>{
     w.style.zIndex=++zc;active=t;
     if(mob)focusKi()
   },{passive:true});
 
+  /* Drag (mouse) */
   let dx,dy,drag=false;
   bar.addEventListener('mousedown',e=>{
     if(e.target.closest('.btns'))return;
@@ -160,26 +258,37 @@ function mk(o){
   });
   addEventListener('mousemove',e=>{
     if(!drag)return;
-    w.style.left=(e.clientX-dx)+'px';w.style.top=(e.clientY-dy)+'px'
+    w.style.left=(e.clientX-dx)+'px';
+    w.style.top=(e.clientY-dy)+'px'
   });
-  addEventListener('mouseup',()=>{if(drag){drag=false;w.style.transition='';clamp(t);save()}});
+  addEventListener('mouseup',()=>{
+    if(drag){drag=false;w.style.transition='';clamp(t);save()}
+  });
 
+  /* Drag (touch) */
   bar.addEventListener('touchstart',e=>{
     if(e.target.closest('.btns'))return;
-    const t2=e.touches[0];drag=true;dx=t2.clientX-w.offsetLeft;dy=t2.clientY-w.offsetTop;
+    const t2=e.touches[0];
+    drag=true;dx=t2.clientX-w.offsetLeft;dy=t2.clientY-w.offsetTop;
+    w.style.transition='none'
   },{passive:true});
   addEventListener('touchmove',e=>{
     if(!drag)return;
     const t2=e.touches[0];
-    w.style.left=(t2.clientX-dx)+'px';w.style.top=(t2.clientY-dy)+'px'
+    w.style.left=(t2.clientX-dx)+'px';
+    w.style.top=(t2.clientY-dy)+'px'
   },{passive:true});
-  addEventListener('touchend',()=>{if(drag){drag=false;clamp(t);save()}});
+  addEventListener('touchend',()=>{
+    if(drag){drag=false;clamp(t);save()}
+  });
 
+  /* Resize (mouse) */
   let rdx,rdy,rw,rh,rz2=false;
   rz.addEventListener('mousedown',e=>{
     e.preventDefault();e.stopPropagation();
     rz2=true;rdx=e.clientX;rdy=e.clientY;
-    rw=w.offsetWidth;rh=w.offsetHeight;w.style.transition='none'
+    rw=w.offsetWidth;rh=w.offsetHeight;
+    w.style.transition='none'
   });
   addEventListener('mousemove',e=>{
     if(!rz2)return;
@@ -188,13 +297,18 @@ function mk(o){
     w.style.width=nw+'px';w.style.height=nh+'px';
     body.style.maxHeight='none';body.style.flex='1'
   });
-  addEventListener('mouseup',()=>{if(rz2){rz2=false;w.style.transition='';clamp(t);save()}});
+  addEventListener('mouseup',()=>{
+    if(rz2){rz2=false;w.style.transition='';clamp(t);save()}
+  });
 
+  /* Resize (touch) */
   rz.addEventListener('touchstart',e=>{
     e.preventDefault();e.stopPropagation();
-    rz2=true;const t2=e.touches[0];
+    rz2=true;
+    const t2=e.touches[0];
     rdx=t2.clientX;rdy=t2.clientY;
-    rw=w.offsetWidth;rh=w.offsetHeight;w.style.transition='none'
+    rw=w.offsetWidth;rh=w.offsetHeight;
+    w.style.transition='none'
   },{passive:false});
   rz.addEventListener('touchmove',e=>{
     if(!rz2)return;e.preventDefault();
@@ -204,37 +318,53 @@ function mk(o){
     w.style.width=nw+'px';w.style.height=nh+'px';
     body.style.maxHeight='none';body.style.flex='1'
   },{passive:false});
-  rz.addEventListener('touchend',()=>{if(rz2){rz2=false;w.style.transition='';clamp(t);save()}});
+  rz.addEventListener('touchend',()=>{
+    if(rz2){rz2=false;w.style.transition='';clamp(t);save()}
+  });
 
-  bar.querySelector('.close').addEventListener('click',e=>{
-    e.stopPropagation();
-    w.style.transition='transform .25s,opacity .2s';
-    w.style.transform='scale(.88)';w.style.opacity='0';
+  /* Close */
+  const doClose=()=>{
+    w.style.transition='transform .3s cubic-bezier(.55,.06,.68,.19),opacity .25s';
+    w.style.transform='scale(.88) translateY(20px)';
+    w.style.opacity='0';
     setTimeout(()=>{
-      w.remove();terms.splice(terms.indexOf(t),1);
+      w.remove();
+      terms.splice(terms.indexOf(t),1);
       if(active===t){active=null;blurKi()}
       updateDock();save()
-    },250)
-  });
-  bar.querySelector('.min').addEventListener('click',e=>{
-    e.stopPropagation();
-    w.classList.toggle('minimized');
-    if(active===t)blurKi();
-    updateDock();save()
-  });
-  bar.querySelector('.max').addEventListener('click',e=>{
-    e.stopPropagation();
+    },300)
+  };
+  bar.querySelector('.close').addEventListener('click',e=>{e.stopPropagation();doClose()});
+  bar.querySelector('.close').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();doClose()}});
+
+  /* Minimize */
+  const doMin=()=>{
+    w.classList.add('minimized');
+    if(active===t){active=null;blurKi()}
+    updateDock();save();
+    showErr(t)
+  };
+  bar.querySelector('.min').addEventListener('click',e=>{e.stopPropagation();doMin()});
+  bar.querySelector('.min').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();doMin()}});
+
+  /* Maximize */
+  const doMax=()=>{
     w.classList.toggle('maximized');
     if(!w.classList.contains('maximized')){
       w.style.position='absolute';
       clamp(t)
     }
     save()
-  });
+  };
+  bar.querySelector('.max').addEventListener('click',e=>{e.stopPropagation();doMax()});
+  bar.querySelector('.max').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();doMax()}});
 
   return t
 }
 
+/* ============================================
+   OUTPUT FUNCTIONS
+   ============================================ */
 function pr(t,txt,cls){
   const el=document.createElement('div');
   el.className='out'+(cls?' '+cls:'');
@@ -274,6 +404,9 @@ function upd(t){
   t.body.scrollTop=t.body.scrollHeight
 }
 
+/* ============================================
+   COMMAND ROUTING
+   ============================================ */
 const nids=['0x01','0x02','0x03'];
 
 function ac(t){
@@ -281,15 +414,31 @@ function ac(t){
   if(!parts[0])return;
   if(parts.length===1){
     const m=Object.keys(shell).filter(c=>c.startsWith(parts[0].toLowerCase()));
-    if(m.length===1){t.input=m[0]+' ';ki.value=t.input;upd(t)}
-    else if(m.length>1)pr(t,m.join('  '),'dim')
+    if(m.length===1){
+      t.input=m[0]+' ';
+      if(mob)ki.value=t.input;
+      upd(t)
+    }else if(m.length>1)pr(t,m.join('  '),'dim')
   }else if(parts[0]==='./connect'&&parts[1]){
     const m=nids.filter(id=>id.startsWith(parts[1]));
-    if(m.length===1){t.input='./connect '+m[0];ki.value=t.input;upd(t)}
-    else if(m.length>1)pr(t,m.join('  '),'dim')
+    if(m.length===1){
+      t.input='./connect '+m[0];
+      if(mob)ki.value=t.input;
+      upd(t)
+    }else if(m.length>1)pr(t,m.join('  '),'dim')
   }
 }
 
+function route(t,v){
+  if(t.mode==='login')login(t,v);
+  else if(t.mode==='pass'){pr(t,'');pass(t,v)}
+  else if(t.mode==='shell'){if(v.trim())sh(t,v)}
+  else if(t.mode==='node'){nd(t,v)}
+}
+
+/* ============================================
+   DESKTOP KEYBOARD
+   ============================================ */
 if(!mob){
   addEventListener('keydown',e=>{
     if(!active)return;
@@ -302,11 +451,9 @@ if(!mob){
       const v=t.input;
       pr(t,t.prompt+' '+v,'cmd');
       if(v.trim()){t.hist.push(v);t.hi=t.hist.length}
-      t.input='';line.querySelector('.typed').textContent='';
-      if(t.mode==='login')login(t,v);
-      else if(t.mode==='pass'){pr(t,'');pass(t,v)}
-      else if(t.mode==='shell'){if(v.trim())sh(t,v)}
-      else if(t.mode==='node'){nd(t,v)}
+      t.input='';
+      line.querySelector('.typed').textContent='';
+      route(t,v);
       return
     }
     if(e.key==='Backspace'){t.input=t.input.slice(0,-1);upd(t);return}
@@ -320,19 +467,33 @@ if(!mob){
       if(t.hi<t.hist.length){t.hi++;t.input=t.hist[t.hi]||'';upd(t)}
       return
     }
-    if(e.key==='Tab'){e.preventDefault();if(t.mode==='shell'||t.mode==='node')ac(t);return}
-    if(e.key.length===1){t.input+=e.key;t.hi=t.hist.length;upd(t)}
+    if(e.key==='Tab'){
+      e.preventDefault();
+      if(t.mode==='shell'||t.mode==='node')ac(t);
+      return
+    }
+    if(e.key.length===1){
+      t.input+=e.key;
+      t.hi=t.hist.length;
+      upd(t)
+    }
   })
 }
 
+/* ============================================
+   VIEWPORT RESIZE
+   ============================================ */
 addEventListener('resize',()=>{
   rs();
   terms.forEach(t=>{
     if(t.el.classList.contains('maximized'))return;
     clamp(t)
   })
-});
+},{passive:true});
 
+/* ============================================
+   BOOT SEQUENCE
+   ============================================ */
 const boot=[
   ['dim','VOID BIOS v4.2.1 (C) 2026 VOID Systems Inc.'],
   ['dim',''],
@@ -363,9 +524,12 @@ const boot=[
   ['info','  [ 0.004096] systemd: 142 services'],
   ['info','  [ 0.005120] systemd: ready'],
   ['dim',''],
-  ['',''],
+  ['','']
 ];
 
+/* ============================================
+   INIT
+   ============================================ */
 const saved=load();
 let hasMain=false;
 saved.forEach(s=>{
@@ -384,16 +548,19 @@ const mt=terms[0];
 
 function startLogin(){
   if(mob){
-    pr(mt,'Last login: auto (mobile)','dim');
+    pr(mt,'Last login: auto ('+os+')','dim');
     pr(mt,'');
     pr(mt,'Welcome to VOID SYSTEMS','info');
     pr(mt,'Type "help" to list available commands.','dim');
     pr(mt,'');
-    mt.prompt='root@main:~#';mt.mode='shell';
+    mt.prompt='root@main:~#';
+    mt.mode='shell';
     show(mt);
     return
   }
-  mt.prompt='login:';show(mt);mt.mode='login'
+  mt.prompt='login:';
+  show(mt);
+  mt.mode='login'
 }
 
 (function bs(){
@@ -403,9 +570,13 @@ function startLogin(){
   }
   const[cls,txt]=boot[bi];
   pr(mt,txt,cls);bi++;
-  setTimeout(bs,txt===''?50:35+Math.random()*45)
+  const delay=reducedMotion?10:(txt===''?50:35+Math.random()*45);
+  setTimeout(bs,delay)
 })();
 
+/* ============================================
+   AUTH
+   ============================================ */
 function login(t,user){
   const u=user.trim().toLowerCase();
   if(u==='root'){
@@ -415,7 +586,8 @@ function login(t,user){
     show(t)
   }else{
     pr(t,`login failed for ${u||'(blank)'}`,'err');
-    pr(t,'');t.prompt='login:';
+    pr(t,'');
+    t.prompt='login:';
     show(t)
   }
 }
@@ -440,6 +612,9 @@ function pass(t,pw){
   }
 }
 
+/* ============================================
+   SHELL COMMANDS
+   ============================================ */
 const shell={
   help:t=>{
     pr(t,'');
@@ -482,7 +657,7 @@ const shell={
         show(t);return
       }
       pr(t,s[i],'ok');i++;
-      setTimeout(st,150+Math.random()*100)
+      setTimeout(st,reducedMotion?10:150+Math.random()*100)
     })()
   },
 
@@ -501,7 +676,7 @@ const shell={
       pr(t,'3 nodes found. Use ./connect <id> to open a session.','ok');
       pr(t,'');
       show(t)
-    },1200)
+    },reducedMotion?50:1200)
   },
 
   './connect':t=>{
@@ -539,8 +714,8 @@ const shell={
         pr(nt,'');
         pr(nt,'Enter auth token to proceed:','warn');
         show(nt);show(t);save()
-      },600)
-    },800)
+      },reducedMotion?50:600)
+    },reducedMotion?50:800)
   },
 
   './status':t=>{
@@ -611,6 +786,9 @@ function sh(t,cmd){
   pr(t,'')
 }
 
+/* ============================================
+   NODE AUTH
+   ============================================ */
 function nd(t,val){
   const v=val.trim().toLowerCase();
   const n=t.node;
@@ -625,6 +803,7 @@ function nd(t,val){
     lnk.className='lnk';
     const a=document.createElement('a');
     a.href=n.lk;a.target='_blank';
+    a.rel='noopener noreferrer';
     a.innerHTML=`<span class="n">→</span>${n.lb}`;
     lnk.appendChild(a);
     const line=t.body.querySelector('.input-line');
@@ -645,7 +824,11 @@ function nd(t,val){
   pr(t,'Enter auth token to proceed:','warn')
 }
 
+/* ============================================
+   GLITCH ENGINE
+   ============================================ */
 function glitch(){
+  if(reducedMotion)return;
   if(!active)return;
   const t=active;
   if(t.el.classList.contains('minimized'))return;
@@ -665,7 +848,7 @@ function glitch(){
   const tx=(Math.random()-.5)*12;
   const ty=(Math.random()-.5)*6;
   w.style.transform=`translate(${tx}px,${ty}px)`;
-  w.style.boxShadow='0 20px 60px #000b,0 0 0 .5px #3ddc8450,0 0 80px #3ddc8420';
+  w.style.boxShadow='0 24px 64px #000000b0,0 0 0 .5px #3ddc8440,0 0 80px #3ddc8415';
   w.style.opacity=String(.85+Math.random()*.15);
   gl.classList.add('on');
 
@@ -705,6 +888,19 @@ function glitch(){
     bad.forEach(([el,o])=>{el.textContent=o})
   },150+Math.random()*100)
 }
-(function sc(){setTimeout(()=>{glitch();sc()},2000+Math.random()*4000)})();
+(function sc(){
+  setTimeout(()=>{glitch();sc()},2000+Math.random()*4000)
+})();
 
-addEventListener('beforeunload',save);   
+/* ============================================
+   VISIBILITY API (pause matrix when hidden)
+   ============================================ */
+document.addEventListener('visibilitychange',()=>{
+  if(!document.hidden)rs()
+});
+
+/* ============================================
+   PERSIST ON EXIT
+   ============================================ */
+addEventListener('beforeunload',save);
+addEventListener('pagehide',save);   
