@@ -11,12 +11,149 @@ const mob=os==='ios'||os==='android'||matchMedia('(max-width:700px)').matches;
 const reducedMotion=matchMedia('(prefers-reduced-motion:reduce)').matches;
 document.body.classList.add('os-'+os);
 
-function genToken(){
-  const c='abcdef0123456789';
-  let r='';
-  for(let i=0;i<8;i++)r+=c[Math.random()*16|0];
-  return r
+/* ============================================
+   AUDIO ENGINE (Web Audio API — no files needed)
+   ============================================ */
+let actx=null;
+function audio(){
+  if(!actx){
+    actx=new(window.AudioContext||window.webkitAudioContext)();
+  }
+  if(actx.state==='suspended')actx.resume();
+  return actx
 }
+
+function playKey(){
+  try{
+    const a=audio(),o=a.createOscillator(),g=a.createGain();
+    o.type='square';o.frequency.value=800+Math.random()*400;
+    g.gain.setValueAtTime(.03,a.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,a.currentTime+.04);
+    o.connect(g);g.connect(a.destination);
+    o.start(a.currentTime);o.stop(a.currentTime+.04)
+  }catch{}
+}
+
+function playEnter(){
+  try{
+    const a=audio(),o=a.createOscillator(),g=a.createGain();
+    o.type='sine';o.frequency.setValueAtTime(600,a.currentTime);
+    o.frequency.exponentialRampToValueAtTime(1200,a.currentTime+.08);
+    g.gain.setValueAtTime(.06,a.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,a.currentTime+.12);
+    o.connect(g);g.connect(a.destination);
+    o.start(a.currentTime);o.stop(a.currentTime+.12)
+  }catch{}
+}
+
+function playError(){
+  try{
+    const a=audio(),o=a.createOscillator(),g=a.createGain();
+    o.type='sawtooth';o.frequency.setValueAtTime(200,a.currentTime);
+    o.frequency.exponentialRampToValueAtTime(80,a.currentTime+.2);
+    g.gain.setValueAtTime(.08,a.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,a.currentTime+.25);
+    o.connect(g);g.connect(a.destination);
+    o.start(a.currentTime);o.stop(a.currentTime+.25)
+  }catch{}
+}
+
+function playSuccess(){
+  try{
+    const a=audio();
+    [400,600,800].forEach((f,i)=>{
+      const o=a.createOscillator(),g=a.createGain();
+      o.type='sine';o.frequency.value=f;
+      g.gain.setValueAtTime(.05,a.currentTime+i*.06);
+      g.gain.exponentialRampToValueAtTime(.001,a.currentTime+i*.06+.15);
+      o.connect(g);g.connect(a.destination);
+      o.start(a.currentTime+i*.06);o.stop(a.currentTime+i*.06+.15)
+    })
+  }catch{}
+}
+
+function playGlitch(){
+  try{
+    const a=audio();
+    const buf=a.createBuffer(1,a.sampleRate*.1,a.sampleRate);
+    const d=buf.getChannelData(0);
+    for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.exp(-i/(d.length*.1));
+    const s=a.createBufferSource(),g=a.createGain();
+    s.buffer=buf;g.gain.setValueAtTime(.06,a.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,a.currentTime+.1);
+    s.connect(g);g.connect(a.destination);s.start(a.currentTime)
+  }catch{}
+}
+
+function playBoot(){
+  try{
+    const a=audio(),o=a.createOscillator(),g=a.createGain();
+    o.type='sine';o.frequency.setValueAtTime(220,a.currentTime);
+    o.frequency.exponentialRampToValueAtTime(440,a.currentTime+.3);
+    g.gain.setValueAtTime(.04,a.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,a.currentTime+.4);
+    o.connect(g);g.connect(a.destination);
+    o.start(a.currentTime);o.stop(a.currentTime+.4)
+  }catch{}
+}
+
+function playCorrupt(){
+  try{
+    const a=audio();
+    const buf=a.createBuffer(1,a.sampleRate*.3,a.sampleRate);
+    const d=buf.getChannelData(0);
+    for(let i=0;i<d.length;i++){
+      const t=i/d.length;
+      d[i]=(Math.random()*2-1)*Math.sin(t*Math.PI)*(.5+.5*Math.sin(t*40))
+    }
+    const s=a.createBufferSource(),g=a.createGain();
+    s.buffer=buf;g.gain.setValueAtTime(.1,a.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,a.currentTime+.3);
+    s.connect(g);g.connect(a.destination);s.start(a.currentTime)
+  }catch{}
+}
+
+function playBruteTick(){
+  try{
+    const a=audio(),o=a.createOscillator(),g=a.createGain();
+    o.type='square';o.frequency.value=1200+Math.random()*800;
+    g.gain.setValueAtTime(.015,a.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,a.currentTime+.02);
+    o.connect(g);g.connect(a.destination);
+    o.start(a.currentTime);o.stop(a.currentTime+.02)
+  }catch{}
+}
+
+function playMinimize(){
+  try{
+    const a=audio(),o=a.createOscillator(),g=a.createGain();
+    o.type='sine';o.frequency.setValueAtTime(800,a.currentTime);
+    o.frequency.exponentialRampToValueAtTime(200,a.currentTime+.2);
+    g.gain.setValueAtTime(.05,a.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,a.currentTime+.25);
+    o.connect(g);g.connect(a.destination);
+    o.start(a.currentTime);o.stop(a.currentTime+.25)
+  }catch{}
+}
+
+function playMaximize(){
+  try{
+    const a=audio(),o=a.createOscillator(),g=a.createGain();
+    o.type='sine';o.frequency.setValueAtTime(300,a.currentTime);
+    o.frequency.exponentialRampToValueAtTime(900,a.currentTime+.2);
+    g.gain.setValueAtTime(.05,a.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,a.currentTime+.25);
+    o.connect(g);g.connect(a.destination);
+    o.start(a.currentTime);o.stop(a.currentTime+.25)
+  }catch{}
+}
+
+/* ============================================
+   MATRIX RAIN
+   ============================================ */
+let mxPaused=false;
+function pauseMX(){mxPaused=true;document.body.classList.add('mx-hit')}
+function resumeMX(){mxPaused=false;document.body.classList.remove('mx-hit')}
 
 const c=document.getElementById('c'),x=c.getContext('2d');
 let W,H,cols,drops;
@@ -37,6 +174,7 @@ addEventListener('resize',rs,{passive:true});
 
 (function mx(){
   if(document.hidden)return;
+  if(mxPaused)return;
   const dpr=devicePixelRatio||1;
   const f=fs*dpr;
   x.fillStyle='rgba(6,6,6,.06)';
@@ -51,12 +189,15 @@ addEventListener('resize',rs,{passive:true});
   requestAnimationFrame(mx)
 })();
 
+/* ============================================
+   WORKSPACE
+   ============================================ */
 const winsEl=document.getElementById('wins');
 const ki=document.getElementById('ki');
 let zc=1;
 const terms=[];
 let active=null;
-const LS='void_wins_v7';
+const LS='void_wins_v8';
 
 const dock=document.createElement('div');
 dock.className='dock';
@@ -66,8 +207,16 @@ winsEl.appendChild(dock);
 
 let errPop=null;
 
+function genToken(){
+  const c2='abcdef0123456789';
+  let r='';
+  for(let i=0;i<8;i++)r+=c2[Math.random()*16|0];
+  return r
+}
+
 function showErr(t){
   if(errPop)errPop.remove();
+  pauseMX();playError();
   errPop=document.createElement('div');
   errPop.className='err-pop';
   errPop.setAttribute('role','alertdialog');
@@ -75,6 +224,7 @@ function showErr(t){
   const pid=Math.random()*9000+1000|0;
   const up=Math.random()*999|0;
   errPop.innerHTML=`
+    <div class="err-glitch-bg"></div>
     <h3>SESSION ${t.id.slice(-4).toUpperCase()} — CONNECTION LOST</h3>
     <p>Terminal process terminated unexpectedly.<br>Session data preserved in memory buffer.</p>
     <span class="err-btn" tabindex="0" role="button">[ RECONNECT ]</span>
@@ -88,6 +238,7 @@ function showErr(t){
     active=t;
     if(mob)focusKi();
     errPop.remove();errPop=null;
+    resumeMX();playSuccess();
     updateDock();save()
   };
   btn.addEventListener('click',restore);
@@ -111,6 +262,7 @@ function updateDock(){
       t.el.style.zIndex=++zc;
       active=t;
       if(mob)focusKi();
+      playSuccess();
       updateDock();save()
     };
     d.addEventListener('click',restore);
@@ -171,6 +323,7 @@ ki.addEventListener('keydown',e=>{
     const line=t.body.querySelector('.input-line');
     if(!line||line.style.display==='none')return;
     const v=t.input;
+    playEnter();
     pr(t,t.prompt+' '+v,'cmd');
     if(v.trim()){t.hist.push(v);t.hi=t.hist.length}
     t.input='';ki.value='';
@@ -184,7 +337,7 @@ ki.addEventListener('keydown',e=>{
   }
 });
 
-/* === WINDOW TILING === */
+/* === TILING === */
 let tiling=false;
 
 function applyTile(){
@@ -195,15 +348,11 @@ function applyTile(){
   if(n===2){cols2=2;rows2=1}
   else if(n<=4){cols2=2;rows2=2}
   else{cols2=3;rows2=Math.ceil(n/3)}
-
-  const vw=innerWidth,vh=innerHeight;
-  const gap=4;
+  const vw=innerWidth,vh=innerHeight,gap=4;
   const cw=(vw-gap*(cols2+1))/cols2;
   const ch2=(vh-gap*(rows2+1))/rows2;
-
   visible.forEach((t,i)=>{
-    const col=i%cols2;
-    const row=Math.floor(i/cols2);
+    const col=i%cols2,row=Math.floor(i/cols2);
     t.el.style.left=(gap+col*(cw+gap))+'px';
     t.el.style.top=(gap+row*(ch2+gap))+'px';
     t.el.style.width=cw+'px';
@@ -221,6 +370,7 @@ function toggleTile(){
     return
   }
   tiling=!tiling;
+  playEnter();
   if(tiling){
     visible.forEach(t=>t.el.classList.add('tiling'));
     applyTile();
@@ -228,11 +378,8 @@ function toggleTile(){
   }else{
     visible.forEach(t=>{
       t.el.classList.remove('tiling');
-      t.el.style.width='';
-      t.el.style.height='';
-      t.el.style.maxHeight='';
-      t.body.style.maxHeight='';
-      t.body.style.flex='';
+      t.el.style.width='';t.el.style.height='';t.el.style.maxHeight='';
+      t.body.style.maxHeight='';t.body.style.flex='';
       clamp(t)
     });
     if(active)pr(active,'Tiling disabled.','dim')
@@ -240,6 +387,7 @@ function toggleTile(){
   save()
 }
 
+/* === WINDOW FACTORY === */
 function mk(o){
   const w=document.createElement('div');
   w.className='win';
@@ -279,7 +427,7 @@ function mk(o){
     input:'',mode:'idle',hidden:false,
     prompt:'root@main:~#',node:null,
     title:o.ti||'terminal',
-    hist:[],hi:-1
+    hist:[],hi:-1,_prev:'',_pend:null,_pt:null
   };
   terms.push(t);
 
@@ -358,12 +506,13 @@ function mk(o){
     if(rz2){rz2=false;w.style.transition='';if(!tiling)clamp(t);save()}
   });
 
-  /* Close — corrupt animation, no actual close */
+  /* Close — corrupt */
   const doClose=()=>{
     const btn=bar.querySelector('.close');
     if(btn.classList.contains('corrupt'))return;
     btn.classList.add('corrupt');
     w.classList.add('corrupt-shake');
+    pauseMX();playCorrupt();
 
     const els=body.querySelectorAll('.out');
     const bad=[];
@@ -382,12 +531,13 @@ function mk(o){
       const err=document.createElement('div');
       err.className='close-err';
       err.innerHTML=`
+        <div class="err-glitch-bg"></div>
         <h4>⚠ FATAL: PROCESS PROTECTED</h4>
         <p>Cannot terminate session.<br>Kernel lock active — retry denied.</p>
         <div class="close-err-dim">errno=1 (EPERM) · pid=${Math.random()*9000+1000|0} · signal blocked</div>
       `;
       winsEl.appendChild(err);
-      setTimeout(()=>err.remove(),2000)
+      setTimeout(()=>{err.remove();resumeMX()},2200)
     },200);
 
     setTimeout(()=>{
@@ -399,17 +549,21 @@ function mk(o){
   bar.querySelector('.close').addEventListener('click',e=>{e.stopPropagation();doClose()});
   bar.querySelector('.close').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();doClose()}});
 
+  /* Minimize */
   const doMin=()=>{
     w.classList.add('minimized');
     if(active===t){active=null;blurKi()}
+    playMinimize();
     updateDock();save();
     showErr(t)
   };
   bar.querySelector('.min').addEventListener('click',e=>{e.stopPropagation();doMin()});
   bar.querySelector('.min').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();doMin()}});
 
+  /* Maximize */
   const doMax=()=>{
     w.classList.toggle('maximized');
+    playMaximize();
     if(!w.classList.contains('maximized')){
       w.style.position='absolute';
       w.classList.remove('tiling');
@@ -424,6 +578,7 @@ function mk(o){
   return t
 }
 
+/* === OUTPUT === */
 function pr(t,txt,cls){
   const el=document.createElement('div');
   el.className='out'+(cls?' '+cls:'');
@@ -444,7 +599,7 @@ function show(t){
   line.style.display='flex';
   line.querySelector('.pr').textContent=t.prompt;
   line.querySelector('.typed').textContent='';
-  t.input='';t.hi=-1;
+  t.input='';t.hi=-1;t._prev='';t._pend=null;
   t.body.appendChild(line);
   t.body.scrollTop=t.body.scrollHeight;
   if(mob&&active===t)focusKi()
@@ -459,10 +614,35 @@ function hide(t){
 function upd(t){
   const line=t.body.querySelector('.input-line');
   if(!line)return;
-  line.querySelector('.typed').textContent=t.hidden?''.padEnd(t.input.length,'*'):t.input;
-  t.body.scrollTop=t.body.scrollHeight
+  if(t.hidden){
+    line.querySelector('.typed').textContent=''.padEnd(t.input.length,'*');
+    t._prev=''.padEnd(t.input.length,'*');
+    t.body.scrollTop=t.body.scrollHeight;
+    return
+  }
+  if(!t._pend)t._pend=new Set();
+  const real=t.input;
+  for(let i=0;i<real.length;i++){
+    if(!t._prev||i>=t._prev.length||real[i]!==t._prev[i])t._pend.add(i)
+  }
+  let disp='';
+  for(let i=0;i<real.length;i++){
+    disp+=t._pend.has(i)?(Math.random()>.5?'1':'0'):real[i]
+  }
+  line.querySelector('.typed').textContent=disp;
+  t._prev=real;
+  t.body.scrollTop=t.body.scrollHeight;
+  if(t._pend.size){
+    clearTimeout(t._pt);
+    t._pt=setTimeout(()=>{
+      t._pend.clear();
+      const l2=t.body.querySelector('.input-line');
+      if(l2)l2.querySelector('.typed').textContent=t.input
+    },90+Math.random()*70)
+  }
 }
 
+/* === AUTOCOMPLETE === */
 const nids=['0x01','0x02','0x03'];
 
 function ac(t){
@@ -496,6 +676,7 @@ function route(t,v){
   else if(t.mode==='node'){nd(t,v)}
 }
 
+/* === DESKTOP KEYBOARD === */
 if(!mob){
   addEventListener('keydown',e=>{
     if(!active)return;
@@ -506,6 +687,7 @@ if(!mob){
       const line=t.body.querySelector('.input-line');
       if(!line||line.style.display==='none')return;
       const v=t.input;
+      playEnter();
       pr(t,t.prompt+' '+v,'cmd');
       if(v.trim()){t.hist.push(v);t.hi=t.hist.length}
       t.input='';
@@ -535,6 +717,7 @@ if(!mob){
       return
     }
     if(e.key.length===1){
+      playKey();
       t.input+=e.key;
       t.hi=t.hist.length;
       upd(t)
@@ -544,16 +727,14 @@ if(!mob){
 
 addEventListener('resize',()=>{
   rs();
-  if(tiling){
-    applyTile()
-  }else{
-    terms.forEach(t=>{
-      if(t.el.classList.contains('maximized'))return;
-      clamp(t)
-    })
-  }
+  if(tiling)applyTile();
+  else terms.forEach(t=>{
+    if(t.el.classList.contains('maximized'))return;
+    clamp(t)
+  })
 },{passive:true});
 
+/* === BOOT === */
 const boot=[
   ['dim','VOID BIOS v4.2.1 (C) 2026 VOID Systems Inc.'],
   ['dim',''],
@@ -604,6 +785,7 @@ let bi=0;
 const mt=terms[0];
 
 function startLogin(){
+  playBoot();
   if(mob){
     pr(mt,'Last login: auto ('+os+')','dim');
     pr(mt,'');
@@ -631,6 +813,7 @@ function startLogin(){
   setTimeout(bs,delay)
 })();
 
+/* === AUTH === */
 function login(t,user){
   const u=user.trim().toLowerCase();
   if(u==='root'){
@@ -639,6 +822,7 @@ function login(t,user){
     t.mode='pass';t.hidden=true;
     show(t)
   }else{
+    playError();
     pr(t,`login failed for ${u||'(blank)'}`,'err');
     pr(t,'');
     t.prompt='login:';
@@ -650,6 +834,7 @@ function pass(t,pw){
   const v=pw.trim().toLowerCase();
   if(v==='root'){
     t.hidden=false;
+    playSuccess();
     pr(t,'Last login: Thu Aug 27 03:42:17 2026 from 192.168.1.42','dim');
     pr(t,'');
     pr(t,'Welcome to VOID SYSTEMS','info');
@@ -658,6 +843,7 @@ function pass(t,pw){
     t.prompt='root@main:~#';t.mode='shell';
     show(t)
   }else{
+    playError();
     pr(t,'Authentication failed.','err');
     pr(t,'');
     t.hidden=true;
@@ -666,12 +852,14 @@ function pass(t,pw){
   }
 }
 
+/* === TOKENS === */
 const tokens={
   '0x01':genToken(),
   '0x02':genToken(),
   '0x03':genToken()
 };
 
+/* === SHELL === */
 const shell={
   help:t=>{
     pr(t,'');
@@ -695,10 +883,7 @@ const shell={
     pr(t,'')
   },
 
-  './tile':t=>{
-    toggleTile();
-    show(t)
-  },
+  './tile':t=>{toggleTile();show(t)},
 
   './init':t=>{
     pr(t,'');pr(t,'Initializing system...','info');pr(t,'');
@@ -716,6 +901,7 @@ const shell={
     let i=0;
     (function st(){
       if(i>=s.length){
+        playSuccess();
         pr(t,'');pr(t,'System ready. 0 errors.','ok');pr(t,'');
         show(t);return
       }
@@ -729,6 +915,7 @@ const shell={
     pr(t,'Scanning network for registered nodes...','dim');
     hide(t);
     setTimeout(()=>{
+      playSuccess();
       pr(t,'');
       pr(t,'  ID      HOST                  TOKEN         STATUS');
       pr(t,'  ------  ----------------------  ------------  --------');
@@ -745,6 +932,7 @@ const shell={
   './connect':(t,args)=>{
     const id=args[0];
     if(!id){
+      playError();
       pr(t,'Usage: ./connect <node-id>','warn');
       pr(t,'Run ./scan to see available nodes.','dim');
       pr(t,'');return
@@ -755,10 +943,11 @@ const shell={
       '0x03':{h:'tiktok.com',tk:tokens['0x03'],ti:'node 0x03 — tiktok.com',lk:'https://www.tiktok.com/@muncixop',lb:'tiktok.com/@muncixop'}
     };
     const n=nodes[id];
-    if(!n){pr(t,`Unknown node: ${id}`,'err');pr(t,'');return}
+    if(!n){playError();pr(t,`Unknown node: ${id}`,'err');pr(t,'');return}
     pr(t,`Connecting to ${n.h}...`,'dim');
     hide(t);
     setTimeout(()=>{
+      playSuccess();
       pr(t,'');
       pr(t,'[OK] TCP handshake complete','ok');
       pr(t,'[OK] TLS 1.3 established','ok');
@@ -855,11 +1044,13 @@ function sh(t,cmd){
   if(shell[full]){shell[full](t,args);return}
   if(shell[k]){shell[k](t,args);return}
   if(k==='echo'){pr(t,args.join(' '));pr(t,'');return}
+  playError();
   pr(t,`zsh: command not found: ${k}`,'err');
   pr(t,'Type "help" for available commands.','dim');
   pr(t,'')
 }
 
+/* === BRUTE FORCE === */
 function bruteForce(t,correctToken){
   const attempts=Math.random()*40+20|0;
   let i=0;
@@ -873,6 +1064,7 @@ function bruteForce(t,correctToken){
     if(i>=attempts){
       bruteEl.textContent+=`  [${i}] ${correctToken} ✓\n`;
       t.body.scrollTop=t.body.scrollHeight;
+      playSuccess();
       setTimeout(()=>{
         pr(t,'');
         pr(t,'[OK] Token verified','ok');
@@ -897,6 +1089,7 @@ function bruteForce(t,correctToken){
       },300);
       return
     }
+    playBruteTick();
     bruteEl.textContent+=`  [${i}] ${genToken()} ✗\n`;
     t.body.scrollTop=t.body.scrollHeight;
     i++;
@@ -905,10 +1098,12 @@ function bruteForce(t,correctToken){
   step()
 }
 
+/* === NODE AUTH (DESKTOP) === */
 function nd(t,val){
   const v=val.trim().toLowerCase();
   const n=t.node;
   if(v===n.tk){
+    playSuccess();
     pr(t,'');
     pr(t,'[OK] Token verified','ok');
     pr(t,'[OK] Session authorized','ok');
@@ -935,17 +1130,20 @@ function nd(t,val){
     pr(t,'Enter the auth token displayed above to proceed.','info');
     pr(t,'');return
   }
+  playError();
   pr(t,`[${n.h}] auth failed: invalid token`,'err');
   pr(t,'');
   pr(t,'Enter auth token to proceed:','warn')
 }
 
+/* === GLITCH === */
 function glitch(){
   if(reducedMotion)return;
   if(!active)return;
   const t=active;
   if(t.el.classList.contains('minimized'))return;
   const gl=t.gl,w=t.el;
+  playGlitch();
   gl.innerHTML='';
   const n=4+(Math.random()*5|0);
   for(let i=0;i<n;i++){
@@ -958,6 +1156,15 @@ function glitch(){
     s.style.cssText=`top:${top}%;height:${th}px;transform:translateX(${off}px) skewX(${sk}deg)`;
     gl.appendChild(s)
   }
+  const rc=document.createElement('div');
+  rc.className='rgb-c';
+  rc.style.transform=`translate(${(Math.random()-.5)*4}px,${(Math.random()-.5)*4}px)`;
+  gl.appendChild(rc);
+  const rm=document.createElement('div');
+  rm.className='rgb-m';
+  rm.style.transform=`translate(${(Math.random()-.5)*-4}px,${(Math.random()-.5)*-4}px)`;
+  gl.appendChild(rm);
+
   const tx=(Math.random()-.5)*12;
   const ty=(Math.random()-.5)*6;
   w.style.transform=`translate(${tx}px,${ty}px)`;
@@ -1005,6 +1212,7 @@ function glitch(){
   setTimeout(()=>{glitch();sc()},2000+Math.random()*4000)
 })();
 
+/* === VISIBILITY === */
 document.addEventListener('visibilitychange',()=>{
   if(!document.hidden)rs()
 });
