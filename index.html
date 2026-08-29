@@ -3,26 +3,27 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NEXUS // TERMINAL</title>
+  <title>NEXUS // TERMINAL_V4</title>
+  <!-- Fuentes modernas: JetBrains Mono (código) y Rajdhani (títulos) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;500;700&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Capas de Efectos -->
-  <canvas id="bg-canvas"></canvas>
-  <div class="scanlines"></div>
-  <div class="vignette"></div>
+  <!-- Capas de Fondo (No intrusivas) -->
+  <canvas id="bg-canvas"></canvas> <!-- Red neuronal sutil -->
+  <div class="scanlines"></div>    <!-- Líneas de escaneo CRT -->
+  <div class="vignette"></div>     <!-- Viñeta oscura para enfoque -->
 
-  <!-- Contenedor Principal (Glassmorphism) -->
+  <!-- Contenedor Principal: Usamos Grid en el body para centrar sin romper el canvas -->
   <main class="terminal-window">
     
-    <!-- Pantalla de Boot -->
+    <!-- PANTALLA DE BOOT (Secuencia de carga) -->
     <div id="boot-screen" class="screen active">
       <div class="boot-header">
         <span class="logo">NEXUS_OS</span>
-        <span class="version">v3.0.1-stable</span>
+        <span class="version">v4.0.1-stable</span>
       </div>
       <div class="boot-log" id="boot-log"></div>
       <div class="progress-container">
@@ -30,87 +31,82 @@
       </div>
     </div>
 
-    <!-- Pantalla Principal -->
+    <!-- PANTALLA PRINCIPAL (Contenido real) -->
     <div id="main-screen" class="screen hidden">
-      <!-- Cabecera de la ventana -->
+      <!-- Cabecera de ventana estilo OS -->
       <header class="window-header">
         <div class="window-controls">
-          <span class="control close"></span>
-          <span class="control minimize"></span>
-          <span class="control maximize"></span>
+          <span class="control close" title="Cerrar"></span>
+          <span class="control minimize" title="Minimizar"></span>
+          <span class="control maximize" title="Maximizar"></span>
         </div>
         <div class="window-title">
           <span class="icon">⚡</span> SECURE_SHELL // ROOT_ACCESS
         </div>
         <div class="status-indicator">
-          <span class="blink-dot"></span> CONNECTED
+          <span class="blink-dot"></span> ONLINE
         </div>
       </header>
 
-      <!-- Cuerpo de la terminal -->
       <div class="window-body">
-        
         <!-- Sección de Bienvenida -->
         <section class="welcome-section">
           <h1 class="glitch-text" data-text="SYSTEM_READY">SYSTEM_READY</h1>
-          <p class="subtitle">Iniciando protocolos de seguridad... Acceso concedido.</p>
+          <p class="subtitle">Protocolos de seguridad iniciados. Acceso concedido.</p>
           
-          <div class="user-stats-grid">
-            <div class="stat-card">
+          <div class="user-info-grid">
+            <div class="info-item">
               <span class="label">USUARIO</span>
               <span class="value">GUEST_ADMIN</span>
             </div>
-            <div class="stat-card">
-              <span class="label">IP ORIGIN</span>
+            <div class="info-item">
+              <span class="label">IP ORIGEN</span>
               <span class="value">192.168.0.X</span>
             </div>
-            <div class="stat-card">
+            <div class="info-item">
               <span class="label">ENCRIPTACIÓN</span>
               <span class="value highlight">AES-256-GCM</span>
             </div>
           </div>
         </section>
 
-        <!-- Navegación -->
+        <!-- Navegación (Links) -->
         <section class="nav-section">
           <h3 class="section-title">>> RECURSOS_DISPONIBLES</h3>
           <div class="grid-links">
-            <a href="#" class="link-card" data-hover="GitHub Repositories">
+            <!-- ⚡ CAMBIA LOS LINKS AQUÍ -->
+            <a href="https://github.com/tu-usuario" target="_blank" class="link-card">
               <div class="icon-box">GH</div>
               <div class="link-info">
                 <span class="link-title">GitHub</span>
-                <span class="link-desc">Repositorios y Proyectos</span>
+                <span class="link-desc">Repositorios y Código</span>
               </div>
-              <div class="hover-line"></div>
             </a>
-            <a href="#" class="link-card" data-hover="Professional Network">
+            <a href="https://linkedin.com/in/tu-usuario" target="_blank" class="link-card">
               <div class="icon-box">LI</div>
               <div class="link-info">
                 <span class="link-title">LinkedIn</span>
-                <span class="link-desc">Red Profesional</span>
+                <span class="link-desc">Perfil Profesional</span>
               </div>
-              <div class="hover-line"></div>
             </a>
-            <a href="#" class="link-card" data-hover="Social Media Feed">
+            <a href="https://twitter.com/tu-usuario" target="_blank" class="link-card">
               <div class="icon-box">X</div>
               <div class="link-info">
                 <span class="link-title">Twitter / X</span>
-                <span class="link-desc">Actualizaciones en tiempo real</span>
+                <span class="link-desc">Actualizaciones</span>
               </div>
-              <div class="hover-line"></div>
             </a>
-            <a href="#" class="link-card" data-hover="Direct Communication">
+            <a href="mailto:tu@email.com" class="link-card">
               <div class="icon-box">@</div>
               <div class="link-info">
                 <span class="link-title">Email</span>
                 <span class="link-desc">Contacto Seguro</span>
               </div>
-              <div class="hover-line"></div>
             </a>
           </div>
         </section>
 
-        <!-- Estadísticas en tiempo real -->
+        <!-- Monitor de Sistema -->
         <section class="system-monitor">
           <div class="monitor-row">
             <div class="monitor-item">
@@ -128,18 +124,16 @@
             <span>UPTIME: <span id="uptime-timer">00:00:00</span></span>
           </div>
         </section>
-
       </div>
 
-      <!-- Pie de página -->
       <footer class="window-footer">
-        <span class="footer-left">NEXUS TERMINAL v3.0</span>
+        <span class="footer-left">NEXUS TERMINAL v4.0</span>
         <span class="footer-right">Presiona <kbd>ESC</kbd> para reiniciar</span>
       </footer>
     </div>
   </main>
 
-  <!-- Modal de Autenticación -->
+  <!-- Modal de Autenticación (Opcional) -->
   <div id="auth-modal" class="modal hidden">
     <div class="modal-content">
       <div class="modal-header">
@@ -147,7 +141,7 @@
         <h2>ACCESO RESTRINGIDO</h2>
       </div>
       <p>Se requiere autenticación para continuar.</p>
-      <input type="password" id="password-input" placeholder="INTRODUZCA LA CLAVE" autocomplete="off">
+      <input type="password" id="password-input" placeholder="CLAVE" autocomplete="off">
       <div class="modal-actions">
         <button id="btn-auth" class="btn-primary">VERIFICAR</button>
         <button id="btn-cancel" class="btn-secondary">CANCELAR</button>
