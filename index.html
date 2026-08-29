@@ -3,152 +3,55 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NEXUS // TERMINAL_V4</title>
-  <!-- Fuentes modernas: JetBrains Mono (código) y Rajdhani (títulos) -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+  <title>TERMINAL_ACCESS</title>
   <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 </head>
 <body>
-  <!-- Capas de Fondo (No intrusivas) -->
-  <canvas id="bg-canvas"></canvas> <!-- Red neuronal sutil -->
-  <div class="scanlines"></div>    <!-- Líneas de escaneo CRT -->
-  <div class="vignette"></div>     <!-- Viñeta oscura para enfoque -->
-
-  <!-- Contenedor Principal: Usamos Grid en el body para centrar sin romper el canvas -->
-  <main class="terminal-window">
-    
-    <!-- PANTALLA DE BOOT (Secuencia de carga) -->
-    <div id="boot-screen" class="screen active">
-      <div class="boot-header">
-        <span class="logo">NEXUS_OS</span>
-        <span class="version">v4.0.1-stable</span>
-      </div>
-      <div class="boot-log" id="boot-log"></div>
-      <div class="progress-container">
-        <div class="progress-bar" id="progress-bar"></div>
-      </div>
+  <!-- Canvas para el efecto glitch (no intrusivo) -->
+  <canvas id="glitch-canvas"></canvas>
+  
+  <!-- Contenedor principal centrado con Grid -->
+  <div class="terminal">
+    <!-- Pantalla de carga rápida -->
+    <div id="boot" class="hidden">
+      <div class="line"><span class="prompt">root@sys:~$</span> init...</div>
+      <div class="line">loading modules...</div>
+      <div class="line">mounting /dev/null...</div>
+      <div class="line" style="color:#0f0">SYSTEM READY.</div>
     </div>
 
-    <!-- PANTALLA PRINCIPAL (Contenido real) -->
-    <div id="main-screen" class="screen hidden">
-      <!-- Cabecera de ventana estilo OS -->
-      <header class="window-header">
-        <div class="window-controls">
-          <span class="control close" title="Cerrar"></span>
-          <span class="control minimize" title="Minimizar"></span>
-          <span class="control maximize" title="Maximizar"></span>
-        </div>
-        <div class="window-title">
-          <span class="icon">⚡</span> SECURE_SHELL // ROOT_ACCESS
-        </div>
-        <div class="status-indicator">
-          <span class="blink-dot"></span> ONLINE
-        </div>
-      </header>
-
-      <div class="window-body">
-        <!-- Sección de Bienvenida -->
-        <section class="welcome-section">
-          <h1 class="glitch-text" data-text="SYSTEM_READY">SYSTEM_READY</h1>
-          <p class="subtitle">Protocolos de seguridad iniciados. Acceso concedido.</p>
-          
-          <div class="user-info-grid">
-            <div class="info-item">
-              <span class="label">USUARIO</span>
-              <span class="value">GUEST_ADMIN</span>
-            </div>
-            <div class="info-item">
-              <span class="label">IP ORIGEN</span>
-              <span class="value">192.168.0.X</span>
-            </div>
-            <div class="info-item">
-              <span class="label">ENCRIPTACIÓN</span>
-              <span class="value highlight">AES-256-GCM</span>
-            </div>
-          </div>
-        </section>
-
-        <!-- Navegación (Links) -->
-        <section class="nav-section">
-          <h3 class="section-title">>> RECURSOS_DISPONIBLES</h3>
-          <div class="grid-links">
-            <!-- ⚡ CAMBIA LOS LINKS AQUÍ -->
-            <a href="https://github.com/tu-usuario" target="_blank" class="link-card">
-              <div class="icon-box">GH</div>
-              <div class="link-info">
-                <span class="link-title">GitHub</span>
-                <span class="link-desc">Repositorios y Código</span>
-              </div>
-            </a>
-            <a href="https://linkedin.com/in/tu-usuario" target="_blank" class="link-card">
-              <div class="icon-box">LI</div>
-              <div class="link-info">
-                <span class="link-title">LinkedIn</span>
-                <span class="link-desc">Perfil Profesional</span>
-              </div>
-            </a>
-            <a href="https://twitter.com/tu-usuario" target="_blank" class="link-card">
-              <div class="icon-box">X</div>
-              <div class="link-info">
-                <span class="link-title">Twitter / X</span>
-                <span class="link-desc">Actualizaciones</span>
-              </div>
-            </a>
-            <a href="mailto:tu@email.com" class="link-card">
-              <div class="icon-box">@</div>
-              <div class="link-info">
-                <span class="link-title">Email</span>
-                <span class="link-desc">Contacto Seguro</span>
-              </div>
-            </a>
-          </div>
-        </section>
-
-        <!-- Monitor de Sistema -->
-        <section class="system-monitor">
-          <div class="monitor-row">
-            <div class="monitor-item">
-              <span class="m-label">CPU_LOAD</span>
-              <div class="bar-bg"><div class="bar-fill" id="cpu-bar"></div></div>
-              <span class="m-value" id="cpu-val">0%</span>
-            </div>
-            <div class="monitor-item">
-              <span class="m-label">MEMORY</span>
-              <div class="bar-bg"><div class="bar-fill" id="ram-bar"></div></div>
-              <span class="m-value" id="ram-val">0%</span>
-            </div>
-          </div>
-          <div class="uptime">
-            <span>UPTIME: <span id="uptime-timer">00:00:00</span></span>
-          </div>
-        </section>
+    <!-- Contenido Principal -->
+    <div id="main" class="hidden">
+      <pre class="ascii">
+   _____  __  __ 
+  /  _  \|  \/  |
+  |  /|  ||      |
+  |_/ |__||_|\_/|
+      </pre>
+      
+      <div class="info">
+        <div>USR: <span class="hl">GUEST</span></div>
+        <div>IP: <span class="hl">192.168.X.X</span></div>
+        <div>ST: <span class="blink">ONLINE</span></div>
       </div>
 
-      <footer class="window-footer">
-        <span class="footer-left">NEXUS TERMINAL v4.0</span>
-        <span class="footer-right">Presiona <kbd>ESC</kbd> para reiniciar</span>
-      </footer>
-    </div>
-  </main>
-
-  <!-- Modal de Autenticación (Opcional) -->
-  <div id="auth-modal" class="modal hidden">
-    <div class="modal-content">
-      <div class="modal-header">
-        <span class="alert-icon">⚠️</span>
-        <h2>ACCESO RESTRINGIDO</h2>
+      <div class="nav">
+        <!-- ⚡ CAMBIA LOS LINKS AQUÍ -->
+        <a href="#" class="lnk"><span class="ic">[G]</span> GitHub</a>
+        <a href="#" class="lnk"><span class="ic">[T]</span> Twitter</a>
+        <a href="#" class="lnk"><span class="ic">[L]</span> LinkedIn</a>
+        <a href="#" class="lnk"><span class="ic">[M]</span> Mail</a>
       </div>
-      <p>Se requiere autenticación para continuar.</p>
-      <input type="password" id="password-input" placeholder="CLAVE" autocomplete="off">
-      <div class="modal-actions">
-        <button id="btn-auth" class="btn-primary">VERIFICAR</button>
-        <button id="btn-cancel" class="btn-secondary">CANCELAR</button>
+
+      <div class="stats">
+        <div>CPU: <span id="cpu">0</span>%</div>
+        <div>RAM: <span id="ram">0</span>%</div>
+        <div>UPT: <span id="up">00:00</span></div>
       </div>
     </div>
   </div>
 
-  <script src="main.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
