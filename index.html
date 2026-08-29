@@ -3,27 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TERMINAL_ACCESS</title>
-  <link rel="stylesheet" href="style.css">
+  <meta name="theme-color" content="#000000">
+  <meta name="description" content="Terminal Hacker Access">
+  <title>VOID_SYSTEMS // TERMINAL</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Canvas para el efecto glitch (no intrusivo) -->
-  <canvas id="glitch-canvas"></canvas>
+  <!-- Canvas de Glitch (Fondo) -->
+  <canvas id="gl"></canvas>
   
-  <!-- Contenedor principal centrado con Grid -->
-  <div class="terminal">
-    <!-- Pantalla de carga rápida -->
-    <div id="boot" class="hidden">
-      <div class="line"><span class="prompt">root@sys:~$</span> init...</div>
+  <!-- Contenedor Principal (Grid para evitar roturas) -->
+  <main class="term">
+    
+    <!-- Pantalla de Boot -->
+    <div id="boot" class="screen active">
+      <div class="line"><span class="p">root@sys:~$</span> init core...</div>
       <div class="line">loading modules...</div>
       <div class="line">mounting /dev/null...</div>
       <div class="line" style="color:#0f0">SYSTEM READY.</div>
     </div>
 
-    <!-- Contenido Principal -->
-    <div id="main" class="hidden">
-      <pre class="ascii">
+    <!-- Pantalla Principal -->
+    <div id="main" class="screen hidden">
+      <div class="head">
+        <span class="dots">●●●</span>
+        <span class="ttl">SECURE_SHELL_V4</span>
+      </div>
+      
+      <pre class="art">
    _____  __  __ 
   /  _  \|  \/  |
   |  /|  ||      |
@@ -38,10 +48,10 @@
 
       <div class="nav">
         <!-- ⚡ CAMBIA LOS LINKS AQUÍ -->
-        <a href="#" class="lnk"><span class="ic">[G]</span> GitHub</a>
-        <a href="#" class="lnk"><span class="ic">[T]</span> Twitter</a>
-        <a href="#" class="lnk"><span class="ic">[L]</span> LinkedIn</a>
-        <a href="#" class="lnk"><span class="ic">[M]</span> Mail</a>
+        <a href="https://github.com/tu-usuario" target="_blank" class="lnk"><span class="ic">[G]</span> GitHub</a>
+        <a href="https://twitter.com/tu-usuario" target="_blank" class="lnk"><span class="ic">[T]</span> Twitter</a>
+        <a href="https://linkedin.com/in/tu-usuario" target="_blank" class="lnk"><span class="ic">[L]</span> LinkedIn</a>
+        <a href="mailto:tu@email.com" class="lnk"><span class="ic">[M]</span> Mail</a>
       </div>
 
       <div class="stats">
@@ -49,6 +59,15 @@
         <div>RAM: <span id="ram">0</span>%</div>
         <div>UPT: <span id="up">00:00</span></div>
       </div>
+    </div>
+  </main>
+
+  <!-- Modal de Contraseña (Opcional) -->
+  <div id="lock" class="modal hidden">
+    <div class="box">
+      <h3>ACCESS DENIED</h3>
+      <input type="password" id="pw" placeholder="KEY">
+      <button id="ok">GO</button>
     </div>
   </div>
 
