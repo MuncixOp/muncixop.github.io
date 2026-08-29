@@ -1,32 +1,38 @@
-const canvas = document.getElementById('glitch-canvas');
-const ctx = canvas.getContext('2d');
+const gl = document.getElementById('gl');
+const ctx = gl.getContext('2d');
 const boot = document.getElementById('boot');
 const main = document.getElementById('main');
 const cpu = document.getElementById('cpu');
 const ram = document.getElementById('ram');
 const up = document.getElementById('up');
+const lock = document.getElementById('lock');
+const pw = document.getElementById('pw');
+const ok = document.getElementById('ok');
 
-let w = canvas.width = window.innerWidth;
-let h = canvas.height = window.innerHeight;
+let w = gl.width = window.innerWidth;
+let h = gl.height = window.innerHeight;
+let t = 0;
 
 window.onresize = () => {
-  w = canvas.width = window.innerWidth;
-  h = canvas.height = window.innerHeight;
+  w = gl.width = window.innerWidth;
+  h = gl.height = window.innerHeight;
 };
 
-// Boot rápido (2 segundos)
+// Boot Sequence (Rápido y seco)
 setTimeout(() => {
-  boot.classList.remove('hidden');
+  boot.classList.add('active');
   setTimeout(() => {
+    boot.classList.remove('active');
     boot.classList.add('hidden');
     main.classList.remove('hidden');
-    loop();
-    stats();
+    main.classList.add('active');
+    glitchLoop();
+    statsLoop();
   }, 2000);
 }, 500);
 
-// Glitch Seco (Corte de imagen, sin suavizado)
-function glitch() {
+// Glitch "Seco" - Sin suavizado, cortes directos
+function glitchLoop() {
   if (Math.random() > 0.3) {
     const y = Math.random() * h;
     const ht = Math.random() * 30 + 10;
@@ -41,23 +47,26 @@ function glitch() {
       ctx.putImageData(img, off, y);
     } catch (e) {}
   }
-  requestAnimationFrame(glitch);
+  requestAnimationFrame(glitchLoop);
 }
-glitch();
 
-// Estadísticas falsas
-function stats() {
+// Stats Falsas
+function statsLoop() {
   setInterval(() => {
     cpu.innerText = Math.floor(Math.random() * 30 + 10);
     ram.innerText = Math.floor(Math.random() * 20 + 30);
-    let t = Date.now();
-    let s = Math.floor((t / 1000) % 60);
-    let m = Math.floor((t / 60000) % 60);
+    t++;
+    const s = t % 60;
+    const m = Math.floor(t / 60);
     up.innerText = `${m}:${s < 10 ? '0'+s : s}`;
   }, 1000);
 }
 
-// Loop para mantener el canvas activo
-function loop() {
-  // Aquí podrías añadir más lógica si fuera necesario
-}
+// Password (Opcional)
+ok.onclick = () => {
+  if (pw.value === 'admin') lock.classList.add('hidden');
+  else { pw.value = ''; lock.classList.add('hidden'); alert('ERR'); }
+};
+
+// Mostrar lock a los 10s (Descomentar si quieres)
+// setTimeout(() => lock.classList.remove('hidden'), 10000);
