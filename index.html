@@ -1,76 +1,22 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#000000">
-  <meta name="description" content="Terminal Hacker Access">
-  <title>VOID_SYSTEMS // TERMINAL</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#060606">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="VOID">
+<meta name="description" content="VOID SYSTEMS — Terminal">
+<meta name="format-detection" content="telephone=no">
+<title>~/muncixop</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Canvas de Glitch (Fondo) -->
-  <canvas id="gl"></canvas>
-  
-  <!-- Contenedor Principal (Grid para evitar roturas) -->
-  <main class="term">
-    
-    <!-- Pantalla de Boot -->
-    <div id="boot" class="screen active">
-      <div class="line"><span class="p">root@sys:~$</span> init core...</div>
-      <div class="line">loading modules...</div>
-      <div class="line">mounting /dev/null...</div>
-      <div class="line" style="color:#0f0">SYSTEM READY.</div>
-    </div>
-
-    <!-- Pantalla Principal -->
-    <div id="main" class="screen hidden">
-      <div class="head">
-        <span class="dots">●●●</span>
-        <span class="ttl">SECURE_SHELL_V4</span>
-      </div>
-      
-      <pre class="art">
-   _____  __  __ 
-  /  _  \|  \/  |
-  |  /|  ||      |
-  |_/ |__||_|\_/|
-      </pre>
-      
-      <div class="info">
-        <div>USR: <span class="hl">GUEST</span></div>
-        <div>IP: <span class="hl">192.168.X.X</span></div>
-        <div>ST: <span class="blink">ONLINE</span></div>
-      </div>
-
-      <div class="nav">
-        <!-- ⚡ CAMBIA LOS LINKS AQUÍ -->
-        <a href="https://github.com/tu-usuario" target="_blank" class="lnk"><span class="ic">[G]</span> GitHub</a>
-        <a href="https://twitter.com/tu-usuario" target="_blank" class="lnk"><span class="ic">[T]</span> Twitter</a>
-        <a href="https://linkedin.com/in/tu-usuario" target="_blank" class="lnk"><span class="ic">[L]</span> LinkedIn</a>
-        <a href="mailto:tu@email.com" class="lnk"><span class="ic">[M]</span> Mail</a>
-      </div>
-
-      <div class="stats">
-        <div>CPU: <span id="cpu">0</span>%</div>
-        <div>RAM: <span id="ram">0</span>%</div>
-        <div>UPT: <span id="up">00:00</span></div>
-      </div>
-    </div>
-  </main>
-
-  <!-- Modal de Contraseña (Opcional) -->
-  <div id="lock" class="modal hidden">
-    <div class="box">
-      <h3>ACCESS DENIED</h3>
-      <input type="password" id="pw" placeholder="KEY">
-      <button id="ok">GO</button>
-    </div>
-  </div>
-
-  <script src="script.js"></script>
+<canvas id="c" aria-hidden="true"></canvas>
+<div id="wins" role="application" aria-label="Terminal workspace"></div>
+<input id="ki" type="text" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" aria-hidden="true">
+<script src="main.js"></script>
 </body>
 </html>
