@@ -1,22 +1,164 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<meta name="theme-color" content="#060606">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="application-name" content="VOID">
-<meta name="description" content="VOID SYSTEMS — Terminal">
-<meta name="format-detection" content="telephone=no">
-<title>~/muncixop</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Terminal Hacker - Acceso Seguro" />
+  <title>SYSTEM_ROOT // TERMINAL_V3</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=VT323&family=Fira+Code:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-<canvas id="c" aria-hidden="true"></canvas>
-<div id="wins" role="application" aria-label="Terminal workspace"></div>
-<input id="ki" type="text" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" aria-hidden="true">
-<script src="main.js"></script>
+  <!-- Capas de Fondo -->
+  <div id="matrix-bg"></div>
+  <canvas id="glitch-canvas"></canvas>
+  <div id="static-noise"></div>
+  <div id="scanlines"></div>
+
+  <!-- Contenedor Principal -->
+  <div class="terminal-container">
+    
+    <!-- Pantalla de Boot -->
+    <div id="boot-screen" class="screen active">
+      <div class="boot-container">
+        <div class="progress-bar">
+          <div class="progress-fill" id="boot-progress"></div>
+        </div>
+        <div class="boot-log">
+          <div class="prompt">root@system:~#</div>
+          <div id="boot-text" class="hidden"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pantalla Principal -->
+    <div id="main-screen" class="screen hidden">
+      <header class="terminal-header">
+        <div class="window-controls">
+          <div class="close-btn" title="Cerrar"></div>
+          <div class="min-btn" title="Minimizar"></div>
+          <div class="max-btn" title="Maximizar"></div>
+        </div>
+        <div class="window-title">SECURE_CONNECTION_V3.0 <span class="status-badge">EN LÍNEA</span></div>
+      </header>
+      
+      <main class="terminal-body">
+        <!-- Sección de Bienvenida -->
+        <section class="welcome-section">
+          <pre id="ascii-art" class="ascii-art"></pre>
+          <div class="system-info">
+            <div class="info-row">
+              <span class="label">ESTADO:</span>
+              <span class="value highlight">ACTIVO</span>
+            </div>
+            <div class="info-row">
+              <span class="label">USUARIO:</span>
+              <span class="value">GUEST_USER</span>
+            </div>
+            <div class="info-row">
+              <span class="label">IP:</span>
+              <span class="value">192.168.0.X</span>
+            </div>
+            <div class="info-row">
+              <span class="label">ENCRIPCIÓN:</span>
+              <span class="value">AES-256</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Sección de Navegación -->
+        <section class="navigation-section">
+          <div class="section-header">
+            <h3>&gt; ACCESO_A_RECURSOS</h3>
+            <span class="badge">[SECURE]</span>
+          </div>
+          
+          <nav class="link-grid">
+            <a href="https://github.com/tu-usuario" target="_blank" class="link-item" data-type="repo">
+              <span class="link-icon">[G]</span>
+              <span class="link-text">GitHub</span>
+              <span class="link-meta">Repositorios</span>
+            </a>
+            <a href="https://twitter.com/tu-usuario" target="_blank" class="link-item" data-type="social">
+              <span class="link-icon">[T]</span>
+              <span class="link-text">Twitter / X</span>
+              <span class="link-meta">Redes</span>
+            </a>
+            <a href="https://linkedin.com/in/tu-usuario" target="_blank" class="link-item" data-type="social">
+              <span class="link-icon">[L]</span>
+              <span class="link-text">LinkedIn</span>
+              <span class="link-meta">Profesional</span>
+            </a>
+            <a href="mailto:tu@email.com" class="link-item" data-type="contact">
+              <span class="link-icon">[E]</span>
+              <span class="link-text">Email</span>
+              <span class="link-meta">Contacto</span>
+            </a>
+            <a href="#" class="link-item" data-type="project">
+              <span class="link-icon">[P]</span>
+              <span class="link-text">Proyectos</span>
+              <span class="link-meta">Portafolio</span>
+            </a>
+            <a href="#" class="link-item" data-type="blog">
+              <span class="link-icon">[B]</span>
+              <span class="link-text">Blog</span>
+              <span class="link-meta">Artículos</span>
+            </a>
+          </nav>
+        </section>
+
+        <!-- Sección de Estadísticas del Sistema -->
+        <section class="system-stats">
+          <div class="stat-card">
+            <div class="stat-label">CPU</div>
+            <div class="stat-value" id="cpu-val">0%</div>
+            <div class="stat-bar"><div class="stat-fill" id="cpu-bar"></div></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">RAM</div>
+            <div class="stat-value" id="ram-val">0%</div>
+            <div class="stat-bar"><div class="stat-fill" id="ram-bar"></div></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">UPTIME</div>
+            <div class="stat-value" id="uptime">00:00:00</div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="terminal-footer">
+        <div class="footer-left">
+          <span>SISTEMA OPERATIVO V3.0</span>
+        </div>
+        <div class="footer-center">
+          <kbd>ESC</kbd> Reiniciar
+        </div>
+        <div class="footer-right">
+          <span class="blink">● SEGURO</span>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Modal de Contraseña (Opcional) -->
+  <div id="password-modal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>⚠️ ACCESO RESTRINGIDO</h3>
+        <p>Autenticación obligatoria</p>
+      </div>
+      <div class="modal-body">
+        <input type="password" id="password-input" placeholder=">>> INTRODUCE CLAVE" autocomplete="off" />
+        <div class="modal-actions">
+          <button id="submit-pass" class="btn-glitch">AUTENTICAR</button>
+          <button id="close-pass" class="btn-text">CANCELAR</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="main.js"></script>
 </body>
-</html>   
+</html>
