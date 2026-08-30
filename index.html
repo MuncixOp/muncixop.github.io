@@ -2,21 +2,23 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<meta name="theme-color" content="#060606">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="application-name" content="VOID">
-<meta name="description" content="VOID SYSTEMS — Terminal">
-<meta name="format-detection" content="telephone=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>~/muncixop</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<canvas id="c" aria-hidden="true"></canvas>
-<div id="wins" role="application" aria-label="Terminal workspace"></div>
-<input id="ki" type="text" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" aria-hidden="true">
+<canvas id="c"></canvas>
+
+<div class="term" id="term">
+  <div class="bar">
+    <span class="d r"></span><span class="d y"></span><span class="d g"></span>
+    <span class="bar-t" data-t="muncixop@void:~$">muncixop@void:~$</span>
+  </div>
+  <div class="out" id="out"></div>
+  <div class="out" id="lnk"></div>
+  <div class="out"><span class="pr">➜</span> <span class="cur">_</span></div>
+</div>
+
 <script src="main.js"></script>
 </body>
 </html>
