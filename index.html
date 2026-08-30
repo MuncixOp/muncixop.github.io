@@ -2,38 +2,21 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#060606">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="VOID">
+<meta name="description" content="VOID SYSTEMS — Terminal">
+<meta name="format-detection" content="telephone=no">
 <title>~/muncixop</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<canvas id="matrix-canvas"></canvas>
-
-<div class="term" id="term" onclick="focusInput()">
-  <div class="bar">
-    <span class="d r"></span><span class="d y"></span><span class="d g"></span>
-    <span class="bar-t" data-t="muncixop@void:~$">muncixop@void:~$</span>
-  </div>
-  
-  <div class="term-body" id="term-body">
-    <div class="out dim">[ 0.000000] BIOS v4.2.1 — VOID SYSTEMS</div>
-    <div class="out dim">[ 0.000312] CPU: unknown @ 4.2GHz</div>
-    <div class="out dim">[ 0.001044] RAM: 65536MB OK</div>
-    <div class="out">&gt; Sistema inicializado correctamente.</div>
-    <div class="out warn">&gt; Escribe <span style="color:#fff">help</span> para ver los comandos disponibles o usa los accesos directos [1-3].</div>
-    
-    <div id="history"></div>
-
-    <div class="prompt-line">
-      <span class="pr">muncixop@void:~$</span>
-      <div class="input-container">
-        <span id="input-display"></span><span class="cur">_</span>
-        <input type="text" id="terminal-input" autocomplete="off" autocapitalize="off" spellcheck="false">
-      </div>
-    </div>
-  </div>
-</div>
-
+<canvas id="c" aria-hidden="true"></canvas>
+<div id="wins" role="application" aria-label="Terminal workspace"></div>
+<input id="ki" type="text" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" aria-hidden="true">
 <script src="main.js"></script>
 </body>
 </html>
