@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VOID SYSTEMS - Kernel v6.8</title>
+    <title>VOID SYSTEMS - Kernel v7.2</title>
     <style>
         * {
             box-sizing: border-box;
@@ -36,7 +36,6 @@
             pointer-events: none;
         }
 
-        /* Scanlines Overlay */
         .scanlines {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -47,7 +46,6 @@
             opacity: 0.6;
         }
 
-        /* Boot Screen */
         #bootScreen {
             position: fixed;
             top: 0;
@@ -73,12 +71,11 @@
             word-break: break-all;
         }
 
-        /* Terminal Window */
         .terminal-window {
             position: absolute;
-            width: min(840px, 94vw);
-            height: min(540px, 88vh);
-            background-color: rgba(10, 14, 20, 0.95);
+            width: min(880px, 94vw);
+            height: min(580px, 88vh);
+            background-color: rgba(10, 14, 20, 0.96);
             border: 1px solid #1f2937;
             border-radius: 6px;
             box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 20px rgba(0, 255, 102, 0.1);
@@ -109,7 +106,6 @@
             opacity: 0 !important;
         }
 
-        /* Glitch and Animation Keyframes */
         @keyframes glitch-anim {
             0% { transform: translate(0); filter: none; }
             15% { transform: translate(-4px, 2px); filter: hue-rotate(90deg) contrast(180%); }
@@ -271,7 +267,6 @@
             border-top: 1px solid #21262d;
         }
 
-        /* Matrix Rain Canvas */
         #matrixCanvas {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -279,6 +274,45 @@
             opacity: 0.15;
             pointer-events: none;
             display: none;
+        }
+
+        /* Enhanced Interactive UI Blocks inside terminal */
+        .interactive-panel {
+            background: rgba(22, 27, 34, 0.7);
+            border: 1px solid #30363d;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 8px 0;
+        }
+        .panel-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 4px 0;
+            font-size: 12px;
+        }
+        .progress-bar-bg {
+            flex: 1;
+            height: 8px;
+            background: #21262d;
+            border-radius: 4px;
+            margin-left: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: #00ff66;
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+        .action-link {
+            color: #58a6ff;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+        .action-link:hover {
+            color: #79c0ff;
         }
     </style>
 </head>
@@ -288,18 +322,16 @@
     <div class="bg-grid"></div>
     <canvas id="matrixCanvas"></canvas>
 
-    <!-- Boot Sequence Screen -->
     <div id="bootScreen">
-        <div class="boot-log" id="bootLog">INITIALIZING KERNEL BOOT SEQUENCE...</div>
+        <div class="boot-log" id="bootLog">INITIALIZING VOID KERNEL BOOT SEQUENCE...</div>
     </div>
 
-    <!-- Main Terminal Window -->
     <div class="terminal-window constant-jitter spawning" id="mainTerminal" style="top: 50%; left: 50%; transform: translate(-50%, -50%);">
         <div class="terminal-header" data-window-id="mainTerminal">
             <div class="window-controls">
-                <button class="control-btn btn-close" id="mainCloseBtn" title="Cerrar"></button>
-                <button class="control-btn btn-minimize" id="mainMinBtn" title="Minimizar"></button>
-                <button class="control-btn btn-maximize" id="mainMaxBtn" title="Maximizar"></button>
+                <button class="control-btn btn-close" id="mainCloseBtn" title="Close"></button>
+                <button class="control-btn btn-minimize" id="mainMinBtn" title="Minimize"></button>
+                <button class="control-btn btn-maximize" id="mainMaxBtn" title="Maximize"></button>
             </div>
             <div class="terminal-title">
                 <span>VOID_OS</span> // CORE_TERMINAL
@@ -308,8 +340,8 @@
         </div>
 
         <div class="terminal-body" id="mainTerminalBody">
-            <div class="output-line system">VOID KERNEL [Version 6.8.4-RELEASE]</div>
-            <div class="output-line system">Escribe 'help' para listar los comandos disponibles del sistema.</div>
+            <div class="output-line system">VOID KERNEL [Version 7.2.0-STABLE]</div>
+            <div class="output-line system">Type 'help' to list available system commands or interface controls.</div>
             <div class="output-line" style="margin-bottom: 10px;">----------------------------------------------------------------</div>
             
             <div id="mainOutputContainer"></div>
@@ -321,13 +353,12 @@
         </div>
 
         <div class="terminal-footer-hint">
-            <span>MODO SEGURO ACTIVO</span>
+            <span>SECURE KERNEL ACTIVE</span>
             <span>UTF-8</span>
         </div>
     </div>
 
     <script>
-        // --- AUDIO SYNTHESIZER ---
         let audioCtx = null;
 
         function initAudio() {
@@ -413,20 +444,17 @@
             } catch(e) {}
         }
 
-        // --- BOOT SEQUENCE LOGIC ---
         const bootLogs = [
-            "BIOS Version 4.86.11 - VOID Corp.",
-            "Detecting primary storage interface...",
-            "NVMe SSD Controller initialized [OK]",
-            "Loading microcode updates...",
-            "Checking physical memory integrity: 32768MB RAM [OK]",
-            "Mounting root filesystem on /dev/nvme0n1p2...",
-            "Loading kernel modules: [net_core, crypt_engine, void_fs, tty_driver]",
-            "Initializing secure socket layer...",
-            "Starting system daemon: void_watchdog [OK]",
-            "Establishing virtual terminal multiplexer...",
-            "Kernel boot sequence completed successfully.",
-            "Launching main shell environment..."
+            "Initializing hardware abstraction layer...",
+            "Loading ACPI tables and CPU microcode...",
+            "Checking primary storage layout: /dev/nvme0n1 [OK]",
+            "Allocating kernel memory space: 32768MB available [OK]",
+            "Mounting network interface controllers...",
+            "Establishing secure sandbox parameters...",
+            "Starting system background daemons: [void_watchdog, net_router, sec_daemon]",
+            "Verifying file system integrity and block maps...",
+            "Kernel boot sequence completed with 0 errors.",
+            "Spawning root shell process..."
         ];
 
         const bootLogEl = document.getElementById('bootLog');
@@ -438,7 +466,7 @@
                 bootLogEl.innerText += "\n> " + bootLogs[currentLogIndex];
                 currentLogIndex++;
                 playKeySound();
-                setTimeout(runBootSequence, 120 + Math.random() * 180);
+                setTimeout(runBootSequence, 150 + Math.random() * 120);
             } else {
                 setTimeout(() => {
                     bootScreen.style.opacity = '0';
@@ -455,7 +483,6 @@
             setTimeout(runBootSequence, 300);
         });
 
-        // --- UNIVERSAL WINDOW DRAGGING & INTERACTIONS ---
         function setupWindowBehaviors(winEl, headerEl, closeBtn, minBtn, maxBtn, isMain = false) {
             let isDragging = false;
             let startX, startY, initialLeft, initialTop;
@@ -482,7 +509,6 @@
                 document.addEventListener('mouseup', onMouseUp);
             });
 
-            // Touch support for mobile/tablets
             headerEl.addEventListener('touchstart', (e) => {
                 if (e.target.closest('.window-controls')) return;
                 if (winEl.classList.contains('maximized')) return;
@@ -532,7 +558,6 @@
                 document.removeEventListener('touchend', onTouchEnd);
             }
 
-            // Close button logic
             closeBtn.addEventListener('click', () => {
                 if (isMain) {
                     playGlitchSound();
@@ -545,7 +570,6 @@
                 }
             });
 
-            // Minimize logic
             let isMinimized = false;
             const bodyEl = winEl.querySelector('.terminal-body');
             const footerEl = winEl.querySelector('.terminal-footer-hint');
@@ -564,7 +588,6 @@
                 }
             });
 
-            // Maximize logic
             maxBtn.addEventListener('click', () => {
                 playKeySound();
                 winEl.classList.toggle('maximized');
@@ -588,7 +611,6 @@
             winEl.style.zIndex = highestZIndex;
         }
 
-        // Initialize main terminal behaviors
         const mainTerminal = document.getElementById('mainTerminal');
         setupWindowBehaviors(
             mainTerminal,
@@ -599,7 +621,6 @@
             true
         );
 
-        // --- TERMINAL ENGINE & COMMANDS ---
         function setupTerminalInterface(inputEl, outputContainerEl, bodyEl) {
             let history = [];
             let historyIdx = -1;
@@ -661,7 +682,6 @@
             document.getElementById('mainTerminalBody')
         );
 
-        // Matrix rain effect control
         let matrixActive = false;
         const canvas = document.getElementById('matrixCanvas');
         const ctx = canvas.getContext('2d');
@@ -692,15 +712,14 @@
                         drops[i]++;
                     }
                 }, 33);
-                return "Matrix rain visual effect enabled.";
+                return "Matrix visual matrix overlay activated.";
             } else {
                 clearInterval(matrixInterval);
                 canvas.style.display = 'none';
-                return "Matrix rain visual effect disabled.";
+                return "Matrix visual matrix overlay deactivated.";
             }
         }
 
-        // Command processing logic
         function processCommand(rawCmd, outContainer, bodyEl) {
             const parts = rawCmd.split(' ');
             const cmd = parts[0].toLowerCase();
@@ -708,17 +727,20 @@
 
             switch(cmd) {
                 case 'help':
-                    appendLine(outContainer, `Comandos disponibles del sistema:
-  help     - Muestra este listado de ayuda
-  clear    - Limpia la pantalla de la terminal actual
-  window   - Invoca una nueva instancia de terminal flotante
-  matrix   - Activa o desactiva el flujo visual matrix
-  sysinfo  - Muestra detalles avanzados del kernel y hardware
-  ping     - Comprueba la latencia con nodos de red remotos
-  date     - Muestra la marca temporal del sistema actual
-  echo     - Imprime texto personalizado en la consola
-  glitch   - Fuerza un pulso de distorsión visual y sonora
-  reboot   - Reinicia por completo el entorno operativo`, 'system');
+                    appendLine(outContainer, `Available system commands:
+  help      - Display this command reference guide
+  clear     - Clear the current terminal view
+  window    - Spawn a new secondary floating terminal instance
+  matrix    - Toggle the matrix rain graphics overlay
+  sysinfo   - Display detailed kernel metrics and hardware profile
+  ping      - Test network latency against target domains or IPs
+  date      - Print current system timestamp
+  echo      - Print custom text strings into output stream
+  glitch    - Trigger artificial visual distortion pulse
+  diagnostics - Run simulated hardware diagnostic suite
+  network   - Scan active local interfaces and routing tables
+  socials   - Open authorized external communications / links
+  reboot    - Perform a warm reboot of the environment`, 'system');
                     break;
 
                 case 'clear':
@@ -727,7 +749,7 @@
 
                 case 'window':
                     spawnNewTerminal();
-                    appendLine(outContainer, "Nueva instancia de terminal invocada correctamente.", "success");
+                    appendLine(outContainer, "New secondary shell instance spawned successfully.", "success");
                     break;
 
                 case 'matrix':
@@ -736,26 +758,26 @@
                     break;
 
                 case 'sysinfo':
-                    appendLine(outContainer, `OS: Void Systems Linux x86_64
-Kernel: 6.8.4-RELEASE
-Uptime: active
-Memory: 1420MB / 32768MB
-Display: WebGL Accelerated / HTML5 Canvas
-Input: Multi-Device Supported`, 'system');
+                    appendLine(outContainer, `OS: Void Systems Unix Kernel x86_64
+Version: 7.2.0-STABLE
+Uptime: active (operational)
+Memory Allocated: 1640MB / 32768MB
+Render Engine: WebGL / HTML5 Canvas Pipeline
+Device Support: Cross-Platform Responsive`, 'system');
                     break;
 
                 case 'ping':
                     const target = arg || '127.0.0.1';
-                    appendLine(outContainer, `PING ${target} (32 bytes de datos):`, 'system');
+                    appendLine(outContainer, `PING ${target} with 32 bytes of diagnostic data:`, 'system');
                     for(let i=1; i<=3; i++) {
                         setTimeout(() => {
-                            appendLine(outContainer, `64 bytes desde ${target}: icmp_seq=${i} ttl=118 tiempo=${(Math.random()*15+5).toFixed(2)} ms`, '');
-                        }, i * 300);
+                            appendLine(outContainer, `64 bytes from ${target}: icmp_seq=${i} ttl=119 time=${(Math.random()*12+4).toFixed(2)} ms`, '');
+                        }, i * 350);
                     }
                     break;
 
                 case 'date':
-                    appendLine(outContainer, `Fecha UTC: ${new Date().toUTCString()}`, 'success');
+                    appendLine(outContainer, `System Timestamp (UTC): ${new Date().toUTCString()}`, 'success');
                     break;
 
                 case 'echo':
@@ -768,14 +790,45 @@ Input: Multi-Device Supported`, 'system');
                     const win = outContainer.closest('.terminal-window');
                     win.classList.add('glitch-active');
                     setTimeout(() => win.classList.remove('glitch-active'), 300);
-                    appendLine(outContainer, "Distorsión de trama inyectada manualmente.", "warning");
+                    appendLine(outContainer, "Manual glitch pulse injected into terminal frame buffer.", "warning");
+                    break;
+
+                case 'diagnostics':
+                    appendLine(outContainer, `Executing comprehensive background diagnostics...`, 'system');
+                    const panelId = 'diag_' + Math.floor(Math.random() * 10000);
+                    appendLine(outContainer, `
+                        <div class="interactive-panel">
+                            <div class="panel-row"><span>CPU Core Integrity:</span><span style="color:#3fb950">99.8% Nominal</span></div>
+                            <div class="panel-row"><span>Memory Buffer Check:</span><span style="color:#3fb950">Passed (0 errors)</span></div>
+                            <div class="panel-row"><span>Storage Sector Scan:</span></div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill" id="${panelId}_bar"></div></div>
+                        </div>
+                    `, '');
+                    setTimeout(() => {
+                        const bar = document.getElementById(`${panelId}_bar`);
+                        if(bar) bar.style.width = '100%';
+                    }, 100);
+                    break;
+
+                case 'network':
+                    appendLine(outContainer, `Active Network Interfaces:
+  [eth0] - IP: 192.168.1.150 - Status: LINK_UP (1 Gbps)
+  [wlan0] - IP: 10.0.0.42 - Status: SECURE_WPA3
+  [tun0] - IP: 10.8.0.1 - Status: ENCRYPTED_VPN`, 'system');
+                    break;
+
+                case 'socials':
+                    appendLine(outContainer, `External communications routing available:
+  - <span class="action-link" onclick="window.open('https://github.com', '_blank')">GitHub Repository</span>
+  - <span class="action-link" onclick="window.open('https://discord.com', '_blank')">Discord Community Server</span>
+  - <span class="action-link" onclick="window.open('https://x.com', '_blank')">X / Twitter Feed</span>`, 'success');
                     break;
 
                 case 'reboot':
-                    appendLine(outContainer, "Reiniciando sistema operativo...", "error");
+                    appendLine(outContainer, "Initiating system kernel warm reboot sequence...", "error");
                     setTimeout(() => {
                         location.reload();
-                    }, 1000);
+                    }, 1200);
                     break;
 
                 case '':
@@ -783,53 +836,52 @@ Input: Multi-Device Supported`, 'system');
 
                 default:
                     playErrorSound();
-                    appendLine(outContainer, `comando no reconocido: ${escapeHtml(cmd)}. Escribe 'help'.`, 'error');
+                    appendLine(outContainer, `command not recognized: '${escapeHtml(cmd)}'. Type 'help' for instructions.`, 'error');
                     break;
             }
         }
 
-        // Spawn dynamic invoked terminal windows
         let spawnedCount = 0;
         function spawnNewTerminal() {
             spawnedCount++;
             const winId = 'spawnedWin_' + spawnedCount;
-            const offsetX = (spawnedCount * 25) % 150;
-            const offsetY = (spawnedCount * 25) % 100;
+            const offsetX = (spawnedCount * 30) % 180;
+            const offsetY = (spawnedCount * 30) % 120;
 
             const winDiv = document.createElement('div');
             winDiv.className = 'terminal-window constant-jitter spawning';
             winDiv.id = winId;
-            winDiv.style.top = `calc(20vh + ${offsetY}px)`;
-            winDiv.style.left = `calc(25vw + ${offsetX}px)`;
+            winDiv.style.top = `calc(18vh + ${offsetY}px)`;
+            winDiv.style.left = `calc(22vw + ${offsetX}px)`;
 
             winDiv.innerHTML = `
                 <div class="terminal-header" data-window-id="${winId}">
                     <div class="window-controls">
-                        <button class="control-btn btn-close" id="${winId}_close" title="Cerrar"></button>
-                        <button class="control-btn btn-minimize" id="${winId}_min" title="Minimizar"></button>
-                        <button class="control-btn btn-maximize" id="${winId}_max" title="Maximizar"></button>
+                        <button class="control-btn btn-close" id="${winId}_close" title="Close"></button>
+                        <button class="control-btn btn-minimize" id="${winId}_min" title="Minimize"></button>
+                        <button class="control-btn btn-maximize" id="${winId}_max" title="Maximize"></button>
                     </div>
                     <div class="terminal-title">
                         <span>INVOKED_SHELL</span> #${spawnedCount}
                     </div>
-                    <div class="window-status">PID: ${100 + spawnedCount}</div>
+                    <div class="window-status">PID: ${120 + spawnedCount}</div>
                 </div>
 
                 <div class="terminal-body" id="${winId}_body">
-                    <div class="output-line system">Instancia remota secundaria establecida.</div>
-                    <div class="output-line system">Esta ventana se puede cerrar o manipular libremente.</div>
+                    <div class="output-line system">Secondary isolated shell instance established.</div>
+                    <div class="output-line system">This window can be safely closed or manipulated independently.</div>
                     <div class="output-line" style="margin-bottom: 10px;">----------------------------------------------------------------</div>
                     
                     <div id="${winId}_output"></div>
 
                     <div class="input-line">
-                        <span class="prompt">user@void-inv:~#</span>
+                        <span class="prompt">user@void-sub:~#</span>
                         <input type="text" id="${winId}_input" class="command-input" autocomplete="off" spellcheck="false">
                     </div>
                 </div>
 
                 <div class="terminal-footer-hint">
-                    <span>SHELL SECUNDARIA</span>
+                    <span>SECONDARY SUBSYSTEM</span>
                     <span>UTF-8</span>
                 </div>
             `;
