@@ -1,8 +1,8 @@
+// --- 1. MATRIX BACKGROUND ---
 const canvas = document.getElementById('matrix-canvas');
 const ctx = canvas.getContext('2d');
 
 let width, height;
-
 function resize() {
   width = canvas.width = window.innerWidth;
   height = canvas.height = window.innerHeight;
@@ -10,150 +10,216 @@ function resize() {
 resize();
 window.addEventListener('resize', resize);
 
-// Alfabeto katakana combinado con números y símbolos criptográficos (estilo original)
 const characters = 'ｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾂﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ0123456789ABCDEF$#@*+<>~';
 const fontSize = 16;
-let columns = Math.floor(width / fontSize);
-
-// Creamos un array de gotas con propiedades físicas individuales para cada columna
-// Cada columna guarda su posición actual 'y' y su velocidad de caída
 let drops = [];
+
 function initDrops() {
-  columns = Math.floor(width / fontSize);
+  let columns = Math.floor(width / fontSize);
   drops = [];
   for (let i = 0; i < columns; i++) {
-    drops[i] = {
-      y: Math.random() * -100, // Posición inicial aleatoria fuera de la pantalla
-      speed: Math.random() * 1.2 + 0.8 // Velocidad individual variada
-    };
+    drops[i] = { y: Math.random() * -100, speed: Math.random() * 1.2 + 0.8 };
   }
 }
 initDrops();
 window.addEventListener('resize', initDrops);
 
 function drawMatrix() {
-  // Capa semitransparente oscura para crear la estela difuminada característica
   ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
   ctx.fillRect(0, 0, width, height);
-
   ctx.font = `bold ${fontSize}px monospace`;
 
   for (let i = 0; i < drops.length; i++) {
-    const drop = drops[i];
-    const x = i * fontSize;
-    const currentY = drop.y * fontSize;
+    let drop = drops[i];
+    let x = i * fontSize;
+    let currentY = drop.y * fontSize;
+    let trailLength = 18;
 
-    // Dibujamos una pequeña estela de caracteres desvaneciéndose hacia arriba
-    const trailLength = 18; // Longitud de la estela
     for (let j = 0; j < trailLength; j++) {
-      const charY = currentY - (j * fontSize);
+      let charY = currentY - (j * fontSize);
       if (charY < 0 || charY > height) continue;
 
-      const randomChar = characters.charAt(Math.floor(Math.random() * characters.length));
-
+      let randomChar = characters.charAt(Math.floor(Math.random() * characters.length));
       if (j === 0) {
-        // La "cabeza" de la cascada: carácter ultrabrillante casi blanco/verde puro
         ctx.fillStyle = '#ffffff';
         ctx.shadowBlur = 12;
         ctx.shadowColor = '#00ff66';
       } else {
-        // El cuerpo de la estela: se va oscureciendo exponencialmente
-        const opacity = Math.max(0, 1 - (j / trailLength));
+        let opacity = Math.max(0, 1 - (j / trailLength));
         ctx.fillStyle = `rgba(0, ${Math.floor(180 + 75 * opacity)}, 50, ${opacity})`;
-        ctx.shadowBlur = j === 1 ? 6 : 0; // Solo un ligero brillo en el segundo caracter
+        ctx.shadowBlur = j === 1 ? 6 : 0;
         ctx.shadowColor = '#00ff00';
       }
-
       ctx.fillText(randomChar, x, charY);
     }
-
-    // Restablecer sombra para optimizar rendimiento
     ctx.shadowBlur = 0;
-
-    // Avanzar la gota según su velocidad
     drop.y += drop.speed;
-
-    // Si la gota sale de la pantalla por debajo, la reiniciamos arriba con nueva velocidad
     if (currentY > height && Math.random() > 0.975) {
       drop.y = Math.random() * -20;
       drop.speed = Math.random() * 1.2 + 0.8;
     }
   }
-
   requestAnimationFrame(drawMatrix);
 }
-
-// Iniciar animación de Matrix
 requestAnimationFrame(drawMatrix);
 
 
-// Secuencia de arranque del sistema (Boot) en la terminal
-const lines = [
-  ['dim', '[ 0.000000] BIOS v4.2.1 — VOID SYSTEMS'],
-  ['dim', '[ 0.000312] CPU: unknown @ 4.2GHz'],
-  ['dim', '[ 0.001044] RAM: 65536MB OK'],
-  ['',     '> cargando kernel...'],
-  ['',     '> montando /dev/null...'],
-  ['ok',   '> acceso concedido ✓'],
-  ['warn', '> 3 nodos disponibles:'],
-];
+// --- 2. TERMINAL FUNCIONAL E INTERACTIVA ---
+const termBody = document.getElementById('term-body');
+const historyContainer = document.getElementById('history');
+const hiddenInput = document.getElementById('terminal-input');
+const inputDisplay = document.getElementById('input-display');
+const termContainer = document.getElementById('term');
 
-const out = document.getElementById('out');
-const lnk = document.getElementById('lnk');
-const term = document.getElementById('term');
+let commandHistory = [];
+let historyIndex = -1;
 
-let i = 0;
-(function type() {
-  if (i >= lines.length) { showLinks(); return; }
-  const [cls, txt] = lines[i];
-  const el = document.createElement('div');
-  el.className = 'out' + (cls ? ' ' + cls : '');
-  el.textContent = txt;
-  out.appendChild(el);
-  i++;
-  setTimeout(type, 240 + Math.random() * 180);
-})();
+const linksData = {
+  'curseforge': ['CURSEFORGE', 'https://www.curseforge.com/members/muncixop/projects'],
+  'twitter': ['X / TWITTER', 'https://x.com/MuncixOp'],
+  'tiktok': ['TIKTOK', 'https://www.tiktok.com/@muncixop']
+};
 
-function showLinks() {
-  const data = [
-    ['CURSEFORGE', 'https://www.curseforge.com/members/muncixop/projects'],
-    ['X / TWITTER', 'https://x.com/MuncixOp'],
-    ['TIKTOK', 'https://www.tiktok.com/@muncixop'],
-  ];
-  
-  data.forEach(([label, href], idx) => {
-    const a = document.createElement('a');
-    a.href = href;
-    a.target = '_blank';
-    a.rel = 'noopener noreferrer';
-    a.innerHTML = `<span class="n">[${idx + 1}]</span>${label}`;
-    a.style.opacity = 0;
-    lnk.appendChild(a);
-    
-    setTimeout(() => {
-      a.style.transition = 'opacity .35s ease';
-      a.style.opacity = 1;
-    }, 120 * idx + 100);
-  });
+function focusInput() {
+  hiddenInput.focus();
 }
+window.addEventListener('load', focusInput);
+document.addEventListener('click', focusInput);
 
-// Navegación rápida por teclado (1-3)
-window.addEventListener('keydown', e => {
-  const links = lnk.querySelectorAll('a');
-  const n = parseInt(e.key, 10) - 1;
-  if (n >= 0 && n < links.length) {
-    location.href = links[n].href;
+hiddenInput.addEventListener('input', () => {
+  inputDisplay.textContent = hiddenInput.value;
+});
+
+hiddenInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    let cmd = hiddenInput.value.trim();
+    processCommand(cmd);
+    hiddenInput.value = '';
+    inputDisplay.textContent = '';
+  } else if (e.key === 'ArrowUp') {
+    if (commandHistory.length > 0 && historyIndex < commandHistory.length - 1) {
+      historyIndex++;
+      hiddenInput.value = commandHistory[commandHistory.length - 1 - historyIndex];
+      inputDisplay.textContent = hiddenInput.value;
+    }
+    e.preventDefault();
+  } else if (e.key === 'ArrowDown') {
+    if (historyIndex > 0) {
+      historyIndex--;
+      hiddenInput.value = commandHistory[commandHistory.length - 1 - historyIndex];
+      inputDisplay.textContent = hiddenInput.value;
+    } else if (historyIndex === 0) {
+      historyIndex = -1;
+      hiddenInput.value = '';
+      inputDisplay.textContent = '';
+    }
+    e.preventDefault();
   }
 });
 
-// Glitches visuales aleatorios de la interfaz de la terminal
+window.addEventListener('keydown', (e) => {
+  if (e.key === '1') openLink('curseforge');
+  if (e.key === '2') openLink('twitter');
+  if (e.key === '3') openLink('tiktok');
+});
+
+function printLine(htmlContent, className = 'out') {
+  const div = document.createElement('div');
+  div.className = className;
+  div.innerHTML = htmlContent;
+  historyContainer.appendChild(div);
+  termBody.scrollTop = termBody.scrollHeight;
+}
+
+function openLink(key) {
+  if (linksData[key]) {
+    printLine(`&gt; Abriendo nodo <span style="color:#0af">${linksData[key][0]}</span>...`, 'out ok');
+    setTimeout(() => {
+      window.open(linksData[key][1], '_blank');
+    }, 400);
+  }
+}
+
+function processCommand(rawCmd) {
+  if (!rawCmd) return;
+  commandHistory.push(rawCmd);
+  historyIndex = -1;
+
+  printLine(`<span style="color:#0af">muncixop@void:~$</span> ${escapeHTML(rawCmd)}`);
+
+  let parts = rawCmd.toLowerCase().split(' ');
+  let cmd = parts[0];
+
+  switch (cmd) {
+    case 'help':
+      printLine(`Comandos disponibles:
+  <span style="color:#fff">socials</span>      - Muestra los enlaces principales (Curseforge, Twitter, TikTok)
+  <span style="color:#fff">curseforge</span>   - Abre directamente el perfil de Curseforge [1]
+  <span style="color:#fff">twitter</span>      - Abre directamente el perfil de X / Twitter [2]
+  <span style="color:#fff">tiktok</span>       - Abre directamente el perfil de TikTok [3]
+  <span style="color:#fff">clear</span>        - Limpia la pantalla de la terminal
+  <span style="color:#fff">whoami</span>       - Muestra información del sistema actual
+  <span style="color:#fff">date</span>         - Muestra la fecha y hora del sistema`);
+      break;
+
+    case 'socials':
+    case 'links':
+    case 'ls':
+      printLine(`Nodos de red disponibles:
+  <a class="link-item" href="${linksData.curseforge[1]}" target="_blank"><span>[1]</span> CURSEFORGE</a>
+  <a class="link-item" href="${linksData.twitter[1]}" target="_blank"><span>[2]</span> X / TWITTER</a>
+  <a class="link-item" href="${linksData.tiktok[1]}" target="_blank"><span>[3]</span> TIKTOK</a>`);
+      break;
+
+    case 'curseforge':
+      openLink('curseforge');
+      break;
+
+    case 'twitter':
+    case 'x':
+      openLink('twitter');
+      break;
+
+    case 'tiktok':
+      openLink('tiktok');
+      break;
+
+    case 'clear':
+    case 'cls':
+      historyContainer.innerHTML = '';
+      break;
+
+    case 'whoami':
+      printLine('muncixop — Desarrollador / Creador de contenido [VOID SYSTEMS CLI v4.2]');
+      break;
+
+    case 'date':
+      printLine(`[ ${new Date().toUTCString()} ]`);
+      break;
+
+    case 'sudo':
+      printLine('Permisos de superusuario denegados. Este incidente será reportado.', 'out err');
+      break;
+
+    default:
+      printLine(`Comando no reconocido: "${escapeHTML(rawCmd)}". Escribe <span style="color:#fff">help</span> para obtener asistencia.`, 'out err');
+      break;
+  }
+}
+
+function escapeHTML(str) {
+  return str.replace(/[&<>'"]/g, 
+    tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+  );
+}
+
 setInterval(() => {
   if (Math.random() > .92) {
-    term.classList.add('shake');
-    term.style.boxShadow = '0 0 60px #f0f3,0 0 120px #0ff1';
+    termContainer.classList.add('shake');
+    termContainer.style.boxShadow = '0 0 60px #f0f3,0 0 120px #0ff1';
     setTimeout(() => {
-      term.classList.remove('shake');
-      term.style.boxShadow = '';
+      termContainer.classList.remove('shake');
+      termContainer.style.boxShadow = '';
     }, 120);
   }
-}, 3000);
+}, 3500);
