@@ -1,42 +1,93 @@
-const c = document.getElementById('c');
-const x = c.getContext('2d');
-let W, H;
+const canvas = document.getElementById('matrix-canvas');
+const ctx = canvas.getContext('2d');
 
-function resize() { 
-  W = c.width = innerWidth; 
-  H = c.height = innerHeight; 
+let width, height;
+
+function resize() {
+  width = canvas.width = window.innerWidth;
+  height = canvas.height = window.innerHeight;
 }
 resize();
-addEventListener('resize', resize);
+window.addEventListener('resize', resize);
 
-const chars = 'アイウエオカキクケコ0123456789$#@%&';
-const fs = 13;
-let cols, drops;
+// Alfabeto katakana combinado con números y símbolos criptográficos (estilo original)
+const characters = 'ｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾂﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ0123456789ABCDEF$#@*+<>~';
+const fontSize = 16;
+let columns = Math.floor(width / fontSize);
 
-function initMatrix() {
-  cols = Math.floor(W / fs);
-  drops = Array(cols).fill(1);
-}
-initMatrix();
-addEventListener('resize', initMatrix);
-
-// Animación de matriz fluida optimizada
-(function loop() {
-  x.fillStyle = 'rgba(5,5,5,.07)';
-  x.fillRect(0, 0, W, H);
-  x.fillStyle = '#0f0';
-  x.font = fs + 'px monospace';
-  
-  for (let i = 0; i < cols; i++) {
-    const char = chars[Math.random() * chars.length | 0];
-    x.fillText(char, i * fs, drops[i] * fs);
-    if (drops[i] * fs > H && Math.random() > .975) drops[i] = 0;
-    drops[i]++;
+// Creamos un array de gotas con propiedades físicas individuales para cada columna
+// Cada columna guarda su posición actual 'y' y su velocidad de caída
+let drops = [];
+function initDrops() {
+  columns = Math.floor(width / fontSize);
+  drops = [];
+  for (let i = 0; i < columns; i++) {
+    drops[i] = {
+      y: Math.random() * -100, // Posición inicial aleatoria fuera de la pantalla
+      speed: Math.random() * 1.2 + 0.8 // Velocidad individual variada
+    };
   }
-  requestAnimationFrame(loop);
-})();
+}
+initDrops();
+window.addEventListener('resize', initDrops);
 
-// Secuencia de arranque del sistema (Boot)
+function drawMatrix() {
+  // Capa semitransparente oscura para crear la estela difuminada característica
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.font = `bold ${fontSize}px monospace`;
+
+  for (let i = 0; i < drops.length; i++) {
+    const drop = drops[i];
+    const x = i * fontSize;
+    const currentY = drop.y * fontSize;
+
+    // Dibujamos una pequeña estela de caracteres desvaneciéndose hacia arriba
+    const trailLength = 18; // Longitud de la estela
+    for (let j = 0; j < trailLength; j++) {
+      const charY = currentY - (j * fontSize);
+      if (charY < 0 || charY > height) continue;
+
+      const randomChar = characters.charAt(Math.floor(Math.random() * characters.length));
+
+      if (j === 0) {
+        // La "cabeza" de la cascada: carácter ultrabrillante casi blanco/verde puro
+        ctx.fillStyle = '#ffffff';
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = '#00ff66';
+      } else {
+        // El cuerpo de la estela: se va oscureciendo exponencialmente
+        const opacity = Math.max(0, 1 - (j / trailLength));
+        ctx.fillStyle = `rgba(0, ${Math.floor(180 + 75 * opacity)}, 50, ${opacity})`;
+        ctx.shadowBlur = j === 1 ? 6 : 0; // Solo un ligero brillo en el segundo caracter
+        ctx.shadowColor = '#00ff00';
+      }
+
+      ctx.fillText(randomChar, x, charY);
+    }
+
+    // Restablecer sombra para optimizar rendimiento
+    ctx.shadowBlur = 0;
+
+    // Avanzar la gota según su velocidad
+    drop.y += drop.speed;
+
+    // Si la gota sale de la pantalla por debajo, la reiniciamos arriba con nueva velocidad
+    if (currentY > height && Math.random() > 0.975) {
+      drop.y = Math.random() * -20;
+      drop.speed = Math.random() * 1.2 + 0.8;
+    }
+  }
+
+  requestAnimationFrame(drawMatrix);
+}
+
+// Iniciar animación de Matrix
+requestAnimationFrame(drawMatrix);
+
+
+// Secuencia de arranque del sistema (Boot) en la terminal
 const lines = [
   ['dim', '[ 0.000000] BIOS v4.2.1 — VOID SYSTEMS'],
   ['dim', '[ 0.000312] CPU: unknown @ 4.2GHz'],
@@ -86,8 +137,8 @@ function showLinks() {
   });
 }
 
-// Navegación por teclado rápida (1-3)
-addEventListener('keydown', e => {
+// Navegación rápida por teclado (1-3)
+window.addEventListener('keydown', e => {
   const links = lnk.querySelectorAll('a');
   const n = parseInt(e.key, 10) - 1;
   if (n >= 0 && n < links.length) {
@@ -95,7 +146,7 @@ addEventListener('keydown', e => {
   }
 });
 
-// Glitches visuales aleatorios de la interfaz
+// Glitches visuales aleatorios de la interfaz de la terminal
 setInterval(() => {
   if (Math.random() > .92) {
     term.classList.add('shake');
