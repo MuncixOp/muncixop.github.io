@@ -9,14 +9,29 @@
 <body>
 <canvas id="matrix-canvas"></canvas>
 
-<div class="term" id="term">
+<div class="term" id="term" onclick="focusInput()">
   <div class="bar">
     <span class="d r"></span><span class="d y"></span><span class="d g"></span>
     <span class="bar-t" data-t="muncixop@void:~$">muncixop@void:~$</span>
   </div>
-  <div class="out" id="out"></div>
-  <div class="out" id="lnk"></div>
-  <div class="out"><span class="pr">➜</span> <span class="cur">_</span></div>
+  
+  <div class="term-body" id="term-body">
+    <div class="out dim">[ 0.000000] BIOS v4.2.1 — VOID SYSTEMS</div>
+    <div class="out dim">[ 0.000312] CPU: unknown @ 4.2GHz</div>
+    <div class="out dim">[ 0.001044] RAM: 65536MB OK</div>
+    <div class="out">&gt; Sistema inicializado correctamente.</div>
+    <div class="out warn">&gt; Escribe <span style="color:#fff">help</span> para ver los comandos disponibles o usa los accesos directos [1-3].</div>
+    
+    <div id="history"></div>
+
+    <div class="prompt-line">
+      <span class="pr">muncixop@void:~$</span>
+      <div class="input-container">
+        <span id="input-display"></span><span class="cur">_</span>
+        <input type="text" id="terminal-input" autocomplete="off" autocapitalize="off" spellcheck="false">
+      </div>
+    </div>
+  </div>
 </div>
 
 <script src="main.js"></script>
