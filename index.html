@@ -1,22 +1,858 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<meta name="theme-color" content="#060606">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="application-name" content="VOID">
-<meta name="description" content="VOID SYSTEMS — Terminal">
-<meta name="format-detection" content="telephone=no">
-<title>~/muncixop</title>
-<link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VOID SYSTEMS - Kernel v6.8</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #05070c;
+            font-family: 'Courier New', Courier, monospace;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #00ff66;
+            position: relative;
+        }
+
+        .bg-grid {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 255, 102, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 102, 0.02) 1px, transparent 1px);
+            background-size: 24px 24px;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Scanlines Overlay */
+        .scanlines {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            background-size: 100% 4px, 6px 100%;
+            z-index: 999;
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        /* Boot Screen */
+        #bootScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #030508;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            padding: 40px;
+            font-family: 'Courier New', Courier, monospace;
+            color: #00ff66;
+            overflow: hidden;
+            transition: opacity 0.5s ease;
+        }
+
+        .boot-log {
+            font-size: 13px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        /* Terminal Window */
+        .terminal-window {
+            position: absolute;
+            width: min(840px, 94vw);
+            height: min(540px, 88vh);
+            background-color: rgba(10, 14, 20, 0.95);
+            border: 1px solid #1f2937;
+            border-radius: 6px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 20px rgba(0, 255, 102, 0.1);
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+            backdrop-filter: blur(12px);
+            transition: box-shadow 0.2s, height 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+        }
+
+        .terminal-window.maximized {
+            top: 0 !important;
+            left: 0 !important;
+            transform: none !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            border-radius: 0 !important;
+            border: none;
+        }
+
+        .terminal-window.minimized {
+            height: 36px !important;
+            overflow: hidden !important;
+        }
+
+        .terminal-window.closing {
+            transform: scale(0) rotate(5deg) !important;
+            opacity: 0 !important;
+        }
+
+        /* Glitch and Animation Keyframes */
+        @keyframes glitch-anim {
+            0% { transform: translate(0); filter: none; }
+            15% { transform: translate(-4px, 2px); filter: hue-rotate(90deg) contrast(180%); }
+            30% { transform: translate(3px, -2px); filter: invert(0.1); }
+            45% { transform: translate(-2px, 3px); filter: hue-rotate(-90deg) contrast(220%); }
+            60% { transform: translate(2px, -1px); filter: blur(0.6px); }
+            80% { transform: translate(-1px, -2px); filter: none; }
+            100% { transform: translate(0); filter: none; }
+        }
+
+        .glitch-active {
+            animation: glitch-anim 0.25s cubic-bezier(.25, .46, .45, .94) both;
+            border-color: #ff5f56 !important;
+            box-shadow: 0 0 40px rgba(255, 95, 86, 0.5) !important;
+        }
+
+        @keyframes text-jitter {
+            0% { text-shadow: none; }
+            50% { text-shadow: 1.5px 0 rgba(255,0,0,0.6), -1.5px 0 rgba(0,255,255,0.6); }
+            100% { text-shadow: none; }
+        }
+
+        .constant-jitter {
+            animation: text-jitter 1.2s infinite steps(2);
+        }
+
+        @keyframes window-spawn {
+            0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+
+        .spawning {
+            animation: window-spawn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .terminal-header {
+            height: 36px;
+            background-color: #141820;
+            border-top-left-radius: 6px;
+            border-top-right-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 12px;
+            cursor: grab;
+            user-select: none;
+            border-bottom: 1px solid #21262d;
+        }
+
+        .terminal-header:active {
+            cursor: grabbing;
+        }
+
+        .terminal-window.maximized .terminal-header {
+            border-radius: 0;
+        }
+
+        .window-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .control-btn {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            outline: none;
+            transition: transform 0.15s, filter 0.15s;
+        }
+        .control-btn:hover { transform: scale(1.15); filter: brightness(1.2); }
+        .btn-close { background-color: #ff5f56; }
+        .btn-minimize { background-color: #ffbd2e; }
+        .btn-maximize { background-color: #27c93f; }
+
+        .terminal-title {
+            font-size: 12px;
+            color: #8b949e;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+
+        .terminal-title span {
+            color: #00ff66;
+        }
+
+        .window-status {
+            font-size: 10px;
+            color: #484f58;
+        }
+
+        .terminal-body {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            font-size: 13px;
+            line-height: 1.5;
+            position: relative;
+            scroll-behavior: smooth;
+        }
+
+        .terminal-body::-webkit-scrollbar {
+            width: 6px;
+        }
+        .terminal-body::-webkit-scrollbar-track {
+            background: #090d13;
+        }
+        .terminal-body::-webkit-scrollbar-thumb {
+            background: #21262d;
+            border-radius: 3px;
+        }
+
+        .output-line {
+            margin-bottom: 5px;
+            word-break: break-all;
+            white-space: pre-wrap;
+            transition: opacity 0.2s ease;
+        }
+
+        .output-line.system { color: #58a6ff; }
+        .output-line.error { color: #ff5f56; }
+        .output-line.success { color: #3fb950; }
+        .output-line.warning { color: #d29922; }
+
+        .input-line {
+            display: flex;
+            align-items: center;
+            margin-top: 6px;
+        }
+
+        .prompt {
+            color: #00ff66;
+            font-weight: bold;
+            margin-right: 8px;
+            white-space: nowrap;
+        }
+
+        .command-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #e6edf3;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 13px;
+            caret-color: #00ff66;
+        }
+
+        .terminal-footer-hint {
+            padding: 6px 16px;
+            background-color: #141820;
+            border-bottom-left-radius: 6px;
+            border-bottom-right-radius: 6px;
+            font-size: 10px;
+            color: #484f58;
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid #21262d;
+        }
+
+        /* Matrix Rain Canvas */
+        #matrixCanvas {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 1;
+            opacity: 0.15;
+            pointer-events: none;
+            display: none;
+        }
+    </style>
 </head>
 <body>
-<canvas id="c" aria-hidden="true"></canvas>
-<div id="wins" role="application" aria-label="Terminal workspace"></div>
-<input id="ki" type="text" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" aria-hidden="true">
-<script src="main.js"></script>
+
+    <div class="scanlines"></div>
+    <div class="bg-grid"></div>
+    <canvas id="matrixCanvas"></canvas>
+
+    <!-- Boot Sequence Screen -->
+    <div id="bootScreen">
+        <div class="boot-log" id="bootLog">INITIALIZING KERNEL BOOT SEQUENCE...</div>
+    </div>
+
+    <!-- Main Terminal Window -->
+    <div class="terminal-window constant-jitter spawning" id="mainTerminal" style="top: 50%; left: 50%; transform: translate(-50%, -50%);">
+        <div class="terminal-header" data-window-id="mainTerminal">
+            <div class="window-controls">
+                <button class="control-btn btn-close" id="mainCloseBtn" title="Cerrar"></button>
+                <button class="control-btn btn-minimize" id="mainMinBtn" title="Minimizar"></button>
+                <button class="control-btn btn-maximize" id="mainMaxBtn" title="Maximizar"></button>
+            </div>
+            <div class="terminal-title">
+                <span>VOID_OS</span> // CORE_TERMINAL
+            </div>
+            <div class="window-status">PID: 101</div>
+        </div>
+
+        <div class="terminal-body" id="mainTerminalBody">
+            <div class="output-line system">VOID KERNEL [Version 6.8.4-RELEASE]</div>
+            <div class="output-line system">Escribe 'help' para listar los comandos disponibles del sistema.</div>
+            <div class="output-line" style="margin-bottom: 10px;">----------------------------------------------------------------</div>
+            
+            <div id="mainOutputContainer"></div>
+
+            <div class="input-line">
+                <span class="prompt">root@void:~#</span>
+                <input type="text" id="mainCommandInput" class="command-input" autocomplete="off" spellcheck="false">
+            </div>
+        </div>
+
+        <div class="terminal-footer-hint">
+            <span>MODO SEGURO ACTIVO</span>
+            <span>UTF-8</span>
+        </div>
+    </div>
+
+    <script>
+        // --- AUDIO SYNTHESIZER ---
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playKeySound() {
+            try {
+                initAudio();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(500 + Math.random() * 300, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.015, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.04);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.04);
+            } catch(e) {}
+        }
+
+        function playEnterSound() {
+            try {
+                initAudio();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(250, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(700, audioCtx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.1);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.1);
+            } catch(e) {}
+        }
+
+        function playErrorSound() {
+            try {
+                initAudio();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(120, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(80, audioCtx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.25);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.25);
+            } catch(e) {}
+        }
+
+        function playGlitchSound() {
+            try {
+                initAudio();
+                const bufferSize = audioCtx.sampleRate * 0.2;
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+                }
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = buffer;
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(1200, audioCtx.currentTime);
+                filter.Q.setValueAtTime(5, audioCtx.currentTime);
+
+                const gain = audioCtx.createGain();
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.2);
+
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioCtx.destination);
+                noise.start();
+            } catch(e) {}
+        }
+
+        // --- BOOT SEQUENCE LOGIC ---
+        const bootLogs = [
+            "BIOS Version 4.86.11 - VOID Corp.",
+            "Detecting primary storage interface...",
+            "NVMe SSD Controller initialized [OK]",
+            "Loading microcode updates...",
+            "Checking physical memory integrity: 32768MB RAM [OK]",
+            "Mounting root filesystem on /dev/nvme0n1p2...",
+            "Loading kernel modules: [net_core, crypt_engine, void_fs, tty_driver]",
+            "Initializing secure socket layer...",
+            "Starting system daemon: void_watchdog [OK]",
+            "Establishing virtual terminal multiplexer...",
+            "Kernel boot sequence completed successfully.",
+            "Launching main shell environment..."
+        ];
+
+        const bootLogEl = document.getElementById('bootLog');
+        const bootScreen = document.getElementById('bootScreen');
+        let currentLogIndex = 0;
+
+        function runBootSequence() {
+            if (currentLogIndex < bootLogs.length) {
+                bootLogEl.innerText += "\n> " + bootLogs[currentLogIndex];
+                currentLogIndex++;
+                playKeySound();
+                setTimeout(runBootSequence, 120 + Math.random() * 180);
+            } else {
+                setTimeout(() => {
+                    bootScreen.style.opacity = '0';
+                    playEnterSound();
+                    setTimeout(() => {
+                        bootScreen.remove();
+                        document.getElementById('mainCommandInput').focus();
+                    }, 500);
+                }, 400);
+            }
+        }
+
+        window.addEventListener('load', () => {
+            setTimeout(runBootSequence, 300);
+        });
+
+        // --- UNIVERSAL WINDOW DRAGGING & INTERACTIONS ---
+        function setupWindowBehaviors(winEl, headerEl, closeBtn, minBtn, maxBtn, isMain = false) {
+            let isDragging = false;
+            let startX, startY, initialLeft, initialTop;
+
+            headerEl.addEventListener('mousedown', (e) => {
+                if (e.target.closest('.window-controls')) return;
+                if (winEl.classList.contains('maximized')) return;
+
+                isDragging = true;
+                startX = e.clientX;
+                startY = e.clientY;
+
+                const rect = winEl.getBoundingClientRect();
+                winEl.style.transform = 'none';
+                winEl.style.left = rect.left + 'px';
+                winEl.style.top = rect.top + 'px';
+
+                initialLeft = rect.left;
+                initialTop = rect.top;
+
+                bringToFront(winEl);
+
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            });
+
+            // Touch support for mobile/tablets
+            headerEl.addEventListener('touchstart', (e) => {
+                if (e.target.closest('.window-controls')) return;
+                if (winEl.classList.contains('maximized')) return;
+
+                isDragging = true;
+                const touch = e.touches[0];
+                startX = touch.clientX;
+                startY = touch.clientY;
+
+                const rect = winEl.getBoundingClientRect();
+                winEl.style.transform = 'none';
+                winEl.style.left = rect.left + 'px';
+                winEl.style.top = rect.top + 'px';
+
+                initialLeft = rect.left;
+                initialTop = rect.top;
+
+                bringToFront(winEl);
+
+                document.addEventListener('touchmove', onTouchMove, {passive: false});
+                document.addEventListener('touchend', onTouchEnd);
+            });
+
+            function onMouseMove(e) {
+                if (!isDragging) return;
+                winEl.style.left = (initialLeft + (e.clientX - startX)) + 'px';
+                winEl.style.top = (initialTop + (e.clientY - startY)) + 'px';
+            }
+
+            function onTouchMove(e) {
+                if (!isDragging) return;
+                const touch = e.touches[0];
+                winEl.style.left = (initialLeft + (touch.clientX - startX)) + 'px';
+                winEl.style.top = (initialTop + (touch.clientY - startY)) + 'px';
+                e.preventDefault();
+            }
+
+            function onMouseUp() {
+                isDragging = false;
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            }
+
+            function onTouchEnd() {
+                isDragging = false;
+                document.removeEventListener('touchmove', onTouchMove);
+                document.removeEventListener('touchend', onTouchEnd);
+            }
+
+            // Close button logic
+            closeBtn.addEventListener('click', () => {
+                if (isMain) {
+                    playGlitchSound();
+                    winEl.classList.add('glitch-active');
+                    setTimeout(() => winEl.classList.remove('glitch-active'), 300);
+                } else {
+                    playErrorSound();
+                    winEl.classList.add('closing');
+                    setTimeout(() => winEl.remove(), 300);
+                }
+            });
+
+            // Minimize logic
+            let isMinimized = false;
+            const bodyEl = winEl.querySelector('.terminal-body');
+            const footerEl = winEl.querySelector('.terminal-footer-hint');
+
+            minBtn.addEventListener('click', () => {
+                playKeySound();
+                isMinimized = !isMinimized;
+                if (isMinimized) {
+                    winEl.classList.add('minimized');
+                    if(bodyEl) bodyEl.style.display = 'none';
+                    if(footerEl) footerEl.style.display = 'none';
+                } else {
+                    winEl.classList.remove('minimized');
+                    if(bodyEl) bodyEl.style.display = 'block';
+                    if(footerEl) footerEl.style.display = 'flex';
+                }
+            });
+
+            // Maximize logic
+            maxBtn.addEventListener('click', () => {
+                playKeySound();
+                winEl.classList.toggle('maximized');
+                if (winEl.classList.contains('maximized')) {
+                    winEl.style.left = '';
+                    winEl.style.top = '';
+                } else {
+                    winEl.style.left = '50%';
+                    winEl.style.top = '50%';
+                    winEl.style.transform = 'translate(-50%, -50%)';
+                }
+            });
+
+            winEl.addEventListener('mousedown', () => bringToFront(winEl));
+            winEl.addEventListener('touchstart', () => bringToFront(winEl));
+        }
+
+        let highestZIndex = 10;
+        function bringToFront(winEl) {
+            highestZIndex++;
+            winEl.style.zIndex = highestZIndex;
+        }
+
+        // Initialize main terminal behaviors
+        const mainTerminal = document.getElementById('mainTerminal');
+        setupWindowBehaviors(
+            mainTerminal,
+            mainTerminal.querySelector('.terminal-header'),
+            document.getElementById('mainCloseBtn'),
+            document.getElementById('mainMinBtn'),
+            document.getElementById('mainMaxBtn'),
+            true
+        );
+
+        // --- TERMINAL ENGINE & COMMANDS ---
+        function setupTerminalInterface(inputEl, outputContainerEl, bodyEl) {
+            let history = [];
+            let historyIdx = -1;
+
+            inputEl.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    playEnterSound();
+                    const val = inputEl.value.trim();
+                    if (val !== '') {
+                        history.push(val);
+                        historyIdx = history.length;
+                    }
+                    appendLine(outputContainerEl, `<span style="color: #00ff66;">root@void:~#</span> ${escapeHtml(val)}`, '');
+                    processCommand(val, outputContainerEl, bodyEl);
+                    inputEl.value = '';
+                } else if (e.key === 'ArrowUp') {
+                    if (historyIdx > 0) {
+                        historyIdx--;
+                        inputEl.value = history[historyIdx];
+                        playKeySound();
+                    }
+                    e.preventDefault();
+                } else if (e.key === 'ArrowDown') {
+                    if (historyIdx < history.length - 1) {
+                        historyIdx++;
+                        inputEl.value = history[historyIdx];
+                        playKeySound();
+                    } else {
+                        historyIdx = history.length;
+                        inputEl.value = '';
+                    }
+                    e.preventDefault();
+                } else {
+                    playKeySound();
+                }
+            });
+
+            bodyEl.addEventListener('click', () => {
+                inputEl.focus();
+            });
+        }
+
+        function appendLine(container, html, className = '') {
+            const div = document.createElement('div');
+            div.className = `output-line ${className}`;
+            div.innerHTML = html;
+            container.appendChild(div);
+            const termBody = container.closest('.terminal-body');
+            termBody.scrollTop = termBody.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        setupTerminalInterface(
+            document.getElementById('mainCommandInput'),
+            document.getElementById('mainOutputContainer'),
+            document.getElementById('mainTerminalBody')
+        );
+
+        // Matrix rain effect control
+        let matrixActive = false;
+        const canvas = document.getElementById('matrixCanvas');
+        const ctx = canvas.getContext('2d');
+        let matrixInterval;
+
+        function toggleMatrixRain() {
+            matrixActive = !matrixActive;
+            if (matrixActive) {
+                canvas.style.display = 'block';
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()*&^%';
+                const fontSize = 14;
+                const columns = canvas.width / fontSize;
+                const drops = Array(Math.floor(columns)).fill(1);
+
+                matrixInterval = setInterval(() => {
+                    ctx.fillStyle = 'rgba(5, 7, 12, 0.08)';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = '#00ff66';
+                    ctx.font = fontSize + 'px monospace';
+                    for (let i = 0; i < drops.length; i++) {
+                        const text = letters.charAt(Math.floor(Math.random() * letters.length));
+                        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                            drops[i] = 0;
+                        }
+                        drops[i]++;
+                    }
+                }, 33);
+                return "Matrix rain visual effect enabled.";
+            } else {
+                clearInterval(matrixInterval);
+                canvas.style.display = 'none';
+                return "Matrix rain visual effect disabled.";
+            }
+        }
+
+        // Command processing logic
+        function processCommand(rawCmd, outContainer, bodyEl) {
+            const parts = rawCmd.split(' ');
+            const cmd = parts[0].toLowerCase();
+            const arg = parts[1] || '';
+
+            switch(cmd) {
+                case 'help':
+                    appendLine(outContainer, `Comandos disponibles del sistema:
+  help     - Muestra este listado de ayuda
+  clear    - Limpia la pantalla de la terminal actual
+  window   - Invoca una nueva instancia de terminal flotante
+  matrix   - Activa o desactiva el flujo visual matrix
+  sysinfo  - Muestra detalles avanzados del kernel y hardware
+  ping     - Comprueba la latencia con nodos de red remotos
+  date     - Muestra la marca temporal del sistema actual
+  echo     - Imprime texto personalizado en la consola
+  glitch   - Fuerza un pulso de distorsión visual y sonora
+  reboot   - Reinicia por completo el entorno operativo`, 'system');
+                    break;
+
+                case 'clear':
+                    outContainer.innerHTML = '';
+                    break;
+
+                case 'window':
+                    spawnNewTerminal();
+                    appendLine(outContainer, "Nueva instancia de terminal invocada correctamente.", "success");
+                    break;
+
+                case 'matrix':
+                    const msg = toggleMatrixRain();
+                    appendLine(outContainer, msg, "success");
+                    break;
+
+                case 'sysinfo':
+                    appendLine(outContainer, `OS: Void Systems Linux x86_64
+Kernel: 6.8.4-RELEASE
+Uptime: active
+Memory: 1420MB / 32768MB
+Display: WebGL Accelerated / HTML5 Canvas
+Input: Multi-Device Supported`, 'system');
+                    break;
+
+                case 'ping':
+                    const target = arg || '127.0.0.1';
+                    appendLine(outContainer, `PING ${target} (32 bytes de datos):`, 'system');
+                    for(let i=1; i<=3; i++) {
+                        setTimeout(() => {
+                            appendLine(outContainer, `64 bytes desde ${target}: icmp_seq=${i} ttl=118 tiempo=${(Math.random()*15+5).toFixed(2)} ms`, '');
+                        }, i * 300);
+                    }
+                    break;
+
+                case 'date':
+                    appendLine(outContainer, `Fecha UTC: ${new Date().toUTCString()}`, 'success');
+                    break;
+
+                case 'echo':
+                    const textToEcho = parts.slice(1).join(' ');
+                    appendLine(outContainer, escapeHtml(textToEcho), '');
+                    break;
+
+                case 'glitch':
+                    playGlitchSound();
+                    const win = outContainer.closest('.terminal-window');
+                    win.classList.add('glitch-active');
+                    setTimeout(() => win.classList.remove('glitch-active'), 300);
+                    appendLine(outContainer, "Distorsión de trama inyectada manualmente.", "warning");
+                    break;
+
+                case 'reboot':
+                    appendLine(outContainer, "Reiniciando sistema operativo...", "error");
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                    break;
+
+                case '':
+                    break;
+
+                default:
+                    playErrorSound();
+                    appendLine(outContainer, `comando no reconocido: ${escapeHtml(cmd)}. Escribe 'help'.`, 'error');
+                    break;
+            }
+        }
+
+        // Spawn dynamic invoked terminal windows
+        let spawnedCount = 0;
+        function spawnNewTerminal() {
+            spawnedCount++;
+            const winId = 'spawnedWin_' + spawnedCount;
+            const offsetX = (spawnedCount * 25) % 150;
+            const offsetY = (spawnedCount * 25) % 100;
+
+            const winDiv = document.createElement('div');
+            winDiv.className = 'terminal-window constant-jitter spawning';
+            winDiv.id = winId;
+            winDiv.style.top = `calc(20vh + ${offsetY}px)`;
+            winDiv.style.left = `calc(25vw + ${offsetX}px)`;
+
+            winDiv.innerHTML = `
+                <div class="terminal-header" data-window-id="${winId}">
+                    <div class="window-controls">
+                        <button class="control-btn btn-close" id="${winId}_close" title="Cerrar"></button>
+                        <button class="control-btn btn-minimize" id="${winId}_min" title="Minimizar"></button>
+                        <button class="control-btn btn-maximize" id="${winId}_max" title="Maximizar"></button>
+                    </div>
+                    <div class="terminal-title">
+                        <span>INVOKED_SHELL</span> #${spawnedCount}
+                    </div>
+                    <div class="window-status">PID: ${100 + spawnedCount}</div>
+                </div>
+
+                <div class="terminal-body" id="${winId}_body">
+                    <div class="output-line system">Instancia remota secundaria establecida.</div>
+                    <div class="output-line system">Esta ventana se puede cerrar o manipular libremente.</div>
+                    <div class="output-line" style="margin-bottom: 10px;">----------------------------------------------------------------</div>
+                    
+                    <div id="${winId}_output"></div>
+
+                    <div class="input-line">
+                        <span class="prompt">user@void-inv:~#</span>
+                        <input type="text" id="${winId}_input" class="command-input" autocomplete="off" spellcheck="false">
+                    </div>
+                </div>
+
+                <div class="terminal-footer-hint">
+                    <span>SHELL SECUNDARIA</span>
+                    <span>UTF-8</span>
+                </div>
+            `;
+
+            document.body.appendChild(winDiv);
+
+            setupWindowBehaviors(
+                winDiv,
+                winDiv.querySelector('.terminal-header'),
+                document.getElementById(`${winId}_close`),
+                document.getElementById(`${winId}_min`),
+                document.getElementById(`${winId}_max`),
+                false
+            );
+
+            setupTerminalInterface(
+                document.getElementById(`${winId}_input`),
+                document.getElementById(`${winId}_output`),
+                document.getElementById(`${winId}_body`)
+            );
+
+            document.getElementById(`${winId}_input`).focus();
+        }
+    </script>
 </body>
 </html>
