@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VOID SYSTEMS - Advanced Terminal</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background-color: #0b0f19;
+            font-family: 'Courier New', Courier, monospace;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #00ff66;
+        }
+
+        /* Background grid effect */
+        .bg-grid {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 255, 102, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 102, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+            z-index: 0;
+        }
+
+        /* Terminal Window */
+        .terminal-window {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 750px;
+            height: 480px;
+            background-color: rgba(13, 17, 23, 0.95);
+            border: 1px solid #1f2937;
+            border-radius: 8px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 255, 102, 0.1);
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+            backdrop-filter: blur(10px);
+            transition: box-shadow 0.2s;
+        }
+
+        .terminal-window.maximized {
+            top: 0 !important;
+            left: 0 !important;
+            transform: none !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            border-radius: 0 !important;
+            border: none;
+        }
+
+        /* Title Bar (Draggable) */
+        .terminal-header {
+            height: 38px;
+            background-color: #161b22;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 12px;
+            cursor: move;
+            user-select: none;
+            border-bottom: 1px solid #30363d;
+        }
+
+        .terminal-window.maximized .terminal-header {
+            border-radius: 0;
+        }
+
+        .window-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .control-btn {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            outline: none;
+            transition: filter 0.2s;
+        }
+        .control-btn:hover { filter: brightness(1.2); }
+        .btn-close { background-color: #ff5f56; }
+        .btn-minimize { background-color: #ffbd2e; }
+        .btn-maximize { background-color: #27c93f; }
+
+        .terminal-title {
+            font-size: 13px;
+            color: #8b949e;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .terminal-title span {
+            color: #00ff66;
+        }
+
+        .window-status {
+            font-size: 11px;
+            color: #484f58;
+        }
+
+        /* Terminal Body / Screen */
+        .terminal-body {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            font-size: 14px;
+            line-height: 1.5;
+            position: relative;
+            scroll-behavior: smooth;
+        }
+
+        /* CRT Scanline effect overlay */
+        .terminal-body::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+            background-size: 100% 4px;
+            z-index: 20;
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        /* Scrollbar styling */
+        .terminal-body::-webkit-scrollbar {
+            width: 8px;
+        }
+        .terminal-body::-webkit-scrollbar-track {
+            background: #0d1117;
+        }
+        .terminal-body::-webkit-scrollbar-thumb {
+            background: #30363d;
+            border-radius: 4px;
+        }
+        .terminal-body::-webkit-scrollbar-thumb:hover {
+            background: #8b949e;
+        }
+
+        .output-line {
+            margin-bottom: 6px;
+            word-break: break-all;
+            white-space: pre-wrap;
+        }
+
+        .output-line.system {
+            color: #58a6ff;
+        }
+
+        .output-line.error {
+            color: #f85149;
+        }
+
+        .output-line.success {
+            color: #3fb950;
+        }
+
+        .output-line.warning {
+            color: #d29922;
+        }
+
+        /* Input Line */
+        .input-line {
+            display: flex;
+            align-items: center;
+            margin-top: 8px;
+        }
+
+        .prompt {
+            color: #00ff66;
+            font-weight: bold;
+            margin-right: 8px;
+            white-space: nowrap;
+        }
+
+        .command-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #e6edf3;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            caret-color: #00ff66;
+        }
+
+        /* Helper hints */
+        .terminal-footer-hint {
+            padding: 8px 16px;
+            background-color: #161b22;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+            font-size: 11px;
+            color: #8b949e;
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid #30363d;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-grid"></div>
+
+    <div class="terminal-window" id="terminalWindow">
+        <div class="terminal-header" id="terminalHeader">
+            <div class="window-controls">
+                <button class="control-btn btn-close" id="btnClose" title="Cerrar"></button>
+                <button class="control-btn btn-minimize" id="btnMinimize" title="Minimizar"></button>
+                <button class="control-btn btn-maximize" id="btnMaximize" title="Maximizar"></button>
+            </div>
+            <div class="terminal-title">
+                <span>⚡</span> VOID SYSTEMS v4.2.0 - [bash]
+            </div>
+            <div class="window-status">TTY-1</div>
+        </div>
+
+        <div class="terminal-body" id="terminalBody">
+            <div class="output-line system">VOID SYSTEMS KERNEL [Linux 6.8.0-generic x86_64]</div>
+            <div class="output-line system">Escribe <span style="color: #00ff66;">'help'</span> para ver la lista de comandos disponibles.</div>
+            <div class="output-line" style="margin-bottom: 12px;">----------------------------------------------------------------</div>
+            
+            <div id="outputContainer"></div>
+
+            <div class="input-line">
+                <span class="prompt" id="promptText">root@void-systems:~#</span>
+                <input type="text" id="commandInput" class="command-input" autofocus autocomplete="off" spellcheck="false">
+            </div>
+        </div>
+
+        <div class="terminal-footer-hint">
+            <span>💡 Consejo: La terminal es totalmente arrastrable desde la barra superior.</span>
+            <span>UTF-8</span>
+        </div>
+    </div>
+
+    <script>
+        // --- DRAGGABLE WINDOW LOGIC ---
+        const terminalWindow = document.getElementById('terminalWindow');
+        const terminalHeader = document.getElementById('terminalHeader');
+
+        let isDragging = false;
+        let startX, startY, initialLeft, initialTop;
+
+        terminalHeader.addEventListener('mousedown', (e) => {
+            // Do not drag if clicking window control buttons
+            if (e.target.classList.contains('control-btn')) return;
+            
+            // If maximized, do not allow dragging
+            if (terminalWindow.classList.contains('maximized')) return;
+
+            isDragging = true;
+            startX = e.clientX;
+            startY = e.clientY;
+
+            // Get current computed position
+            const rect = terminalWindow.getBoundingClientRect();
+            
+            // Switch from transform centering to absolute pixel positioning if first time dragging
+            terminalWindow.style.transform = 'none';
+            terminalWindow.style.left = rect.left + 'px';
+            terminalWindow.style.top = rect.top + 'px';
+
+            initialLeft = rect.left;
+            initialTop = rect.top;
+
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        });
+
+        function onMouseMove(e) {
+            if (!isDragging) return;
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+
+            terminalWindow.style.left = (initialLeft + dx) + 'px';
+            terminalWindow.style.top = (initialTop + dy) + 'px';
+        }
+
+        function onMouseUp() {
+            isDragging = false;
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+        }
+
+        // --- WINDOW CONTROLS ---
+        const btnClose = document.getElementById('btnClose');
+        const btnMinimize = document.getElementById('btnMinimize');
+        const btnMaximize = document.getElementById('btnMaximize');
+
+        btnClose.addEventListener('click', () => {
+            terminalWindow.style.opacity = '0';
+            setTimeout(() => {
+                terminalWindow.style.display = 'none';
+            }, 200);
+        });
+
+        btnMinimize.addEventListener('click', () => {
+            const body = document.getElementById('terminalBody');
+            const footer = document.querySelector('.terminal-footer-hint');
+            if (body.style.display === 'none') {
+                body.style.display = 'block';
+                footer.style.display = 'flex';
+                terminalWindow.style.height = '480px';
+            } else {
+                body.style.display = 'none';
+                footer.style.display = 'none';
+                terminalWindow.style.height = '38px';
+            }
+        });
+
+        btnMaximize.addEventListener('click', () => {
+            terminalWindow.classList.toggle('maximized');
+        });
+
+        // --- TERMINAL COMMAND LOGIC ---
+        const commandInput = document.getElementById('commandInput');
+        const outputContainer = document.getElementById('outputContainer');
+        const terminalBody = document.getElementById('terminalBody');
+
+        let commandHistory = [];
+        let historyIndex = -1;
+
+        const asciiBanner = `
+██╗   ██╗ ██████╗ ██╗██████╗     ███████╗██╗   ██╗███████╗████████╗██╗   ██╗███╗   ███╗███████╗
+██║   ██║██╔═══██╗██║██╔══██╗    ██╔════╝╚██╗ ██╔╝██╔════╝╚══██╔══╝██║   ██║████╗ ████║██╔════╝
+██║   ██║██║   ██║██║██║  ██║    ███████╗ ╚████╔╝ ███████╗   ██║   ██║   ██║██╔████╔██║███████╗
+╚██╗ ██╔╝██║   ██║██║██║  ██║    ╚════██║  ╚██╔╝  ╚════██║   ██║   ██║   ██║██║╚██╝██║╚════██║
+ ╚████╔╝ ╚██████╔╝██║██████╔╝    ███████║   ██║   ███████║   ██║   ██║   ██║██║     ██║███████║
+`;
+
+        commandInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                const cmd = commandInput.value.trim();
+                if (cmd !== '') {
+                    commandHistory.push(cmd);
+                    historyIndex = commandHistory.length;
+                }
+                processCommand(cmd);
+                commandInput.value = '';
+            } else if (e.key === 'ArrowUp') {
+                if (historyIndex > 0) {
+                    historyIndex--;
+                    commandInput.value = commandHistory[historyIndex];
+                }
+                e.preventDefault();
+            } else if (e.key === 'ArrowDown') {
+                if (historyIndex < commandHistory.length - 1) {
+                    historyIndex++;
+                    commandInput.value = commandHistory[historyIndex];
+                } else {
+                    historyIndex = commandHistory.length;
+                    commandInput.value = '';
+                }
+                e.preventDefault();
+            }
+        });
+
+        // Keep focus on input when clicking anywhere in terminal body
+        terminalBody.addEventListener('click', () => {
+            commandInput.focus();
+        });
+
+        function appendOutput(htmlContent, className = '') {
+            const div = document.createElement('div');
+            div.className = `output-line ${className}`;
+            div.innerHTML = htmlContent;
+            outputContainer.appendChild(div);
+            terminalBody.scrollTop = terminalBody.scrollHeight;
+        }
+
+        function processCommand(rawCmd) {
+            // Echo command
+            appendOutput(`<span style="color: #00ff66;">root@void-systems:~#</span> ${escapeHtml(rawCmd)}`);
+
+            const parts = rawCmd.split(' ');
+            const cmd = parts[0].toLowerCase();
+            const args = parts.slice(1);
+
+            switch(cmd) {
+                case 'help':
+                    appendOutput(`Comandos disponibles en VOID SYSTEMS:
+  <span style="color: #58a6ff;">help</span>      - Muestra esta lista de ayuda
+  <span style="color: #58a6ff;">clear</span>     - Limpia la pantalla de la terminal
+  <span style="color: #58a6ff;">neofetch</span>  - Información del sistema y entorno
+  <span style="color: #58a6ff;">matrix</span>    - Simula flujo de código Matrix en consola
+  <span style="color: #58a6ff;">date</span>      - Muestra fecha y hora actual del sistema
+  <span style="color: #58a6ff;">whoami</span>    - Muestra el usuario actual activo
+  <span style="color: #58a6ff;">ls</span>        - Lista los directorios del espacio de trabajo
+  <span style="color: #58a6ff;">blockbench</span>- Simula verificación de assets 3D (.bbmodel)
+  <span style="color: #58a6ff;">roblox</span>    - Estado de compilación de scripts y animación`);
+                    break;
+
+                case 'clear':
+                    outputContainer.innerHTML = '';
+                    break;
+
+                case 'neofetch':
+                    appendOutput(`<span style="color: #3fb950;">
+       /\         root@void-systems
+      /  \        -----------------
+     /\   \       OS: Void Linux x86_64
+    /      \      Host: Custom Terminal Interface
+   /   ,,   \     Kernel: 6.8.0-generic
+  /   |  |   \    Uptime: 4 hours, 20 mins
+ /_-''    ''-_\   Shell: bash 5.2.21
+                  Theme: Dark Neon Matrix
+                  Terminal: HTML5 / JS Draggable Window
+</span>`);
+                    break;
+
+                case 'matrix':
+                    appendOutput(`<span style="color: #3fb950;">01010011 01011001 01010011 01010100 01000101 01001101 01010011</span>`, 'success');
+                    appendOutput(`<span style="color: #3fb950;">Iniciando inyección de flujo neural en memoria... [OK]</span>`, 'success');
+                    appendOutput(`<span style="color: #3fb950;">Sistemas de sincronización 3D y renderizado estables.</span>`, 'success');
+                    break;
+
+                case 'date':
+                    appendOutput(new Date().toString());
+                    break;
+
+                case 'whoami':
+                    appendOutput('root (Superuser / Administrator)');
+                    break;
+
+                case 'ls':
+                    appendOutput(`total 42
+drwxr-xr-x  5 root root 4096 Aug 31 12:22 <span style="color: #58a6ff;">.</span>
+drwxr-xr-x 12 root root 4096 Aug 31 12:22 <span style="color: #58a6ff;">..</span>
+-rw-r--r--  1 root root  532 Aug 31 12:22 config.json
+-rw-r--r--  1 root root 2048 Aug 31 12:22 model_rig.bbmodel
+drwxr-xr-x  2 root root 4096 Aug 31 12:22 scripts/
+drwxr-xr-x  2 root root 4096 Aug 31 12:22 assets/`);
+                    break;
+
+                case 'blockbench':
+                    appendOutput(`<span style="color: #d29922;">[*] Verificando Blockbench Desktop (Última versión)...</span>`);
+                    appendOutput(`[+] Modelos cargados: model_rig.bbmodel (Rig humanoid R6/R15 optimizado)`, 'success');
+                    appendOutput(`[+] UV Mappings y texturas verificados correctamente.`, 'success');
+                    break;
+
+                case 'roblox':
+                    appendOutput(`<span style="color: #58a6ff;">[*] Comprobando entorno Roblox Studio / Script Builder...</span>`);
+                    appendOutput(`[+] Módulos de habilidades y animaciones sincronizados.`, 'success');
+                    break;
+
+                case '':
+                    break;
+
+                default:
+                    appendOutput(`bash: ${escapeHtml(rawCmd)}: comando no encontrado. Escribe 'help' para ver los comandos válidos.`, 'error');
+                    break;
+            }
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+    </script>
+</body>
+</html>
