@@ -1,13 +1,15 @@
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-html,body{height:100%;overflow:hidden;background:#050505}
+html,body{height:100%;overflow:hidden;background:#000}
 body{font:14px/1.5 'JetBrains Mono','Fira Code','Courier New',monospace;display:flex;align-items:center;justify-content:center}
 
-#c{position:fixed;inset:0;opacity:.14;z-index:0;pointer-events:none}
+/* Canvas de fondo de Matrix con cobertura total */
+#matrix-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;background:#000}
 
 .term{
   position:relative;z-index:1;
   width:min(620px,92vw);
-  background:#0a0f0a;
+  background:rgba(10, 15, 10, 0.85);
+  backdrop-filter: blur(6px);
   border:1px solid #1a3a1a;
   border-radius:6px;
   box-shadow:0 0 40px #0f01,0 0 120px #0f005,inset 0 0 80px #0008;
