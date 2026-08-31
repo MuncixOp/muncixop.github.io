@@ -126,21 +126,25 @@ function setupWindowBehaviors(winEl, headerEl, closeBtn, minBtn, maxBtn, isMain 
     let isDragging = false;
     let startX, startY, initialLeft, initialTop;
 
-    headerEl.addEventListener('mousedown', (e) => {
-        if (e.target.closest('.window-controls')) return;
-        if (winEl.classList.contains('maximized')) return;
-
-        isDragging = true;
-        startX = e.clientX;
-        startY = e.clientY;
-
+    // Aseguramos que al cargar tenga una posición inicial explícita basada en px si usa transform o porcentajes
+    function ensurePixelPosition() {
         const rect = winEl.getBoundingClientRect();
         winEl.style.transform = 'none';
         winEl.style.left = rect.left + 'px';
         winEl.style.top = rect.top + 'px';
+    }
 
-        initialLeft = rect.left;
-        initialTop = rect.top;
+    headerEl.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.window-controls')) return;
+        if (winEl.classList.contains('maximized')) return;
+
+        ensurePixelPosition();
+        isDragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+
+        initialLeft = parseFloat(winEl.style.left);
+        initialTop = parseFloat(winEl.style.top);
 
         bringToFront(winEl);
 
@@ -152,18 +156,14 @@ function setupWindowBehaviors(winEl, headerEl, closeBtn, minBtn, maxBtn, isMain 
         if (e.target.closest('.window-controls')) return;
         if (winEl.classList.contains('maximized')) return;
 
+        ensurePixelPosition();
         isDragging = true;
         const touch = e.touches[0];
         startX = touch.clientX;
         startY = touch.clientY;
 
-        const rect = winEl.getBoundingClientRect();
-        winEl.style.transform = 'none';
-        winEl.style.left = rect.left + 'px';
-        winEl.style.top = rect.top + 'px';
-
-        initialLeft = rect.left;
-        initialTop = rect.top;
+        initialLeft = parseFloat(winEl.style.left);
+        initialTop = parseFloat(winEl.style.top);
 
         bringToFront(winEl);
 
@@ -173,15 +173,19 @@ function setupWindowBehaviors(winEl, headerEl, closeBtn, minBtn, maxBtn, isMain 
 
     function onMouseMove(e) {
         if (!isDragging) return;
-        winEl.style.left = (initialLeft + (e.clientX - startX)) + 'px';
-        winEl.style.top = (initialTop + (e.clientY - startY)) + 'px';
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        winEl.style.left = (initialLeft + dx) + 'px';
+        winEl.style.top = (initialTop + dy) + 'px';
     }
 
     function onTouchMove(e) {
         if (!isDragging) return;
         const touch = e.touches[0];
-        winEl.style.left = (initialLeft + (touch.clientX - startX)) + 'px';
-        winEl.style.top = (initialTop + (touch.clientY - startY)) + 'px';
+        const dx = touch.clientX - startX;
+        const dy = touch.clientY - startY;
+        winEl.style.left = (initialLeft + dx) + 'px';
+        winEl.style.top = (initialTop + dy) + 'px';
         e.preventDefault();
     }
 
@@ -234,9 +238,7 @@ function setupWindowBehaviors(winEl, headerEl, closeBtn, minBtn, maxBtn, isMain 
             winEl.style.left = '';
             winEl.style.top = '';
         } else {
-            winEl.style.left = '50%';
-            winEl.style.top = '50%';
-            winEl.style.transform = 'translate(-50%, -50%)';
+            ensurePixelPosition();
         }
     });
 
