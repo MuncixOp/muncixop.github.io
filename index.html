@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MUNCIX_OP // VOID KERNEL</title>
+    <title>MUNCIX_OP // QUANTUM VOID KERNEL v10.4</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -14,42 +14,13 @@
     <div class="vignette-overlay"></div>
     <div class="corrupt-flash" id="corruptFlash"></div>
     <div class="screen-glitch-overlay" id="screenGlitchOverlay"></div>
+    <div class="chromatic-aberration" id="chromaticAberration"></div>
 
     <div id="bootScreen">
-        <div class="boot-log" id="bootLog">INITIALIZING MUNCIX_KERNEL BOOT SEQUENCE...</div>
+        <div class="boot-log" id="bootLog">INITIALIZING QUANTUM MUNCIX_KERNEL BOOT SEQUENCE...</div>
     </div>
 
-    <div class="terminal-window spawning" id="mainTerminal">
-        <div class="terminal-header" data-window-id="mainTerminal">
-            <div class="window-controls">
-                <button class="control-btn btn-close" id="mainCloseBtn" title="Close"></button>
-                <button class="control-btn btn-minimize" id="mainMinBtn" title="Minimize"></button>
-                <button class="control-btn btn-maximize" id="mainMaxBtn" title="Maximize"></button>
-            </div>
-            <div class="terminal-title" data-corrupt-text="MUNCIX_OS // SECURE_CORE [AUTONOMOUS_VOID]">
-                MUNCIX_OS // SECURE_CORE [AUTONOMOUS_VOID]
-            </div>
-            <div class="window-status" data-corrupt-text="PID: 404">PID: 404</div>
-        </div>
-
-        <div class="terminal-body" id="mainTerminalBody">
-            <div class="output-line system" data-corrupt-text="MUNCIX_OP KERNEL [Version 10.0-BACKGROUND_GLITCH]">MUNCIX_OP KERNEL [Version 10.0-BACKGROUND_GLITCH]</div>
-            <div class="output-line system" data-corrupt-text="Background glitch daemon active. Watching system integrity...">Background glitch daemon active. Watching system integrity...</div>
-            <div class="output-line" style="margin-bottom: 10px;">----------------------------------------------------------------</div>
-            
-            <div id="mainOutputContainer"></div>
-
-            <div class="input-line">
-                <span class="prompt">muncix@void:~#</span>
-                <input type="text" id="mainCommandInput" class="command-input" autocomplete="off" spellcheck="false">
-            </div>
-        </div>
-
-        <div class="terminal-footer-hint">
-            <span data-corrupt-text="DAEMON: ACTIVE (BACKGROUND GLITCHES)">DAEMON: ACTIVE (BACKGROUND GLITCHES)</span>
-            <span>UTF-8</span>
-        </div>
-    </div>
+    <div id="terminalContainer"></div>
 
     <script src="main.js"></script>
 </body>
