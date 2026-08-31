@@ -16,7 +16,7 @@ body {
     align-items: center;
     color: #00ff66;
     position: relative;
-    user-select: none;
+    user-select: none
 }
 
 .bg-grid {
