@@ -14,11 +14,11 @@ function playKeySound() {
         osc.type = 'sawtooth';
         osc.frequency.setValueAtTime(400 + Math.random() * 400, audioCtx.currentTime);
         gain.gain.setValueAtTime(0.02, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.04);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
         osc.start();
-        osc.stop(audioCtx.currentTime + 0.05);
+        osc.stop(audioCtx.currentTime + 0.04);
     } catch(e) {}
 }
 
@@ -28,14 +28,14 @@ function playEnterSound() {
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = 'square';
-        osc.frequency.setValueAtTime(200, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
-        gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.12);
+        osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.1);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
         osc.start();
-        osc.stop(audioCtx.currentTime + 0.12);
+        osc.stop(audioCtx.currentTime + 0.1);
     } catch(e) {}
 }
 
@@ -45,57 +45,41 @@ function playErrorSound() {
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(100, audioCtx.currentTime);
-        osc.frequency.setValueAtTime(60, audioCtx.currentTime + 0.1);
-        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.3);
+        osc.frequency.setValueAtTime(110, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(70, audioCtx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.25);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
         osc.start();
-        osc.stop(audioCtx.currentTime + 0.3);
+        osc.stop(audioCtx.currentTime + 0.25);
     } catch(e) {}
 }
 
-function playGlitchSound() {
-    try {
-        initAudio();
-        const bufferSize = audioCtx.sampleRate * 0.3;
-        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) {
-            data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize) * (Math.random() > 0.5 ? 1 : -1);
-        }
-        const noise = audioCtx.createBufferSource();
-        noise.buffer = buffer;
-        const filter = audioCtx.createBiquadFilter();
-        filter.type = 'highpass';
-        filter.frequency.setValueAtTime(800, audioCtx.currentTime);
-
-        const gain = audioCtx.createGain();
-        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.3);
-
-        noise.connect(filter);
-        filter.connect(gain);
-        gain.connect(audioCtx.destination);
-        noise.start();
-
-        const flash = document.getElementById('corruptFlash');
-        if (flash) {
-            flash.style.opacity = '1';
-            setTimeout(() => { flash.style.opacity = '0'; }, 100);
-        }
-    } catch(e) {}
+function triggerGlitchEffect(winElement) {
+    playErrorSound();
+    if (winElement) {
+        winElement.classList.add('glitch-active');
+        setTimeout(() => {
+            winElement.classList.remove('glitch-active');
+        }, 160); // Exactamente ~150-160 milisegundos de corrupción fluida
+    }
+    const flash = document.getElementById('corruptFlash');
+    if (flash) {
+        flash.style.opacity = '1';
+        setTimeout(() => {
+            flash.style.opacity = '0';
+        }, 120);
+    }
 }
 
 const bootLogs = [
     "LOADING MUNCIX_CORE KERNEL MODULES...",
     "BYPASSING SECURITY FIREWALLS: [OK]",
     "MOUNTING CORRUPTED SECTORS: /dev/muncix_root [OK]",
-    "INJECTING GLITCH PROTOCOLS & CORRUPTION OVERLAYS...",
+    "INJECTING FLUID GLITCH PROTOCOLS (150MS BURSTS)...",
     "ESTABLISHING SECURE NET LINKS TO TIKTOK, X, AND CURSEFORGE...",
-    "SYNCHRONIZING AUDIO / VISUAL BUFFER FRAMES...",
-    "SYSTEM CORRUPTION STABLE. WELCOME, MUNCIX_OP."
+    "SYSTEM STABLE. WELCOME, MUNCIX_OP."
 ];
 
 const bootLogEl = document.getElementById('bootLog');
@@ -107,7 +91,7 @@ function runBootSequence() {
         bootLogEl.innerText += "\n> " + bootLogs[currentLogIndex];
         currentLogIndex++;
         playKeySound();
-        setTimeout(runBootSequence, 120 + Math.random() * 100);
+        setTimeout(runBootSequence, 100 + Math.random() * 80);
     } else {
         setTimeout(() => {
             bootScreen.style.opacity = '0';
@@ -115,20 +99,20 @@ function runBootSequence() {
             setTimeout(() => {
                 bootScreen.remove();
                 document.getElementById('mainCommandInput').focus();
-            }, 500);
-        }, 400);
+            }, 400);
+        }, 300);
     }
 }
 
 window.addEventListener('load', () => {
-    setTimeout(runBootSequence, 300);
+    setTimeout(runBootSequence, 200);
 });
 
 function setupWindowBehaviors(winEl, headerEl, closeBtn, minBtn, maxBtn, isMain = false) {
     let isDragging = false;
     let startX, startY, initialLeft, initialTop;
 
-    function ensurePixelPosition() {
+    function initPosition() {
         const rect = winEl.getBoundingClientRect();
         winEl.style.transform = 'none';
         winEl.style.left = rect.left + 'px';
@@ -139,7 +123,7 @@ function setupWindowBehaviors(winEl, headerEl, closeBtn, minBtn, maxBtn, isMain 
         if (e.target.closest('.window-controls')) return;
         if (winEl.classList.contains('maximized')) return;
 
-        ensurePixelPosition();
+        initPosition();
         isDragging = true;
         startX = e.clientX;
         startY = e.clientY;
@@ -157,7 +141,7 @@ function setupWindowBehaviors(winEl, headerEl, closeBtn, minBtn, maxBtn, isMain 
         if (e.target.closest('.window-controls')) return;
         if (winEl.classList.contains('maximized')) return;
 
-        ensurePixelPosition();
+        initPosition();
         isDragging = true;
         const touch = e.touches[0];
         startX = touch.clientX;
@@ -203,11 +187,10 @@ function setupWindowBehaviors(winEl, headerEl, closeBtn, minBtn, maxBtn, isMain 
     }
 
     closeBtn.addEventListener('click', () => {
-        playGlitchSound();
-        winEl.classList.add('glitch-active');
-        setTimeout(() => winEl.classList.remove('glitch-active'), 300);
+        triggerGlitchEffect(winEl);
+        winEl.classList.add('closing');
         if (!isMain) {
-            setTimeout(() => winEl.remove(), 300);
+            setTimeout(() => winEl.remove(), 250);
         }
     });
 
@@ -232,11 +215,8 @@ function setupWindowBehaviors(winEl, headerEl, closeBtn, minBtn, maxBtn, isMain 
     maxBtn.addEventListener('click', () => {
         playKeySound();
         winEl.classList.toggle('maximized');
-        if (winEl.classList.contains('maximized')) {
-            winEl.style.left = '';
-            winEl.style.top = '';
-        } else {
-            ensurePixelPosition();
+        if (!winEl.classList.contains('maximized')) {
+            initPosition();
         }
     });
 
@@ -311,29 +291,6 @@ function appendLine(container, html, className = '') {
     termBody.scrollTop = termBody.scrollHeight;
 }
 
-function appendTypedLine(container, text, className = '', speed = 15, callback = null) {
-    const div = document.createElement('div');
-    div.className = `output-line ${className}`;
-    container.appendChild(div);
-    
-    const termBody = container.closest('.terminal-body');
-    let i = 0;
-    
-    function type() {
-        if (i < text.length) {
-            div.innerHTML = escapeHtml(text.substring(0, i + 1)) + '<span class="typing-cursor"></span>';
-            i++;
-            termBody.scrollTop = termBody.scrollHeight;
-            setTimeout(type, speed + Math.random() * 8);
-        } else {
-            div.innerHTML = escapeHtml(text);
-            termBody.scrollTop = termBody.scrollHeight;
-            if (callback) callback();
-        }
-    }
-    type();
-}
-
 function escapeHtml(text) {
     return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
@@ -385,7 +342,7 @@ function toggleMatrixRain() {
 function processCommand(rawCmd, outContainer, bodyEl) {
     const parts = rawCmd.split(' ');
     const cmd = parts[0].toLowerCase();
-    const arg = parts[1] || '';
+    const win = outContainer.closest('.terminal-window');
 
     switch(cmd) {
         case 'help':
@@ -395,7 +352,7 @@ function processCommand(rawCmd, outContainer, bodyEl) {
   window    - Spawn a new corrupted floating sub-terminal
   matrix    - Toggle custom corrupted Matrix rain overlay
   sysinfo   - Display Muncix_Op kernel profile & stats
-  corrupt   - Trigger an aggressive system corruption glitch burst
+  corrupt   - Trigger a precise 150ms system glitch corruption burst
   socials   - Display and open official social channels (TikTok, X, CurseForge)
   reboot    - Perform a full system hard reboot`, 'system');
             break;
@@ -416,17 +373,14 @@ function processCommand(rawCmd, outContainer, bodyEl) {
 
         case 'sysinfo':
             appendLine(outContainer, `USER: Muncix_Op [ROOT_ADMIN]
-Kernel: Muncix Unix Corrupted v9.4
+Kernel: Muncix Unix Fluid v9.5
 Active Modules: TikTok, X/Twitter, CurseForge
-Glitch Engine: Hyper-Active (Level 9)`, 'system');
+Glitch Burst Time: 150ms Precision Engine`, 'system');
             break;
 
         case 'corrupt':
-            playGlitchSound();
-            const win = outContainer.closest('.terminal-window');
-            win.classList.add('glitch-active');
-            setTimeout(() => win.classList.remove('glitch-active'), 350);
-            appendLine(outContainer, "[!] HARDWARE WARNING: Corrupted sector overflow injected!", "error");
+            triggerGlitchEffect(win);
+            appendLine(outContainer, "[!] GLITCH BURST EXECUTED: Sector corruption applied for 150ms.", "error");
             break;
 
         case 'socials':
@@ -451,14 +405,14 @@ Glitch Engine: Hyper-Active (Level 9)`, 'system');
             appendLine(outContainer, "Initiating emergency system hard reboot...", "error");
             setTimeout(() => {
                 location.reload();
-            }, 1200);
+            }, 1000);
             break;
 
         case '':
             break;
 
         default:
-            playErrorSound();
+            triggerGlitchEffect(win);
             appendLine(outContainer, `command not recognized: '${escapeHtml(cmd)}'. Type 'help' for options.`, 'error');
             break;
     }
@@ -468,14 +422,14 @@ let spawnedCount = 0;
 function spawnNewTerminal() {
     spawnedCount++;
     const winId = 'spawnedWin_' + spawnedCount;
-    const offsetX = (spawnedCount * 35) % 200;
-    const offsetY = (spawnedCount * 35) % 140;
+    const offsetX = (spawnedCount * 40) % 180;
+    const offsetY = (spawnedCount * 40) % 120;
 
     const winDiv = document.createElement('div');
-    winDiv.className = 'terminal-window constant-jitter spawning';
+    winDiv.className = 'terminal-window spawning';
     winDiv.id = winId;
-    winDiv.style.top = `calc(15vh + ${offsetY}px)`;
-    winDiv.style.left = `calc(20vw + ${offsetX}px)`;
+    winDiv.style.top = `calc(22vh + ${offsetY}px)`;
+    winDiv.style.left = `calc(25vw + ${offsetX}px)`;
 
     winDiv.innerHTML = `
         <div class="terminal-header" data-window-id="${winId}">
