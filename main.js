@@ -12,13 +12,13 @@ function playKeySound() {
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(400 + Math.random() * 400, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(350 + Math.random() * 300, audioCtx.currentTime);
         gain.gain.setValueAtTime(0.02, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.04);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.03);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
         osc.start();
-        osc.stop(audioCtx.currentTime + 0.04);
+        osc.stop(audioCtx.currentTime + 0.03);
     } catch(e) {}
 }
 
@@ -28,48 +28,90 @@ function playEnterSound() {
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = 'square';
-        osc.frequency.setValueAtTime(220, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.08);
+        osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(900, audioCtx.currentTime + 0.08);
         gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.1);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.09);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
         osc.start();
-        osc.stop(audioCtx.currentTime + 0.1);
+        osc.stop(audioCtx.currentTime + 0.09);
     } catch(e) {}
 }
 
-function playErrorSound() {
+function playGlitchNoise() {
     try {
         initAudio();
-        const osc = audioCtx.createOscillator();
+        const bufferSize = audioCtx.sampleRate * 0.15;
+        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            data[i] = (Math.random() * 2 - 1) * (Math.random() > 0.3 ? 1 : -1);
+        }
+        const noise = audioCtx.createBufferSource();
+        noise.buffer = buffer;
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(1200, audioCtx.currentTime);
+
         const gain = audioCtx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(110, audioCtx.currentTime);
-        osc.frequency.setValueAtTime(70, audioCtx.currentTime + 0.08);
-        gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.25);
-        osc.connect(gain);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.15);
+
+        noise.connect(filter);
+        filter.connect(gain);
         gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.25);
+        noise.start();
     } catch(e) {}
 }
 
-function triggerGlitchEffect(winElement) {
-    playErrorSound();
+// Función de corrupción de texto en vivo por 150ms
+function corruptTextElements(winElement) {
+    const textElements = winElement.querySelectorAll('[data-corrupt-text], .output-line');
+    const originalTexts = [];
+
+    textElements.forEach(el => {
+        if (!el.getAttribute('data-corrupt-text')) {
+            el.setAttribute('data-corrupt-text', el.innerText);
+        }
+        originalTexts.push({ el: el, text: el.getAttribute('data-corrupt-text') });
+        
+        // Generar texto basura corrupto con símbolos extraños
+        let corrupted = '';
+        const charset = '█▓▒░#@$%&*<>?/\\|~019284';
+        for (let i = 0; i < el.getAttribute('data-corrupt-text').length; i++) {
+            corrupted += charset.charAt(Math.floor(Math.random() * charset.length));
+        }
+        el.innerText = corrupted;
+    });
+
+    setTimeout(() => {
+        originalTexts.forEach(item => {
+            item.el.innerText = item.text;
+        });
+    }, 150); // Exactamente 150 milisegundos de corrupción de texto
+}
+
+function triggerRealGlitch(winElement) {
+    playGlitchNoise();
+    
     if (winElement) {
         winElement.classList.add('glitch-active');
+        corruptTextElements(winElement);
         setTimeout(() => {
             winElement.classList.remove('glitch-active');
-        }, 160); // Exactamente ~150-160 milisegundos de corrupción fluida
+        }, 150); // Ventana se parte y distorsiona exactamente 150ms
     }
+
     const flash = document.getElementById('corruptFlash');
-    if (flash) {
+    const screenOverlay = document.getElementById('screenGlitchOverlay');
+    if (flash && screenOverlay) {
         flash.style.opacity = '1';
+        screenOverlay.style.opacity = '1';
         setTimeout(() => {
             flash.style.opacity = '0';
-        }, 120);
+            screenOverlay.style.opacity = '0';
+        }, 150);
     }
 }
 
@@ -77,9 +119,9 @@ const bootLogs = [
     "LOADING MUNCIX_CORE KERNEL MODULES...",
     "BYPASSING SECURITY FIREWALLS: [OK]",
     "MOUNTING CORRUPTED SECTORS: /dev/muncix_root [OK]",
-    "INJECTING FLUID GLITCH PROTOCOLS (150MS BURSTS)...",
-    "ESTABLISHING SECURE NET LINKS TO TIKTOK, X, AND CURSEFORGE...",
-    "SYSTEM STABLE. WELCOME, MUNCIX_OP."
+    "ENGAGING CONSTANT MATRIX RAIN CASCADE...",
+    "ACTIVATING 150MS HARD-GLITCH SPLIT ENGINE...",
+    "SYSTEM CORRUPTED. WELCOME, MUNCIX_OP."
 ];
 
 const bootLogEl = document.getElementById('bootLog');
@@ -91,7 +133,7 @@ function runBootSequence() {
         bootLogEl.innerText += "\n> " + bootLogs[currentLogIndex];
         currentLogIndex++;
         playKeySound();
-        setTimeout(runBootSequence, 100 + Math.random() * 80);
+        setTimeout(runBootSequence, 90 + Math.random() * 60);
     } else {
         setTimeout(() => {
             bootScreen.style.opacity = '0';
@@ -99,6 +141,7 @@ function runBootSequence() {
             setTimeout(() => {
                 bootScreen.remove();
                 document.getElementById('mainCommandInput').focus();
+                initMatrixRain(); // Iniciar matriz constante al arrancar
             }, 400);
         }, 300);
     }
@@ -187,10 +230,10 @@ function setupWindowBehaviors(winEl, headerEl, closeBtn, minBtn, maxBtn, isMain 
     }
 
     closeBtn.addEventListener('click', () => {
-        triggerGlitchEffect(winEl);
+        triggerRealGlitch(winEl);
         winEl.classList.add('closing');
         if (!isMain) {
-            setTimeout(() => winEl.remove(), 250);
+            setTimeout(() => winEl.remove(), 200);
         }
     });
 
@@ -285,6 +328,7 @@ function setupTerminalInterface(inputEl, outputContainerEl, bodyEl) {
 function appendLine(container, html, className = '') {
     const div = document.createElement('div');
     div.className = `output-line ${className}`;
+    div.setAttribute('data-corrupt-text', div.innerText);
     div.innerHTML = html;
     container.appendChild(div);
     const termBody = container.closest('.terminal-body');
@@ -301,42 +345,37 @@ setupTerminalInterface(
     document.getElementById('mainTerminalBody')
 );
 
-let matrixActive = false;
+// Cascada constante de Matrix en el fondo
 const canvas = document.getElementById('matrixCanvas');
 const ctx = canvas.getContext('2d');
-let matrixInterval;
 
-function toggleMatrixRain() {
-    matrixActive = !matrixActive;
-    if (matrixActive) {
-        canvas.style.display = 'block';
+function initMatrixRain() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const letters = 'MUNCIX_OP0123456789@#$%^&*()_+<>_█▓▒░CORRUPT';
+    const fontSize = 14;
+    const columns = canvas.width / fontSize;
+    const drops = Array(Math.floor(columns)).fill(1);
+
+    setInterval(() => {
+        ctx.fillStyle = 'rgba(3, 5, 8, 0.1)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#ff0055';
+        ctx.font = fontSize + 'px monospace';
+        for (let i = 0; i < drops.length; i++) {
+            const text = letters.charAt(Math.floor(Math.random() * letters.length));
+            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+            if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                drops[i] = 0;
+            }
+            drops[i]++;
+        }
+    }, 30);
+
+    window.addEventListener('resize', () => {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        const letters = 'MUNCIX_OP0123456789@#$%^&*()_+<>_CORRUPT';
-        const fontSize = 14;
-        const columns = canvas.width / fontSize;
-        const drops = Array(Math.floor(columns)).fill(1);
-
-        matrixInterval = setInterval(() => {
-            ctx.fillStyle = 'rgba(3, 5, 8, 0.08)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#ff0055';
-            ctx.font = fontSize + 'px monospace';
-            for (let i = 0; i < drops.length; i++) {
-                const text = letters.charAt(Math.floor(Math.random() * letters.length));
-                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
-                    drops[i] = 0;
-                }
-                drops[i]++;
-            }
-        }, 30);
-        return "Corrupted Matrix Rain overlay activated.";
-    } else {
-        clearInterval(matrixInterval);
-        canvas.style.display = 'none';
-        return "Matrix overlay deactivated.";
-    }
+    });
 }
 
 function processCommand(rawCmd, outContainer, bodyEl) {
@@ -350,9 +389,7 @@ function processCommand(rawCmd, outContainer, bodyEl) {
   help      - Display this command reference guide
   clear     - Clear the current terminal console
   window    - Spawn a new corrupted floating sub-terminal
-  matrix    - Toggle custom corrupted Matrix rain overlay
-  sysinfo   - Display Muncix_Op kernel profile & stats
-  corrupt   - Trigger a precise 150ms system glitch corruption burst
+  corrupt   - Trigger a precise 150ms hard-glitch split & text corruption
   socials   - Display and open official social channels (TikTok, X, CurseForge)
   reboot    - Perform a full system hard reboot`, 'system');
             break;
@@ -366,21 +403,9 @@ function processCommand(rawCmd, outContainer, bodyEl) {
             appendLine(outContainer, "New corrupted secondary terminal instance spawned.", "success");
             break;
 
-        case 'matrix':
-            const msg = toggleMatrixRain();
-            appendLine(outContainer, msg, "success");
-            break;
-
-        case 'sysinfo':
-            appendLine(outContainer, `USER: Muncix_Op [ROOT_ADMIN]
-Kernel: Muncix Unix Fluid v9.5
-Active Modules: TikTok, X/Twitter, CurseForge
-Glitch Burst Time: 150ms Precision Engine`, 'system');
-            break;
-
         case 'corrupt':
-            triggerGlitchEffect(win);
-            appendLine(outContainer, "[!] GLITCH BURST EXECUTED: Sector corruption applied for 150ms.", "error");
+            triggerRealGlitch(win);
+            appendLine(outContainer, "[!] HARD-GLITCH SPLIT: Window fractured & texts corrupted for 150ms.", "error");
             break;
 
         case 'socials':
@@ -412,7 +437,7 @@ Glitch Burst Time: 150ms Precision Engine`, 'system');
             break;
 
         default:
-            triggerGlitchEffect(win);
+            triggerRealGlitch(win);
             appendLine(outContainer, `command not recognized: '${escapeHtml(cmd)}'. Type 'help' for options.`, 'error');
             break;
     }
@@ -438,15 +463,15 @@ function spawnNewTerminal() {
                 <button class="control-btn btn-minimize" id="${winId}_min" title="Minimize"></button>
                 <button class="control-btn btn-maximize" id="${winId}_max" title="Maximize"></button>
             </div>
-            <div class="terminal-title">
+            <div class="terminal-title" data-corrupt-text="SUB_SHELL #${spawnedCount}">
                 <span>SUB_SHELL</span> #${spawnedCount}
             </div>
-            <div class="window-status">PID: ${500 + spawnedCount}</div>
+            <div class="window-status" data-corrupt-text="PID: ${500 + spawnedCount}">PID: ${500 + spawnedCount}</div>
         </div>
 
         <div class="terminal-body" id="${winId}_body">
-            <div class="output-line system">Isolated corrupted subsystem initialized.</div>
-            <div class="output-line system">Type 'socials' for direct access links.</div>
+            <div class="output-line system" data-corrupt-text="Isolated corrupted subsystem initialized.">Isolated corrupted subsystem initialized.</div>
+            <div class="output-line system" data-corrupt-text="Type 'socials' for direct access links.">Type 'socials' for direct access links.</div>
             <div class="output-line" style="margin-bottom: 10px;">----------------------------------------------------------------</div>
             
             <div id="${winId}_output"></div>
@@ -458,7 +483,7 @@ function spawnNewTerminal() {
         </div>
 
         <div class="terminal-footer-hint">
-            <span>SUBSYSTEM ACTIVE</span>
+            <span data-corrupt-text="SUBSYSTEM ACTIVE">SUBSYSTEM ACTIVE</span>
             <span>UTF-8</span>
         </div>
     `;
