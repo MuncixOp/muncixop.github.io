@@ -55,7 +55,7 @@ function playGlitchNoise() {
         filter.frequency.setValueAtTime(1200, audioCtx.currentTime);
 
         const gain = audioCtx.createGain();
-        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.15);
 
         noise.connect(filter);
@@ -65,21 +65,18 @@ function playGlitchNoise() {
     } catch(e) {}
 }
 
-// Función de corrupción de texto en vivo por 150ms
-function corruptTextElements(winElement) {
-    const textElements = winElement.querySelectorAll('[data-corrupt-text], .output-line');
+// Corrupción de texto en vivo en segundo plano durante 150ms exactos
+function corruptAllTexts() {
+    const textElements = document.querySelectorAll('[data-corrupt-text]');
     const originalTexts = [];
 
     textElements.forEach(el => {
-        if (!el.getAttribute('data-corrupt-text')) {
-            el.setAttribute('data-corrupt-text', el.innerText);
-        }
-        originalTexts.push({ el: el, text: el.getAttribute('data-corrupt-text') });
+        const original = el.getAttribute('data-corrupt-text');
+        originalTexts.push({ el: el, text: original });
         
-        // Generar texto basura corrupto con símbolos extraños
         let corrupted = '';
         const charset = '█▓▒░#@$%&*<>?/\\|~019284';
-        for (let i = 0; i < el.getAttribute('data-corrupt-text').length; i++) {
+        for (let i = 0; i < original.length; i++) {
             corrupted += charset.charAt(Math.floor(Math.random() * charset.length));
         }
         el.innerText = corrupted;
@@ -89,19 +86,22 @@ function corruptTextElements(winElement) {
         originalTexts.forEach(item => {
             item.el.innerText = item.text;
         });
-    }, 150); // Exactamente 150 milisegundos de corrupción de texto
+    }, 150);
 }
 
-function triggerRealGlitch(winElement) {
+// Disparador global del glitch en segundo plano que afecta a todas las ventanas abiertas
+function triggerBackgroundGlitch() {
     playGlitchNoise();
-    
-    if (winElement) {
-        winElement.classList.add('glitch-active');
-        corruptTextElements(winElement);
+
+    const windows = document.querySelectorAll('.terminal-window');
+    windows.forEach(win => {
+        win.classList.add('glitch-active');
         setTimeout(() => {
-            winElement.classList.remove('glitch-active');
-        }, 150); // Ventana se parte y distorsiona exactamente 150ms
-    }
+            win.classList.remove('glitch-active');
+        }, 150);
+    });
+
+    corruptAllTexts();
 
     const flash = document.getElementById('corruptFlash');
     const screenOverlay = document.getElementById('screenGlitchOverlay');
@@ -115,12 +115,23 @@ function triggerRealGlitch(winElement) {
     }
 }
 
+// Bucle autónomo en segundo plano: Ocurre de forma impredecible cada 4 a 9 segundos
+function initBackgroundGlitchDaemon() {
+    function scheduleNextGlitch() {
+        const randomInterval = 4000 + Math.random() * 5000; // Entre 4 y 9 segundos
+        setTimeout(() => {
+            triggerBackgroundGlitch();
+            scheduleNextGlitch();
+        }, randomInterval);
+    }
+    scheduleNextGlitch();
+}
+
 const bootLogs = [
     "LOADING MUNCIX_CORE KERNEL MODULES...",
     "BYPASSING SECURITY FIREWALLS: [OK]",
-    "MOUNTING CORRUPTED SECTORS: /dev/muncix_root [OK]",
     "ENGAGING CONSTANT MATRIX RAIN CASCADE...",
-    "ACTIVATING 150MS HARD-GLITCH SPLIT ENGINE...",
+    "STARTING AUTONOMOUS BACKGROUND GLITCH DAEMON (150MS BURSTS)...",
     "SYSTEM CORRUPTED. WELCOME, MUNCIX_OP."
 ];
 
@@ -141,7 +152,8 @@ function runBootSequence() {
             setTimeout(() => {
                 bootScreen.remove();
                 document.getElementById('mainCommandInput').focus();
-                initMatrixRain(); // Iniciar matriz constante al arrancar
+                initMatrixRain();
+                initBackgroundGlitchDaemon(); // ¡Inicia la corrupción autónoma en segundo plano!
             }, 400);
         }, 300);
     }
@@ -230,7 +242,7 @@ function setupWindowBehaviors(winEl, headerEl, closeBtn, minBtn, maxBtn, isMain 
     }
 
     closeBtn.addEventListener('click', () => {
-        triggerRealGlitch(winEl);
+        triggerBackgroundGlitch();
         winEl.classList.add('closing');
         if (!isMain) {
             setTimeout(() => winEl.remove(), 200);
@@ -345,7 +357,6 @@ setupTerminalInterface(
     document.getElementById('mainTerminalBody')
 );
 
-// Cascada constante de Matrix en el fondo
 const canvas = document.getElementById('matrixCanvas');
 const ctx = canvas.getContext('2d');
 
@@ -389,7 +400,7 @@ function processCommand(rawCmd, outContainer, bodyEl) {
   help      - Display this command reference guide
   clear     - Clear the current terminal console
   window    - Spawn a new corrupted floating sub-terminal
-  corrupt   - Trigger a precise 150ms hard-glitch split & text corruption
+  glitch    - Force a manual 150ms hard system glitch burst right now
   socials   - Display and open official social channels (TikTok, X, CurseForge)
   reboot    - Perform a full system hard reboot`, 'system');
             break;
@@ -403,9 +414,9 @@ function processCommand(rawCmd, outContainer, bodyEl) {
             appendLine(outContainer, "New corrupted secondary terminal instance spawned.", "success");
             break;
 
-        case 'corrupt':
-            triggerRealGlitch(win);
-            appendLine(outContainer, "[!] HARD-GLITCH SPLIT: Window fractured & texts corrupted for 150ms.", "error");
+        case 'glitch':
+            triggerBackgroundGlitch();
+            appendLine(outContainer, "[!] Manual glitch burst injected into background daemon.", "error");
             break;
 
         case 'socials':
@@ -437,7 +448,7 @@ function processCommand(rawCmd, outContainer, bodyEl) {
             break;
 
         default:
-            triggerRealGlitch(win);
+            triggerBackgroundGlitch();
             appendLine(outContainer, `command not recognized: '${escapeHtml(cmd)}'. Type 'help' for options.`, 'error');
             break;
     }
