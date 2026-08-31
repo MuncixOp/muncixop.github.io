@@ -43,7 +43,7 @@ body {
 .vignette-overlay {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
-    box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.9);
+    box-shadow: inset 0 0 140px rgba(0, 0, 0, 0.95);
     z-index: 998;
     pointer-events: none;
 }
@@ -51,11 +51,26 @@ body {
 .corrupt-flash {
     position: fixed;
     top: 0; left: 0; width: 100vw; height: 100vh;
-    background: rgba(255, 0, 85, 0.2);
+    background: rgba(255, 0, 85, 0.35);
     z-index: 997;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.05s ease;
+    transition: opacity 0.02s ease;
+}
+
+/* Capa para romper la pantalla físicamente por 150ms */
+.screen-glitch-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    z-index: 996;
+    pointer-events: none;
+    opacity: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(255,0,85,0.15) 0px,
+        rgba(0,255,102,0.15) 2px,
+        transparent 4px
+    );
 }
 
 #bootScreen {
@@ -82,12 +97,12 @@ body {
     text-shadow: 0 0 8px rgba(255, 0, 85, 0.6);
 }
 
-/* Ventana principal y sub-ventanas */
+/* Ventanas con soporte para separación por cortes (clip-path) */
 .terminal-window {
     position: absolute;
     width: min(900px, 95vw);
     height: min(600px, 90vh);
-    background-color: rgba(8, 11, 16, 0.95);
+    background-color: rgba(8, 11, 16, 0.96);
     border: 1px solid #ff0055;
     border-radius: 8px;
     box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9), 0 0 35px rgba(255, 0, 85, 0.2);
@@ -95,7 +110,6 @@ body {
     flex-direction: column;
     z-index: 10;
     backdrop-filter: blur(16px);
-    /* Transiciones ultra fluidas para maximizar, minimizar y redimensionar */
     transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
                 height 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
                 width 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
@@ -118,34 +132,63 @@ body {
 }
 
 .terminal-window.closing {
-    transform: scale(0.8) rotate(5deg) !important;
+    transform: scale(0.7) rotate(8deg) skew(20deg) !important;
     opacity: 0 !important;
-    transition: all 0.25s cubic-bezier(0.4, 0, 1, 1) !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 1, 1) !important;
 }
 
-/* Animación de Glitch exacta de 150ms a 200ms */
-@keyframes exact-glitch {
-    0% { transform: translate(0, 0) skew(0deg); filter: none; border-color: #ff0055; }
-    20% { transform: translate(-6px, 3px) skew(-3deg); filter: hue-rotate(90deg) contrast(200%); border-color: #00ff66; }
-    40% { transform: translate(5px, -4px) skew(2deg); filter: invert(0.2) saturate(300%); border-color: #00ffff; }
-    60% { transform: translate(-3px, 2px) skew(-1deg); filter: blur(0.8px); }
-    80% { transform: translate(4px, -2px); filter: none; border-color: #ff0055; }
-    100% { transform: translate(0, 0) skew(0deg); filter: none; }
+/* Glitch de verdad: Se parte, se desplaza en bloques y se distorsiona agresivamente por 150ms */
+@keyframes real-hard-glitch {
+    0% {
+        transform: translate(0, 0) skew(0deg);
+        filter: none;
+        clip-path: none;
+        border-color: #ff0055;
+    }
+    15% {
+        transform: translate(-14px, 6px) skew(-15deg);
+        filter: invert(0.9) hue-rotate(140deg) contrast(300%);
+        clip-path: polygon(0 10%, 100% 10%, 100% 40%, 0 40%);
+        border-color: #00ff66;
+    }
+    30% {
+        transform: translate(16px, -10px) skew(20deg);
+        filter: saturate(500%) drop-shadow(10px 0 0 #ff0055);
+        clip-path: polygon(0 60%, 100% 60%, 100% 85%, 0 85%);
+        border-color: #00ffff;
+    }
+    45% {
+        transform: translate(-8px, 12px) skew(-10deg);
+        filter: blur(1.5px) invert(0.3);
+        clip-path: polygon(0 20%, 100% 20%, 100% 50%, 0 50%);
+        border-color: #ffff00;
+    }
+    70% {
+        transform: translate(10px, -6px) skew(5deg);
+        filter: hue-rotate(240deg) contrast(250%);
+        clip-path: polygon(0 0%, 100% 0%, 100% 100%, 0 100%);
+        border-color: #ff0055;
+    }
+    100% {
+        transform: translate(0, 0) skew(0deg);
+        filter: none;
+        clip-path: none;
+        border-color: #ff0055;
+    }
 }
 
 .glitch-active {
-    animation: exact-glitch 0.16s cubic-bezier(0.25, 0.46, 0.45, 0.94) both !important;
-    border-color: #ff0055 !important;
-    box-shadow: 0 0 50px rgba(255, 0, 85, 0.9) !important;
+    animation: real-hard-glitch 0.15s steps(2, end) both !important;
+    box-shadow: 0 0 60px rgba(255, 0, 85, 1) !important;
 }
 
 @keyframes window-spawn {
-    0% { transform: scale(0.85) translateY(20px); opacity: 0; filter: blur(6px); }
+    0% { transform: scale(0.8) translateY(30px); opacity: 0; filter: blur(8px); }
     100% { transform: scale(1) translateY(0); opacity: 1; filter: blur(0); }
 }
 
 .spawning {
-    animation: window-spawn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: window-spawn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .terminal-header {
@@ -160,7 +203,6 @@ body {
     cursor: grab;
     user-select: none;
     border-bottom: 1px solid rgba(255, 0, 85, 0.4);
-    transition: background-color 0.2s ease;
 }
 
 .terminal-header:active {
@@ -239,7 +281,7 @@ body {
     margin-bottom: 6px;
     word-break: break-all;
     white-space: pre-wrap;
-    transition: opacity 0.2s ease, transform 0.2s ease;
+    transition: opacity 0.2s ease;
 }
 
 .output-line.system { color: #00ffff; }
@@ -288,9 +330,9 @@ body {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
     z-index: 1;
-    opacity: 0.2;
+    opacity: 0.35;
     pointer-events: none;
-    display: none;
+    display: block; /* Activado por defecto en cascada constante */
 }
 
 .social-card {
