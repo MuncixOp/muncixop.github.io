@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VOID SYSTEMS - Kernel v7.2</title>
+    <title>MUNCIX_OP // VOID KERNEL</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,9 +11,11 @@
     <div class="scanlines"></div>
     <div class="bg-grid"></div>
     <canvas id="matrixCanvas"></canvas>
+    <div class="vignette-overlay"></div>
+    <div class="corrupt-flash" id="corruptFlash"></div>
 
     <div id="bootScreen">
-        <div class="boot-log" id="bootLog">INITIALIZING VOID KERNEL BOOT SEQUENCE...</div>
+        <div class="boot-log" id="bootLog">INITIALIZING MUNCIX_KERNEL BOOT SEQUENCE...</div>
     </div>
 
     <div class="terminal-window constant-jitter spawning" id="mainTerminal" style="top: 50%; left: 50%; transform: translate(-50%, -50%);">
@@ -24,26 +26,26 @@
                 <button class="control-btn btn-maximize" id="mainMaxBtn" title="Maximize"></button>
             </div>
             <div class="terminal-title">
-                <span>VOID_OS</span> // CORE_TERMINAL
+                <span>MUNCIX_OS</span> // SECURE_CORE [CORRUPTED]
             </div>
-            <div class="window-status">PID: 101</div>
+            <div class="window-status">PID: 404</div>
         </div>
 
         <div class="terminal-body" id="mainTerminalBody">
-            <div class="output-line system">VOID KERNEL [Version 7.2.0-STABLE]</div>
-            <div class="output-line system">Type 'help' for commands or 'socials' for direct links.</div>
+            <div class="output-line system glitch-text">MUNCIX_OP KERNEL [Version 9.4.6-CORRUPT]</div>
+            <div class="output-line system">Type 'help' for commands or 'socials' for direct links to TikTok, X, and CurseForge.</div>
             <div class="output-line" style="margin-bottom: 10px;">----------------------------------------------------------------</div>
             
             <div id="mainOutputContainer"></div>
 
             <div class="input-line">
-                <span class="prompt">root@void:~#</span>
+                <span class="prompt">muncix@void:~#</span>
                 <input type="text" id="mainCommandInput" class="command-input" autocomplete="off" spellcheck="false">
             </div>
         </div>
 
         <div class="terminal-footer-hint">
-            <span>SECURE KERNEL ACTIVE</span>
+            <span>STATUS: INSTABILITY DETECTED</span>
             <span>UTF-8</span>
         </div>
     </div>
