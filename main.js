@@ -311,6 +311,29 @@ function appendLine(container, html, className = '') {
     termBody.scrollTop = termBody.scrollHeight;
 }
 
+function appendTypedLine(container, text, className = '', speed = 15, callback = null) {
+    const div = document.createElement('div');
+    div.className = `output-line ${className}`;
+    container.appendChild(div);
+    
+    const termBody = container.closest('.terminal-body');
+    let i = 0;
+    
+    function type() {
+        if (i < text.length) {
+            div.innerHTML = escapeHtml(text.substring(0, i + 1)) + '<span class="typing-cursor"></span>';
+            i++;
+            termBody.scrollTop = termBody.scrollHeight;
+            setTimeout(type, speed + Math.random() * 10);
+        } else {
+            div.innerHTML = escapeHtml(text);
+            termBody.scrollTop = termBody.scrollHeight;
+            if (callback) callback();
+        }
+    }
+    type();
+}
+
 function escapeHtml(text) {
     return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
@@ -351,11 +374,11 @@ function toggleMatrixRain() {
                 drops[i]++;
             }
         }, 33);
-        return "Matrix visual matrix overlay activated.";
+        return "Matrix visual overlay activated.";
     } else {
         clearInterval(matrixInterval);
         canvas.style.display = 'none';
-        return "Matrix visual matrix overlay deactivated.";
+        return "Matrix visual overlay deactivated.";
     }
 }
 
@@ -373,6 +396,7 @@ function processCommand(rawCmd, outContainer, bodyEl) {
   matrix    - Toggle the matrix rain graphics overlay
   sysinfo   - Display detailed kernel metrics and hardware profile
   ping      - Test network latency against target domains or IPs
+  decrypt   - Initialize simulated secure data stream decryption
   date      - Print current system timestamp
   echo      - Print custom text strings into output stream
   glitch    - Trigger artificial visual distortion pulse
@@ -413,6 +437,17 @@ Device Support: Cross-Platform Responsive`, 'system');
                     appendLine(outContainer, `64 bytes from ${target}: icmp_seq=${i} ttl=119 time=${(Math.random()*12+4).toFixed(2)} ms`, '');
                 }, i * 350);
             }
+            break;
+
+        case 'decrypt':
+            appendLine(outContainer, `[!] Initializing bypass routines on secure subnet...`, 'warning');
+            setTimeout(() => {
+                appendTypedLine(outContainer, `> Bypassing mainframe firewall layers... [ACCESS GRANTED]`, 'success', 20, () => {
+                    setTimeout(() => {
+                        appendTypedLine(outContainer, `> Extracting cryptographic keys: 0x7F8B_VOID_SECURE`, 'decrypting', 15);
+                    }, 300);
+                });
+            }, 400);
             break;
 
         case 'date':
@@ -458,9 +493,9 @@ Device Support: Cross-Platform Responsive`, 'system');
 
         case 'socials':
             appendLine(outContainer, `External communications routing available:
-  - <span class="action-link" onclick="window.open('https://github.com', '_blank')">GitHub Repository</span>
-  - <span class="action-link" onclick="window.open('https://discord.com', '_blank')">Discord Community Server</span>
-  - <span class="action-link" onclick="window.open('https://x.com', '_blank')">X / Twitter Feed</span>`, 'success');
+  - <span class="action-link" onclick="window.open('https://github.com', '_blank')">GitHub Profile</span>
+  - <span class="action-link" onclick="window.open('https://discord.com', '_blank')">Discord Community</span>
+  - <span class="action-link" onclick="window.open('https://x.com', '_blank')">X / Twitter</span>`, 'success');
             break;
 
         case 'reboot':
@@ -508,7 +543,7 @@ function spawnNewTerminal() {
 
         <div class="terminal-body" id="${winId}_body">
             <div class="output-line system">Secondary isolated shell instance established.</div>
-            <div class="output-line system">This window can be safely closed or manipulated independently.</div>
+            <div class="output-line system">Type 'socials' for routing or close window safely.</div>
             <div class="output-line" style="margin-bottom: 10px;">----------------------------------------------------------------</div>
             
             <div id="${winId}_output"></div>
