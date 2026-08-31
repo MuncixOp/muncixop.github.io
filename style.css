@@ -16,6 +16,7 @@ body {
     align-items: center;
     color: #00ff66;
     position: relative;
+    user-select: none;
 }
 
 .bg-grid {
@@ -223,6 +224,7 @@ body {
 .output-line.error { color: #ff5f56; }
 .output-line.success { color: #3fb950; }
 .output-line.warning { color: #d29922; }
+.output-line.decrypting { color: #d29922; font-style: italic; }
 
 .input-line {
     display: flex;
@@ -305,4 +307,19 @@ body {
 }
 .action-link:hover {
     color: #79c0ff;
+}
+
+.typing-cursor {
+    display: inline-block;
+    width: 7px;
+    height: 13px;
+    background-color: #00ff66;
+    margin-left: 2px;
+    animation: cursor-blink 0.8s infinite;
+    vertical-align: middle;
+}
+
+@keyframes cursor-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
 }
