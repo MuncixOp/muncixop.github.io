@@ -14,6 +14,9 @@
     <div class="vignette-overlay"></div>
     <div class="corrupt-flash" id="corruptFlash"></div>
 
+    <!-- Capa de distorsión absoluta para fragmentación de ventana -->
+    <div class="screen-glitch-overlay" id="screenGlitchOverlay"></div>
+
     <div id="bootScreen">
         <div class="boot-log" id="bootLog">INITIALIZING MUNCIX_KERNEL BOOT SEQUENCE...</div>
     </div>
@@ -25,15 +28,15 @@
                 <button class="control-btn btn-minimize" id="mainMinBtn" title="Minimize"></button>
                 <button class="control-btn btn-maximize" id="mainMaxBtn" title="Maximize"></button>
             </div>
-            <div class="terminal-title">
-                <span>MUNCIX_OS</span> // SECURE_CORE [CORRUPTED]
+            <div class="terminal-title" data-corrupt-text="MUNCIX_OS // SECURE_CORE [CORRUPTED]">
+                MUNCIX_OS // SECURE_CORE [CORRUPTED]
             </div>
-            <div class="window-status">PID: 404</div>
+            <div class="window-status" data-corrupt-text="PID: 404">PID: 404</div>
         </div>
 
         <div class="terminal-body" id="mainTerminalBody">
-            <div class="output-line system glitch-text">MUNCIX_OP KERNEL [Version 9.5-FLUID_GLITCH]</div>
-            <div class="output-line system">Type 'help' for commands or 'socials' for direct links to TikTok, X, and CurseForge.</div>
+            <div class="output-line system glitch-text" data-corrupt-text="MUNCIX_OP KERNEL [Version 9.8-HARD_VOID]">MUNCIX_OP KERNEL [Version 9.8-HARD_VOID]</div>
+            <div class="output-line system" data-corrupt-text="Type 'help' for commands, 'matrix' for constant rain, or 'socials' for links.">Type 'help' for commands, 'matrix' for constant rain, or 'socials' for links.</div>
             <div class="output-line" style="margin-bottom: 10px;">----------------------------------------------------------------</div>
             
             <div id="mainOutputContainer"></div>
@@ -45,7 +48,7 @@
         </div>
 
         <div class="terminal-footer-hint">
-            <span>STATUS: FLUID STABILITY</span>
+            <span data-corrupt-text="STATUS: MAXIMUM INSTABILITY">STATUS: MAXIMUM INSTABILITY</span>
             <span>UTF-8</span>
         </div>
     </div>
