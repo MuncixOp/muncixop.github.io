@@ -12,13 +12,13 @@ function playKeySound() {
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(350 + Math.random() * 300, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.02, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.03);
+        osc.frequency.setValueAtTime(400 + Math.random() * 350, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.025, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.035);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
         osc.start();
-        osc.stop(audioCtx.currentTime + 0.03);
+        osc.stop(audioCtx.currentTime + 0.035);
     } catch(e) {}
 }
 
@@ -28,35 +28,35 @@ function playEnterSound() {
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = 'square';
-        osc.frequency.setValueAtTime(200, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(900, audioCtx.currentTime + 0.08);
-        gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.09);
+        osc.frequency.setValueAtTime(250, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1100, audioCtx.currentTime + 0.09);
+        gain.gain.setValueAtTime(0.045, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.1);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
         osc.start();
-        osc.stop(audioCtx.currentTime + 0.09);
+        osc.stop(audioCtx.currentTime + 0.1);
     } catch(e) {}
 }
 
 function playGlitchNoise() {
     try {
         initAudio();
-        const bufferSize = audioCtx.sampleRate * 0.15;
+        const bufferSize = audioCtx.sampleRate * 0.18;
         const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
         const data = buffer.getChannelData(0);
         for (let i = 0; i < bufferSize; i++) {
-            data[i] = (Math.random() * 2 - 1) * (Math.random() > 0.3 ? 1 : -1);
+            data[i] = (Math.random() * 2 - 1) * (Math.random() > 0.25 ? 1 : -1);
         }
         const noise = audioCtx.createBufferSource();
         noise.buffer = buffer;
         const filter = audioCtx.createBiquadFilter();
         filter.type = 'bandpass';
-        filter.frequency.setValueAtTime(1200, audioCtx.currentTime);
+        filter.frequency.setValueAtTime(1400, audioCtx.currentTime);
 
         const gain = audioCtx.createGain();
-        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.18);
 
         noise.connect(filter);
         filter.connect(gain);
@@ -65,7 +65,6 @@ function playGlitchNoise() {
     } catch(e) {}
 }
 
-// Corrupción de texto en vivo en segundo plano durante 150ms exactos
 function corruptAllTexts() {
     const textElements = document.querySelectorAll('[data-corrupt-text]');
     const originalTexts = [];
@@ -75,7 +74,7 @@ function corruptAllTexts() {
         originalTexts.push({ el: el, text: original });
         
         let corrupted = '';
-        const charset = '█▓▒░#@$%&*<>?/\\|~019284';
+        const charset = '█▓▒░#@$%&*<>?/\\|~019284X';
         for (let i = 0; i < original.length; i++) {
             corrupted += charset.charAt(Math.floor(Math.random() * charset.length));
         }
@@ -86,10 +85,9 @@ function corruptAllTexts() {
         originalTexts.forEach(item => {
             item.el.innerText = item.text;
         });
-    }, 150);
+    }, 160);
 }
 
-// Disparador global del glitch en segundo plano que afecta a todas las ventanas abiertas
 function triggerBackgroundGlitch() {
     playGlitchNoise();
 
@@ -98,7 +96,7 @@ function triggerBackgroundGlitch() {
         win.classList.add('glitch-active');
         setTimeout(() => {
             win.classList.remove('glitch-active');
-        }, 150);
+        }, 160);
     });
 
     corruptAllTexts();
@@ -111,14 +109,13 @@ function triggerBackgroundGlitch() {
         setTimeout(() => {
             flash.style.opacity = '0';
             screenOverlay.style.opacity = '0';
-        }, 150);
+        }, 160);
     }
 }
 
-// Bucle autónomo en segundo plano: Ocurre de forma impredecible cada 4 a 9 segundos
 function initBackgroundGlitchDaemon() {
     function scheduleNextGlitch() {
-        const randomInterval = 4000 + Math.random() * 5000; // Entre 4 y 9 segundos
+        const randomInterval = 4500 + Math.random() * 4500;
         setTimeout(() => {
             triggerBackgroundGlitch();
             scheduleNextGlitch();
@@ -128,11 +125,11 @@ function initBackgroundGlitchDaemon() {
 }
 
 const bootLogs = [
-    "LOADING MUNCIX_CORE KERNEL MODULES...",
-    "BYPASSING SECURITY FIREWALLS: [OK]",
-    "ENGAGING CONSTANT MATRIX RAIN CASCADE...",
-    "STARTING AUTONOMOUS BACKGROUND GLITCH DAEMON (150MS BURSTS)...",
-    "SYSTEM CORRUPTED. WELCOME, MUNCIX_OP."
+    "LOADING QUANTUM MUNCIX_CORE KERNEL...",
+    "BYPASSING NEURAL SECURITY MATRIX: [OK]",
+    "ENGAGING ADVANCED MATRIX RAIN CASCADE...",
+    "CALIBRATING AUTONOMOUS RECONSTRUCTION DAEMON...",
+    "SYSTEM CORRUPTED & SECURED. WELCOME, MUNCIX_OP."
 ];
 
 const bootLogEl = document.getElementById('bootLog');
@@ -144,17 +141,17 @@ function runBootSequence() {
         bootLogEl.innerText += "\n> " + bootLogs[currentLogIndex];
         currentLogIndex++;
         playKeySound();
-        setTimeout(runBootSequence, 90 + Math.random() * 60);
+        setTimeout(runBootSequence, 80 + Math.random() * 50);
     } else {
         setTimeout(() => {
             bootScreen.style.opacity = '0';
             playEnterSound();
             setTimeout(() => {
                 bootScreen.remove();
-                document.getElementById('mainCommandInput').focus();
                 initMatrixRain();
-                initBackgroundGlitchDaemon(); // ¡Inicia la corrupción autónoma en segundo plano!
-            }, 400);
+                initBackgroundGlitchDaemon();
+                createTerminalWindow('mainTerminal', 'MUNCIX_OS // QUANTUM_CORE [REGENERATION_ACTIVE]', '707', true, null);
+            }, 500);
         }, 300);
     }
 }
@@ -163,7 +160,7 @@ window.addEventListener('load', () => {
     setTimeout(runBootSequence, 200);
 });
 
-function setupWindowBehaviors(winEl, headerEl, closeBtn, minBtn, maxBtn, isMain = false) {
+function setupWindowBehaviors(winEl, headerEl, closeBtn, minBtn, maxBtn, windowId, titleText, pidText, isMain) {
     let isDragging = false;
     let startX, startY, initialLeft, initialTop;
 
@@ -241,12 +238,22 @@ function setupWindowBehaviors(winEl, headerEl, closeBtn, minBtn, maxBtn, isMain 
         document.removeEventListener('touchend', onTouchEnd);
     }
 
+    // CIERRE CON DESTRUCCIÓN Y RESURGIMIENTO EXACTO EN 1 SEGUNDO
     closeBtn.addEventListener('click', () => {
         triggerBackgroundGlitch();
         winEl.classList.add('closing');
-        if (!isMain) {
-            setTimeout(() => winEl.remove(), 200);
-        }
+
+        setTimeout(() => {
+            winEl.remove();
+
+            // Espera exacta de 1 segundo antes de la reconstrucción cuántica
+            setTimeout(() => {
+                createTerminalWindow(windowId, titleText, pidText, isMain, null);
+                playEnterSound();
+                triggerBackgroundGlitch();
+            }, 1000);
+
+        }, 350);
     });
 
     let isMinimized = false;
@@ -285,16 +292,6 @@ function bringToFront(winEl) {
     winEl.style.zIndex = highestZIndex;
 }
 
-const mainTerminal = document.getElementById('mainTerminal');
-setupWindowBehaviors(
-    mainTerminal,
-    mainTerminal.querySelector('.terminal-header'),
-    document.getElementById('mainCloseBtn'),
-    document.getElementById('mainMinBtn'),
-    document.getElementById('mainMaxBtn'),
-    true
-);
-
 function setupTerminalInterface(inputEl, outputContainerEl, bodyEl) {
     let history = [];
     let historyIdx = -1;
@@ -307,7 +304,7 @@ function setupTerminalInterface(inputEl, outputContainerEl, bodyEl) {
                 history.push(val);
                 historyIdx = history.length;
             }
-            appendLine(outputContainerEl, `<span style="color: #ff0055;">muncix@void:~#</span> ${escapeHtml(val)}`, '');
+            appendLine(outputContainerEl, `<span style="color: var(--danger-neon);">muncix@void:~#</span> ${escapeHtml(val)}`, '');
             processCommand(val, outputContainerEl, bodyEl);
             inputEl.value = '';
         } else if (e.key === 'ArrowUp') {
@@ -351,12 +348,6 @@ function escapeHtml(text) {
     return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-setupTerminalInterface(
-    document.getElementById('mainCommandInput'),
-    document.getElementById('mainOutputContainer'),
-    document.getElementById('mainTerminalBody')
-);
-
 const canvas = document.getElementById('matrixCanvas');
 const ctx = canvas.getContext('2d');
 
@@ -369,9 +360,9 @@ function initMatrixRain() {
     const drops = Array(Math.floor(columns)).fill(1);
 
     setInterval(() => {
-        ctx.fillStyle = 'rgba(3, 5, 8, 0.1)';
+        ctx.fillStyle = 'rgba(2, 4, 8, 0.12)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#ff0055';
+        ctx.fillStyle = 'var(--danger-neon)';
         ctx.font = fontSize + 'px monospace';
         for (let i = 0; i < drops.length; i++) {
             const text = letters.charAt(Math.floor(Math.random() * letters.length));
@@ -396,13 +387,13 @@ function processCommand(rawCmd, outContainer, bodyEl) {
 
     switch(cmd) {
         case 'help':
-            appendLine(outContainer, `Available Muncix System Commands:
-  help      - Display this command reference guide
-  clear     - Clear the current terminal console
-  window    - Spawn a new corrupted floating sub-terminal
-  glitch    - Force a manual 150ms hard system glitch burst right now
-  socials   - Display and open official social channels (TikTok, X, CurseForge)
-  reboot    - Perform a full system hard reboot`, 'system');
+            appendLine(outContainer, `Available Quantum Muncix Commands:
+  help      - Display this reference guide
+  clear     - Wipe console history
+  window    - Spawn a secondary corrupted sub-terminal
+  glitch    - Trigger manual glitch and distortion pulse
+  socials   - Access official networks (TikTok, X, CurseForge)
+  reboot    - Execute core system reboot`, 'system');
             break;
 
         case 'clear':
@@ -411,16 +402,16 @@ function processCommand(rawCmd, outContainer, bodyEl) {
 
         case 'window':
             spawnNewTerminal();
-            appendLine(outContainer, "New corrupted secondary terminal instance spawned.", "success");
+            appendLine(outContainer, "Secondary corrupted subsystem successfully linked.", "success");
             break;
 
         case 'glitch':
             triggerBackgroundGlitch();
-            appendLine(outContainer, "[!] Manual glitch burst injected into background daemon.", "error");
+            appendLine(outContainer, "[!] Manual quantum glitch pulse injected.", "error");
             break;
 
         case 'socials':
-            appendLine(outContainer, `Official Muncix_Op Social Channels:`, 'success');
+            appendLine(outContainer, `Official Muncix_Op Secure Channels:`, 'success');
             appendLine(outContainer, `
                 <div class="social-card">
                     <span>TikTok (@muncixop)</span>
@@ -438,7 +429,7 @@ function processCommand(rawCmd, outContainer, bodyEl) {
             break;
 
         case 'reboot':
-            appendLine(outContainer, "Initiating emergency system hard reboot...", "error");
+            appendLine(outContainer, "Initiating emergency quantum core reboot...", "error");
             setTimeout(() => {
                 location.reload();
             }, 1000);
@@ -460,12 +451,17 @@ function spawnNewTerminal() {
     const winId = 'spawnedWin_' + spawnedCount;
     const offsetX = (spawnedCount * 40) % 180;
     const offsetY = (spawnedCount * 40) % 120;
+    createTerminalWindow(winId, `SUB_SHELL #${spawnedCount}`, `${800 + spawnedCount}`, false, `calc(20vh + ${offsetY}px); left: calc(22vw + ${offsetX}px);`);
+}
 
+function createTerminalWindow(winId, title, pid, isMain, customStyle) {
+    const container = document.getElementById('terminalContainer');
     const winDiv = document.createElement('div');
-    winDiv.className = 'terminal-window spawning';
+    winDiv.className = 'terminal-window reconstructing';
     winDiv.id = winId;
-    winDiv.style.top = `calc(22vh + ${offsetY}px)`;
-    winDiv.style.left = `calc(25vw + ${offsetX}px)`;
+    if (customStyle) {
+        winDiv.style.cssText = customStyle;
+    }
 
     winDiv.innerHTML = `
         <div class="terminal-header" data-window-id="${winId}">
@@ -474,32 +470,32 @@ function spawnNewTerminal() {
                 <button class="control-btn btn-minimize" id="${winId}_min" title="Minimize"></button>
                 <button class="control-btn btn-maximize" id="${winId}_max" title="Maximize"></button>
             </div>
-            <div class="terminal-title" data-corrupt-text="SUB_SHELL #${spawnedCount}">
-                <span>SUB_SHELL</span> #${spawnedCount}
+            <div class="terminal-title" data-corrupt-text="${title}">
+                <span>${isMain ? 'MUNCIX_OS' : 'SUB_SHELL'}</span> ${isMain ? '// QUANTUM_CORE' : '#' + pid}
             </div>
-            <div class="window-status" data-corrupt-text="PID: ${500 + spawnedCount}">PID: ${500 + spawnedCount}</div>
+            <div class="window-status" data-corrupt-text="PID: ${pid}">PID: ${pid}</div>
         </div>
 
         <div class="terminal-body" id="${winId}_body">
-            <div class="output-line system" data-corrupt-text="Isolated corrupted subsystem initialized.">Isolated corrupted subsystem initialized.</div>
-            <div class="output-line system" data-corrupt-text="Type 'socials' for direct access links.">Type 'socials' for direct access links.</div>
+            <div class="output-line system" data-corrupt-text="${isMain ? 'MUNCIX_OP KERNEL [Version 10.4-QUANTUM_REGEN]' : 'Isolated subsystem successfully reconstructed.'}">${isMain ? 'MUNCIX_OP KERNEL [Version 10.4-QUANTUM_REGEN]' : 'Isolated subsystem successfully reconstructed.'}</div>
+            <div class="output-line system" data-corrupt-text="${isMain ? 'Type \'help\' for commands, \'glitch\' for pulses, or \'socials\' for networks.' : 'Type \'socials\' for link access.'}">${isMain ? 'Type \'help\' for commands, \'glitch\' for pulses, or \'socials\' for networks.' : 'Type \'socials\' for link access.'}</div>
             <div class="output-line" style="margin-bottom: 10px;">----------------------------------------------------------------</div>
             
             <div id="${winId}_output"></div>
 
             <div class="input-line">
-                <span class="prompt">muncix@sub:~#</span>
+                <span class="prompt">${isMain ? 'muncix@void:~#' : 'muncix@sub~#'}</span>
                 <input type="text" id="${winId}_input" class="command-input" autocomplete="off" spellcheck="false">
             </div>
         </div>
 
         <div class="terminal-footer-hint">
-            <span data-corrupt-text="SUBSYSTEM ACTIVE">SUBSYSTEM ACTIVE</span>
+            <span data-corrupt-text="${isMain ? 'DAEMON: ACTIVE (QUANTUM AUTO-RECONSTRUCTION)' : 'SUBSYSTEM ONLINE'}">${isMain ? 'DAEMON: ACTIVE (QUANTUM AUTO-RECONSTRUCTION)' : 'SUBSYSTEM ONLINE'}</span>
             <span>UTF-8</span>
         </div>
     `;
 
-    document.body.appendChild(winDiv);
+    container.appendChild(winDiv);
 
     setupWindowBehaviors(
         winDiv,
@@ -507,7 +503,10 @@ function spawnNewTerminal() {
         document.getElementById(`${winId}_close`),
         document.getElementById(`${winId}_min`),
         document.getElementById(`${winId}_max`),
-        false
+        winId,
+        title,
+        pid,
+        isMain
     );
 
     setupTerminalInterface(
