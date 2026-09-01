@@ -40,6 +40,24 @@ function playEnterSound() {
     } catch(e) {}
 }
 
+function playGlitchSound() {
+    try {
+        initAudio();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(120, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(80, audioCtx.currentTime + 0.05);
+        osc.frequency.setValueAtTime(200, audioCtx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.015, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.2);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.2);
+    } catch(e) {}
+}
+
 // Secuencia de booteo limpia
 const voidBootLogs = [
     { text: "[BIOS] Initializing UEFI Subsystem & Quantum ACPI Core...", status: "Loading ACPI..." },
@@ -73,7 +91,7 @@ function runVoidBoot() {
             setTimeout(() => {
                 bootScreen.remove();
                 initMatrixRain();
-                createTerminalWindow('mainTerminal', 'MUNCIX_OS // HYPER_VOID [ONLINE]', '202', true);
+                createTerminalWindow('mainTerminal', 'MUNCIX_OS // HYPER_VOID [ONLINE]', '202', true, true);
             }, 350);
         }, 200);
     }
@@ -103,7 +121,7 @@ const virtualFileSystem = {
 
 const terminalStateSessions = {};
 
-function setupWindowBehaviors(winEl, headerEl, closeBtn, minBtn, maxBtn) {
+function setupWindowBehaviors(winEl, headerEl, closeBtn, minBtn, maxBtn, isMainTerminal) {
     let isDragging = false;
     let startX, startY, initialLeft, initialTop;
 
@@ -135,7 +153,24 @@ function setupWindowBehaviors(winEl, headerEl, closeBtn, minBtn, maxBtn) {
     }
     function onMouseUp() { isDragging = false; document.removeEventListener('mousemove', onMouseMove); document.removeEventListener('mouseup', onMouseUp); }
 
-    closeBtn.addEventListener('click', () => winEl.remove());
+    // Manejo de cierre protegido vs libre
+    closeBtn.addEventListener('click', () => {
+        if (isMainTerminal) {
+            playGlitchSound();
+            winEl.classList.add('glitch-active');
+            
+            const outputEl = winEl.querySelector('[id$="_output"]');
+            if (outputEl) {
+                appendLine(outputEl, "[!] KERNEL PANIC PREVENTION: ¡El proceso principal no puede terminar! Núcleo protegido.", "error");
+            }
+
+            setTimeout(() => {
+                winEl.classList.remove('glitch-active');
+            }, 300);
+        } else {
+            winEl.remove();
+        }
+    });
 
     let isMin = false;
     const bodyEl = winEl.querySelector('.terminal-body');
@@ -381,7 +416,7 @@ function processCommand(rawCmd, outContainer, bodyEl, winId, session) {
 
         case 'socials':
             session.authStep = 1;
-            appendLine(outContainer, "[!] VERIFICACIÓN DE SEGURIDAD: Para acceder a los enlaces oficiales,", "warning");
+            appendLine(outContainer, "[!] VERIFICACIÓN DE SEGURIDAD: Para acceder al canal seguro,", "warning");
             appendLine(outContainer, "[?] Ingrese cualquier valor o presione ENTER para continuar:", "warning");
             break;
 
@@ -405,10 +440,10 @@ function spawnNewSubTerminal() {
     const winId = 'subWin_' + subCount;
     const offX = (subCount * 30) % 180;
     const offY = (subCount * 30) % 100;
-    createTerminalWindow(winId, `SUB_SHELL #${subCount}`, `${980 + subCount}`, `calc(12vh + ${offY}px); left: calc(15vw + ${offX}px);`);
+    createTerminalWindow(winId, `SUB_SHELL #${subCount}`, `${980 + subCount}`, `top: calc(12vh + ${offY}px); left: calc(15vw + ${offX}px);`, false);
 }
 
-function createTerminalWindow(winId, title, pid, customStyle) {
+function createTerminalWindow(winId, title, pid, customStyle, isMainTerminal = false) {
     const container = document.getElementById('terminalContainer');
     const winDiv = document.createElement('div');
     winDiv.className = 'terminal-window spawning';
@@ -454,7 +489,8 @@ function createTerminalWindow(winId, title, pid, customStyle) {
         winDiv.querySelector('.terminal-header'),
         document.getElementById(`${winId}_close`),
         document.getElementById(`${winId}_min`),
-        document.getElementById(`${winId}_max`)
+        document.getElementById(`${winId}_max`),
+        isMainTerminal
     );
 
     setupTerminalInterface(
