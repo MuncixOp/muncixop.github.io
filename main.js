@@ -40,16 +40,16 @@ function playEnterSound() {
     } catch(e) {}
 }
 
+// Sonido de glitch más armónico, profundo y menos estridente
 function playGlitchSound() {
     try {
         initAudio();
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(120, audioCtx.currentTime);
-        osc.frequency.setValueAtTime(80, audioCtx.currentTime + 0.05);
-        osc.frequency.setValueAtTime(200, audioCtx.currentTime + 0.1);
-        gain.gain.setValueAtTime(0.015, audioCtx.currentTime);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(180, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(90, audioCtx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.012, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.2);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
@@ -110,8 +110,8 @@ const virtualFileSystem = {
     "/home/guest": { type: "dir", contents: ["welcome_guest.txt"] },
     "/sys": { type: "dir", contents: ["kernel_info", "memory_map"] },
     "/bin": { type: "dir", contents: ["help", "ls", "cd", "cat", "clear", "window", "ping", "nmap", "socials", "sysinfo", "date", "whoami", "reboot"] },
-    "/readme.txt": { type: "file", content: "MUNCIX_OS v25.0 HYPER_VOID. Versión estable optimizada para una experiencia fluida y sin distracciones visuales agresivas." },
-    "/system.conf": { type: "file", content: "CORE_ENGINE=HYPER_VOID\nDEBUG_MODE=FALSE\nSAFETY_MODE=ENABLED" },
+    "/readme.txt": { type: "file", content: "MUNCIX_OS v25.0 HYPER_VOID. Versión estable optimizada para una experiencia fluida y segura." },
+    "/system.conf": { type: "file", content: "CORE_ENGINE=HYPER_VOID\nDEBUG_MODE=FALSE\nSAFETY_MODE=ENABLED\nGLITCH_INTENSITY=CALM" },
     "/home/muncix_op/bio.txt": { type: "file", content: "Desarrollador: Muncix_Op\nÁreas: Roblox Studio (Jujutsu Shenanigans), Blockbench 3D, Desmos." },
     "/home/muncix_op/socials.log": { type: "file", content: "TikTok: @muncixop\nX / Twitter: @MuncixOp\nCurseForge: muncixop" },
     "/home/developer/roblox_jjs_yuta.lua": { type: "file", content: "-- Jujutsu Shenanigans: Custom Yuta Okkotsu moveset script" },
@@ -153,7 +153,7 @@ function setupWindowBehaviors(winEl, headerEl, closeBtn, minBtn, maxBtn, isMainT
     }
     function onMouseUp() { isDragging = false; document.removeEventListener('mousemove', onMouseMove); document.removeEventListener('mouseup', onMouseUp); }
 
-    // Manejo de cierre protegido vs libre
+    // Cierre protegido con glitch estético y calmado
     closeBtn.addEventListener('click', () => {
         if (isMainTerminal) {
             playGlitchSound();
@@ -161,12 +161,12 @@ function setupWindowBehaviors(winEl, headerEl, closeBtn, minBtn, maxBtn, isMainT
             
             const outputEl = winEl.querySelector('[id$="_output"]');
             if (outputEl) {
-                appendLine(outputEl, "[!] KERNEL PANIC PREVENTION: ¡El proceso principal no puede terminar! Núcleo protegido.", "error");
+                appendLine(outputEl, "[~] KERNEL WATCHDOG: El proceso principal permanece protegido de forma segura.", "warning");
             }
 
             setTimeout(() => {
                 winEl.classList.remove('glitch-active');
-            }, 300);
+            }, 350);
         } else {
             winEl.remove();
         }
@@ -252,7 +252,7 @@ function handleAuthFlow(val, outContainer, session) {
 
     if (session.authStep === 1) {
         session.authStep = 2;
-        appendLine(outContainer, "[+] FASE 1: Token verificado.", "success");
+        appendLine(outContainer, "[+] FASE 1: Token verificado con éxito.", "success");
         appendLine(outContainer, "[?] FASE 2/2: Escriba 'CONFIRMAR' para revelar las redes oficiales de Muncix_Op:", "warning");
     } else if (session.authStep === 2) {
         session.authStep = 0;
@@ -402,7 +402,7 @@ function processCommand(rawCmd, outContainer, bodyEl, winId, session) {
             break;
 
         case 'date':
-            appendLine(outContainer, `Tue Sep 1 03:41:00 UTC 2026`, 'system');
+            appendLine(outContainer, `Wed Sep 2 07:53:45 UTC 2026`, 'system');
             break;
 
         case 'clear':
@@ -465,7 +465,7 @@ function createTerminalWindow(winId, title, pid, customStyle, isMainTerminal = f
 
         <div class="terminal-body" id="${winId}_body">
             <div class="output-line system">MUNCIX_KERNEL [Versión 25.0 STABLE]</div>
-            <div class="output-line system">Escribe 'help' para ver los comandos disponibles.</div>
+            <div class="output-line system corrupted-text">Escribe 'help' para ver los comandos disponibles.</div>
             <div class="output-line" style="margin-bottom: 8px;">----------------------------------------------------------------</div>
             
             <div id="${winId}_output"></div>
