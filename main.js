@@ -128,7 +128,7 @@ const bootLogs = [
     "LOADING QUANTUM MUNCIX_CORE KERNEL...",
     "BYPASSING NEURAL SECURITY MATRIX: [OK]",
     "ENGAGING ADVANCED MATRIX RAIN CASCADE...",
-    "STABILIZING CORE WINDOW CONTAINERS...",
+    "STABILIZING EVENT DAEMON PROTOCOLS...",
     "SYSTEM SECURED. WELCOME, MUNCIX_OP."
 ];
 
@@ -150,7 +150,7 @@ function runBootSequence() {
                 bootScreen.remove();
                 initMatrixRain();
                 initBackgroundGlitchDaemon();
-                createTerminalWindow('mainTerminal', 'MUNCIX_OS // QUANTUM_CORE [STABLE_ACTIVE]', '707', true, null);
+                createTerminalWindow('mainTerminal', 'MUNCIX_OS // QUANTUM_CORE [EVENT_DRIVEN]', '707', true, null);
             }, 500);
         }, 300);
     }
@@ -238,10 +238,10 @@ function setupWindowBehaviors(winEl, headerEl, closeBtn, minBtn, maxBtn, windowI
         document.removeEventListener('touchend', onTouchEnd);
     }
 
-    // BOTÓN DE CIERRE ESTÉTICO: PURAMENTE VISUAL (DISPARA GLITCH, LA VENTANA NUNCA SE CIERRA)
+    // BOTÓN DE CIERRE ESTÉTICO (DISPARA EVENTO GLITCH, LA VENTANA NUNCA SE CIERRA)
     closeBtn.addEventListener('click', () => {
         triggerBackgroundGlitch();
-        appendLine(outputContainerEl, "[!] SYSTEM: Close signal intercepted. Corrupted visual pulse triggered.", "warning");
+        appendLine(outputContainerEl, "[!] EVENTO: Pulso estético interceptado en la barra de cierre.", "warning");
     });
 
     let isMinimized = false;
@@ -280,9 +280,13 @@ function bringToFront(winEl) {
     winEl.style.zIndex = highestZIndex;
 }
 
-function setupTerminalInterface(inputEl, outputContainerEl, bodyEl) {
+const terminalAuthStates = {};
+
+function setupTerminalInterface(inputEl, outputContainerEl, bodyEl, winId) {
     let history = [];
     let historyIdx = -1;
+
+    terminalAuthStates[winId] = { step: 0 };
 
     inputEl.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
@@ -292,8 +296,17 @@ function setupTerminalInterface(inputEl, outputContainerEl, bodyEl) {
                 history.push(val);
                 historyIdx = history.length;
             }
+
+            const state = terminalAuthStates[winId];
+
+            if (state && state.step > 0) {
+                handleSocialAuthProcess(val, outputContainerEl, state, winId);
+                inputEl.value = '';
+                return;
+            }
+
             appendLine(outputContainerEl, `<span style="color: var(--danger-neon);">muncix@void:~#</span> ${escapeHtml(val)}`, '');
-            processCommand(val, outputContainerEl, bodyEl);
+            processCommand(val, outputContainerEl, bodyEl, winId);
             inputEl.value = '';
         } else if (e.key === 'ArrowUp') {
             if (historyIdx > 0) {
@@ -320,6 +333,40 @@ function setupTerminalInterface(inputEl, outputContainerEl, bodyEl) {
     bodyEl.addEventListener('click', () => {
         inputEl.focus();
     });
+}
+
+function handleSocialAuthProcess(val, outContainer, state, winId) {
+    appendLine(outContainer, `<span style="color: var(--cyan-neon);">auth@muncix:~#</span> ${escapeHtml(val || '[BYPASS]')}`, '');
+
+    if (state.step === 1) {
+        state.step = 2;
+        triggerBackgroundGlitch();
+        appendLine(outContainer, "[+] EVENTO FASE 1: Token neural procesado correctamente.", "success");
+        appendLine(outContainer, "[?] FASE 2/3: Ingrese clave de cifrado maestro (o presione ENTER):", "warning");
+    } else if (state.step === 2) {
+        state.step = 3;
+        triggerBackgroundGlitch();
+        appendLine(outContainer, "[+] EVENTO FASE 2: Clave maestra aceptada. Desencriptando...", "success");
+        appendLine(outContainer, "[?] FASE 3/3: Escriba 'CONFIRMAR' para revelar canales seguros de Muncix_Op:", "warning");
+    } else if (state.step === 3) {
+        state.step = 0;
+        triggerBackgroundGlitch();
+        appendLine(outContainer, "[✔] AUTENTICACIÓN COMPLETADA: Canales desbloqueados.", "success");
+        appendLine(outContainer, `
+            <div class="social-card">
+                <span>TikTok (@muncixop)</span>
+                <span class="action-link" onclick="window.open('https://www.tiktok.com/@muncixop', '_blank')">[ABRIR_RED_SOCIAL]</span>
+            </div>
+            <div class="social-card">
+                <span>X / Twitter (@MuncixOp)</span>
+                <span class="action-link" onclick="window.open('https://x.com/MuncixOp', '_blank')">[ABRIR_RED_SOCIAL]</span>
+            </div>
+            <div class="social-card">
+                <span>CurseForge Projects</span>
+                <span class="action-link" onclick="window.open('https://www.curseforge.com/members/muncixop/projects', '_blank')">[ABRIR_RED_SOCIAL]</span>
+            </div>
+        `, '');
+    }
 }
 
 function appendLine(container, html, className = '') {
@@ -368,7 +415,7 @@ function initMatrixRain() {
     });
 }
 
-function processCommand(rawCmd, outContainer, bodyEl) {
+function processCommand(rawCmd, outContainer, bodyEl, winId) {
     const parts = rawCmd.split(' ');
     const cmd = parts[0].toLowerCase();
 
@@ -378,8 +425,7 @@ function processCommand(rawCmd, outContainer, bodyEl) {
   help      - Display this reference guide
   clear     - Wipe console history
   window    - Spawn a secondary sub-terminal
-  glitch    - Trigger manual glitch and distortion pulse
-  socials   - Access official networks (TikTok, X, CurseForge)
+  socials   - Iniciar proceso de autenticación para redes sociales
   reboot    - Execute core system reboot`, 'system');
             break;
 
@@ -392,27 +438,11 @@ function processCommand(rawCmd, outContainer, bodyEl) {
             appendLine(outContainer, "Secondary subsystem successfully linked.", "success");
             break;
 
-        case 'glitch':
-            triggerBackgroundGlitch();
-            appendLine(outContainer, "[!] Manual quantum glitch pulse injected.", "error");
-            break;
-
         case 'socials':
-            appendLine(outContainer, `Official Muncix_Op Secure Channels:`, 'success');
-            appendLine(outContainer, `
-                <div class="social-card">
-                    <span>TikTok (@muncixop)</span>
-                    <span class="action-link" onclick="window.open('https://www.tiktok.com/@muncixop', '_blank')">[OPEN_LINK]</span>
-                </div>
-                <div class="social-card">
-                    <span>X / Twitter (@MuncixOp)</span>
-                    <span class="action-link" onclick="window.open('https://x.com/MuncixOp', '_blank')">[OPEN_LINK]</span>
-                </div>
-                <div class="social-card">
-                    <span>CurseForge Projects</span>
-                    <span class="action-link" onclick="window.open('https://www.curseforge.com/members/muncixop/projects', '_blank')">[OPEN_LINK]</span>
-                </div>
-            `, '');
+            triggerBackgroundGlitch();
+            terminalAuthStates[winId].step = 1;
+            appendLine(outContainer, "[!] EVENTO DE SEGURIDAD: Iniciando autenticación para redes de Muncix_Op.", "error");
+            appendLine(outContainer, "[?] FASE 1/3: Ingrese su token o ID de enlace (ej: 'muncix_auth'):", "warning");
             break;
 
         case 'reboot':
@@ -464,8 +494,8 @@ function createTerminalWindow(winId, title, pid, isMain, customStyle) {
         </div>
 
         <div class="terminal-body" id="${winId}_body">
-            <div class="output-line system" data-corrupt-text="${isMain ? 'MUNCIX_OP KERNEL [Version 10.6-STABLE_CORE]' : 'Isolated subsystem active.'}">${isMain ? 'MUNCIX_OP KERNEL [Version 10.6-STABLE_CORE]' : 'Isolated subsystem active.'}</div>
-            <div class="output-line system" data-corrupt-text="${isMain ? 'Type \'help\' for commands, \'glitch\' for pulses, or \'socials\' for networks.' : 'Type \'socials\' for link access.'}">${isMain ? 'Type \'help\' for commands, \'glitch\' for pulses, or \'socials\' for networks.' : 'Type \'socials\' for link access.'}</div>
+            <div class="output-line system" data-corrupt-text="${isMain ? 'MUNCIX_OP KERNEL [Version 10.8-EVENT_SYSTEM]' : 'Isolated subsystem active.'}">${isMain ? 'MUNCIX_OP KERNEL [Version 10.8-EVENT_SYSTEM]' : 'Isolated subsystem active.'}</div>
+            <div class="output-line system" data-corrupt-text="${isMain ? 'Type \'help\' for commands, or \'socials\' to start social verification.' : 'Type \'socials\' for link verification.'}">${isMain ? 'Type \'help\' for commands, or \'socials\' to start social verification.' : 'Type \'socials\' for link verification.'}</div>
             <div class="output-line" style="margin-bottom: 10px;">----------------------------------------------------------------</div>
             
             <div id="${winId}_output"></div>
@@ -477,7 +507,7 @@ function createTerminalWindow(winId, title, pid, isMain, customStyle) {
         </div>
 
         <div class="terminal-footer-hint">
-            <span data-corrupt-text="${isMain ? 'DAEMON: ACTIVE (STABLE PERSISTENCE)' : 'SUBSYSTEM ONLINE'}">${isMain ? 'DAEMON: ACTIVE (STABLE PERSISTENCE)' : 'SUBSYSTEM ONLINE'}</span>
+            <span data-corrupt-text="${isMain ? 'DAEMON: EVENT-DRIVEN GLITCH ACTIVE' : 'SUBSYSTEM ONLINE'}">${isMain ? 'DAEMON: EVENT-DRIVEN GLITCH ACTIVE' : 'SUBSYSTEM ONLINE'}</span>
             <span>UTF-8</span>
         </div>
     `;
@@ -500,7 +530,8 @@ function createTerminalWindow(winId, title, pid, isMain, customStyle) {
     setupTerminalInterface(
         document.getElementById(`${winId}_input`),
         document.getElementById(`${winId}_output`),
-        document.getElementById(`${winId}_body`)
+        document.getElementById(`${winId}_body`),
+        winId
     );
 
     document.getElementById(`${winId}_input`).focus();
