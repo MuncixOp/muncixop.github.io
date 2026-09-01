@@ -9,8 +9,8 @@
     --primary-neon: #00ff66;
     --danger-neon: #ff0055;
     --cyan-neon: #00ffff;
-    --bg-dark: #020408;
-    --panel-bg: rgba(6, 9, 14, 0.96);
+    --bg-dark: #010204;
+    --panel-bg: rgba(4, 7, 12, 0.97);
 }
 
 body {
@@ -31,8 +31,8 @@ body {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
     background-image: 
-        linear-gradient(rgba(0, 255, 102, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 0, 85, 0.025) 1px, transparent 1px);
+        linear-gradient(rgba(0, 255, 102, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 0, 85, 0.02) 1px, transparent 1px);
     background-size: 24px 24px;
     z-index: 0;
     pointer-events: none;
@@ -41,18 +41,18 @@ body {
 .scanlines {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.5) 50%), 
-                linear-gradient(90deg, rgba(255, 0, 0, 0.04), rgba(0, 255, 0, 0.015), rgba(0, 0, 255, 0.04));
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.6) 50%), 
+                linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
     background-size: 100% 3px, 4px 100%;
     z-index: 999;
     pointer-events: none;
-    opacity: 0.8;
+    opacity: 0.85;
 }
 
 .vignette-overlay {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
-    box-shadow: inset 0 0 180px rgba(0, 0, 0, 0.98);
+    box-shadow: inset 0 0 220px rgba(0, 0, 0, 0.99);
     z-index: 998;
     pointer-events: none;
 }
@@ -60,11 +60,11 @@ body {
 .corrupt-flash {
     position: fixed;
     top: 0; left: 0; width: 100vw; height: 100vh;
-    background: radial-gradient(circle, rgba(255,0,85,0.4) 0%, rgba(0,255,102,0.1) 100%);
+    background: radial-gradient(circle, rgba(255,0,85,0.45) 0%, rgba(0,255,102,0.12) 100%);
     z-index: 997;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.03s ease;
+    transition: opacity 0.04s ease;
 }
 
 .screen-glitch-overlay {
@@ -75,20 +75,10 @@ body {
     opacity: 0;
     background: repeating-linear-gradient(
         0deg,
-        rgba(255,0,85,0.2) 0px,
-        rgba(0,255,255,0.2) 2px,
-        transparent 4px
+        rgba(255,0,85,0.25) 0px,
+        rgba(0,255,255,0.25) 2px,
+        transparent 5px
     );
-}
-
-.chromatic-aberration {
-    position: fixed;
-    top: 0; left: 0; width: 100vw; height: 100vh;
-    z-index: 995;
-    pointer-events: none;
-    mix-blend-mode: screen;
-    opacity: 0;
-    transition: opacity 0.1s ease;
 }
 
 #bootScreen {
@@ -104,7 +94,7 @@ body {
     font-family: 'Courier New', Courier, monospace;
     color: var(--danger-neon);
     overflow: hidden;
-    transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: opacity 0.4s ease;
 }
 
 .boot-log {
@@ -112,7 +102,7 @@ body {
     line-height: 1.6;
     white-space: pre-wrap;
     word-break: break-all;
-    text-shadow: 0 0 10px rgba(255, 0, 85, 0.7);
+    text-shadow: 0 0 12px rgba(255, 0, 85, 0.8);
 }
 
 #terminalContainer {
@@ -124,20 +114,17 @@ body {
 
 .terminal-window {
     position: absolute;
-    width: min(920px, 95vw);
-    height: min(620px, 90vh);
+    width: min(940px, 95vw);
+    height: min(640px, 90vh);
     background-color: var(--panel-bg);
     border: 1px solid var(--danger-neon);
-    border-radius: 10px;
-    box-shadow: 0 40px 100px rgba(0, 0, 0, 0.95), 0 0 40px rgba(255, 0, 85, 0.25);
+    border-radius: 12px;
+    box-shadow: 0 40px 100px rgba(0, 0, 0, 0.98), 0 0 50px rgba(255, 0, 85, 0.2);
     display: flex;
     flex-direction: column;
     pointer-events: auto;
-    backdrop-filter: blur(20px);
-    transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
-                height 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
-                width 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
-                border-radius 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    backdrop-filter: blur(25px);
+    transition: box-shadow 0.3s ease, height 0.3s ease, width 0.3s ease, border-radius 0.3s ease;
 }
 
 .terminal-window.maximized {
@@ -151,66 +138,31 @@ body {
 }
 
 .terminal-window.minimized {
-    height: 40px !important;
+    height: 42px !important;
     overflow: hidden !important;
 }
 
-/* Destrucción extrema al cerrar */
-.terminal-window.closing {
-    animation: quantum-destroy 0.35s cubic-bezier(0.4, 0, 1, 1) forwards !important;
+@keyframes window-spawn {
+    0% { transform: scale(0.75) translateY(40px); opacity: 0; filter: blur(10px); }
+    100% { transform: scale(1) translateY(0); opacity: 1; filter: blur(0); }
 }
 
-@keyframes quantum-destroy {
-    0% { transform: scale(1) rotate(0deg) skew(0deg); opacity: 1; filter: none; }
-    40% { transform: scale(1.15) rotate(8deg) skew(-35deg); filter: invert(1) hue-rotate(180deg) contrast(500%); }
-    80% { transform: scale(0.6) rotate(-15deg) skew(60deg); opacity: 0.5; filter: blur(8px) drop-shadow(0 0 80px var(--danger-neon)); }
-    100% { transform: scale(0) rotate(45deg) skew(90deg); opacity: 0; filter: blur(20px); }
-}
-
-/* Reconstrucción cyberpunk cinemática tras el segundo de pausa */
-@keyframes quantum-reconstruct {
-    0% {
-        transform: scale(0.1) translateY(150px) skew(-60deg);
-        opacity: 0;
-        filter: blur(20px) invert(1) contrast(800%);
-        clip-path: polygon(0 0%, 100% 0%, 100% 5%, 0 5%);
-    }
-    30% {
-        transform: scale(1.08) translateY(-20px) skew(20deg);
-        opacity: 0.9;
-        filter: blur(5px) hue-rotate(240deg) contrast(400%);
-        clip-path: polygon(0 0%, 100% 0%, 100% 60%, 0 60%);
-    }
-    60% {
-        transform: scale(0.96) translateY(8px) skew(-8deg);
-        opacity: 1;
-        filter: blur(2px) contrast(200%);
-        clip-path: polygon(0 0%, 100% 0%, 100% 90%, 0 90%);
-    }
-    100% {
-        transform: scale(1) translateY(0) skew(0deg);
-        opacity: 1;
-        filter: none;
-        clip-path: polygon(0 0%, 100% 0%, 100% 100%, 0 100%);
-    }
-}
-
-.reconstructing {
-    animation: quantum-reconstruct 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+.spawning {
+    animation: window-spawn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .terminal-header {
-    height: 40px;
-    background-color: #0d121c;
-    border-top-left-radius: 10px;
-    border-top-right-radius: 10px;
+    height: 42px;
+    background-color: #0b0f19;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 16px;
     cursor: grab;
     user-select: none;
-    border-bottom: 1px solid rgba(255, 0, 85, 0.4);
+    border-bottom: 1px solid rgba(255, 0, 85, 0.35);
 }
 
 .terminal-header:active {
@@ -259,9 +211,9 @@ body {
 
 .terminal-body {
     flex: 1;
-    padding: 18px;
+    padding: 20px;
     overflow-y: auto;
-    font-size: 13px;
+    font-size: 13.5px;
     line-height: 1.6;
     position: relative;
     scroll-behavior: smooth;
@@ -271,7 +223,7 @@ body {
     width: 6px;
 }
 .terminal-body::-webkit-scrollbar-track {
-    background: #030509;
+    background: #020408;
 }
 .terminal-body::-webkit-scrollbar-thumb {
     background: var(--danger-neon);
@@ -280,10 +232,10 @@ body {
 }
 
 .output-line {
-    margin-bottom: 7px;
+    margin-bottom: 8px;
     word-break: break-all;
     white-space: pre-wrap;
-    transition: opacity 0.2s ease;
+    transition: color 0.15s ease;
 }
 
 .output-line.system { color: var(--cyan-neon); }
@@ -294,14 +246,14 @@ body {
 .input-line {
     display: flex;
     align-items: center;
-    margin-top: 10px;
+    margin-top: 12px;
     position: relative;
 }
 
 .prompt {
     color: var(--danger-neon);
     font-weight: bold;
-    margin-right: 9px;
+    margin-right: 10px;
     white-space: nowrap;
     text-shadow: 0 0 8px rgba(255,0,85,0.7);
 }
@@ -313,16 +265,16 @@ body {
     outline: none;
     color: #ffffff;
     font-family: 'Courier New', Courier, monospace;
-    font-size: 13px;
+    font-size: 13.5px;
     caret-color: var(--danger-neon);
 }
 
 .terminal-footer-hint {
-    padding: 8px 16px;
-    background-color: #0d121c;
-    border-bottom-left-radius: 10px;
-    border-bottom-right-radius: 10px;
-    font-size: 10px;
+    padding: 9px 18px;
+    background-color: #0b0f19;
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+    font-size: 10.5px;
     color: var(--danger-neon);
     display: flex;
     justify-content: space-between;
@@ -333,7 +285,7 @@ body {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
     z-index: 1;
-    opacity: 0.4;
+    opacity: 0.35;
     pointer-events: none;
     display: block;
 }
@@ -342,7 +294,7 @@ body {
     background: rgba(255, 0, 85, 0.08);
     border-left: 3px solid var(--danger-neon);
     padding: 12px 16px;
-    margin: 10px 0;
+    margin: 12px 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -370,14 +322,14 @@ body {
 
 @keyframes hard-glitch-fx {
     0% { transform: translate(0, 0) skew(0deg); filter: none; clip-path: none; border-color: var(--danger-neon); }
-    20% { transform: translate(-20px, 10px) skew(-25deg); filter: invert(0.95) hue-rotate(150deg) contrast(400%); clip-path: polygon(0 5%, 100% 5%, 100% 40%, 0 40%); border-color: var(--primary-neon); }
-    40% { transform: translate(22px, -14px) skew(30deg); filter: saturate(700%) drop-shadow(16px 0 0 var(--danger-neon)); clip-path: polygon(0 50%, 100% 50%, 100% 95%, 0 95%); border-color: var(--cyan-neon); }
-    60% { transform: translate(-12px, 16px) skew(-15deg); filter: blur(2px) invert(0.5); clip-path: polygon(0 20%, 100% 20%, 100% 65%, 0 65%); border-color: #ffff00; }
-    80% { transform: translate(14px, -10px) skew(10deg); filter: hue-rotate(290deg) contrast(350%); clip-path: polygon(0 0%, 100% 0%, 100% 100%, 0 100%); border-color: var(--danger-neon); }
+    20% { transform: translate(-16px, 8px) skew(-20deg); filter: invert(0.9) hue-rotate(140deg) contrast(350%); clip-path: polygon(0 5%, 100% 5%, 100% 45%, 0 45%); border-color: var(--primary-neon); }
+    40% { transform: translate(18px, -12px) skew(25deg); filter: saturate(600%) drop-shadow(14px 0 0 var(--danger-neon)); clip-path: polygon(0 50%, 100% 50%, 100% 90%, 0 90%); border-color: var(--cyan-neon); }
+    60% { transform: translate(-10px, 12px) skew(-10deg); filter: blur(1.5px) invert(0.4); clip-path: polygon(0 15%, 100% 15%, 100% 70%, 0 70%); border-color: #ffff00; }
+    80% { transform: translate(12px, -8px) skew(8deg); filter: hue-rotate(270deg) contrast(300%); clip-path: polygon(0 0%, 100% 0%, 100% 100%, 0 100%); border-color: var(--danger-neon); }
     100% { transform: translate(0, 0) skew(0deg); filter: none; clip-path: none; border-color: var(--danger-neon); }
 }
 
 .glitch-active {
-    animation: hard-glitch-fx 0.15s steps(2, end) both !important;
-    box-shadow: 0 0 90px rgba(255, 0, 85, 1) !important;
+    animation: hard-glitch-fx 0.18s steps(2, end) both !important;
+    box-shadow: 0 0 80px rgba(255, 0, 85, 0.9) !important;
 }
