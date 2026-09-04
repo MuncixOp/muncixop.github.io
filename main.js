@@ -1,11 +1,11 @@
 /* ========================================================================== */
-/* MUNCIX_OS // HYPER_VOID SUPREME QUANTUM CORE v99.9 - JAVASCRIPT ENGINE      */
+/* MUNCIX_OS // OMNI-QUANTUM SUPREME NEXUS v999.9 - JAVASCRIPT ENGINE ULTIMATE*/
 /* ========================================================================== */
 
 let audioCtx = null;
 let audioEnabled = true;
 
-function initAudio() {
+function initAudioSystem() {
     if (!audioCtx && audioEnabled) {
         try {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -13,150 +13,152 @@ function initAudio() {
     }
 }
 
-function playKeySound() {
+function playKeyClickSound() {
     if (!audioEnabled) return;
     try {
-        initAudio();
+        initAudioSystem();
         if (!audioCtx) return;
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(380, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.003, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.02);
+        osc.frequency.setValueAtTime(420, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.0035, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.025);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
         osc.start();
-        osc.stop(audioCtx.currentTime + 0.02);
+        osc.stop(audioCtx.currentTime + 0.025);
     } catch(e) {}
 }
 
-function playEnterSound() {
+function playEnterActionSound() {
     if (!audioEnabled) return;
     try {
-        initAudio();
+        initAudioSystem();
         if (!audioCtx) return;
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = 'triangle';
-        osc.frequency.setValueAtTime(540, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(270, audioCtx.currentTime + 0.05);
-        gain.gain.setValueAtTime(0.007, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.05);
+        osc.frequency.setValueAtTime(580, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(290, audioCtx.currentTime + 0.06);
+        gain.gain.setValueAtTime(0.008, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.06);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
         osc.start();
-        osc.stop(audioCtx.currentTime + 0.05);
+        osc.stop(audioCtx.currentTime + 0.06);
     } catch(e) {}
 }
 
-function playGlitchSound() {
+function playGlitchFXSound() {
     if (!audioEnabled) return;
     try {
-        initAudio();
+        initAudioSystem();
         if (!audioCtx) return;
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(240, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(70, audioCtx.currentTime + 0.2);
-        gain.gain.setValueAtTime(0.012, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.22);
+        osc.frequency.setValueAtTime(260, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(60, audioCtx.currentTime + 0.22);
+        gain.gain.setValueAtTime(0.014, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.24);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
         osc.start();
-        osc.stop(audioCtx.currentTime + 0.22);
+        osc.stop(audioCtx.currentTime + 0.24);
     } catch(e) {}
 }
 
 /* ========================================================================== */
-/* SECUENCIA DE BOOTEO SUPREMA EXPANDIDA                                      */
+/* SECUENCIA DE BOOTEO OMNI-SUPREMA EXPANDIDA                                 */
 /* ========================================================================== */
 
-const supremeBootLogs = [
-    { text: "[BIOS] Initializing Quantum UEFI Subsystem & Mesh ACPI v9.4...", status: "Loading Quantum ACPI..." },
-    { text: "[CPU] Core #0 - #64 detected @ 14.8 GHz [HYPERQUANTUM SUPREME ARCHITECTURE]", status: "Checking quantum clocks..." },
-    { text: "[MEM] Initializing 2097152MB ECC Quantum RAM -> 0x00000 - 0xFFFFFF [OK]", status: "Validating memory mesh..." },
-    { text: "[PCI] High-speed PCIe Gen 7 lanes mapped. Secure quantum bus active.", status: "Mounting core storage..." },
-    { text: "[GPU] Neural Matrix Ray-Tracing Pipeline online. 120 FPS target locked.", status: "Calibrating shaders..." },
-    { text: "[NET] Quantum entanglement communication bridge established across nodes.", status: "Securing network socket..." },
-    { text: "[SECURITY] Zero-trust kernel enclave verified. Cryptographic hash matched.", status: "Verifying checksums..." },
-    { text: "[KERNEL] Uncompressing MUNCIX_HYPER_VOID_SUPREME_KERNEL v99.9 into Ring 0...", status: "Injecting secure kernel..." },
-    { text: "[READY] Quantum core stability 100%. Launching supreme visual interface...", status: "BOOT SEQUENCE COMPLETE." }
+const omniBootLogs = [
+    { text: "[BIOS] Initializing OMNI-QUANTUM UEFI Subsystem & Mesh ACPI v99.9...", status: "Loading Quantum ACPI..." },
+    { text: "[CPU] Core #0 - #128 detected @ 18.5 GHz [HYPERQUANTUM OMNI ARCHITECTURE]", status: "Checking multi-core quantum clocks..." },
+    { text: "[MEM] Initializing 8388608MB ECC Quantum RAM -> 0x00000 - 0xFFFFFFFFF [OK]", status: "Validating spatial memory mesh..." },
+    { text: "[PCI] High-speed PCIe Gen 8 lanes mapped. Secure quantum entanglement active.", status: "Mounting supreme storage..." },
+    { text: "[GPU] Neural Matrix Ray-Tracing Pipeline online. 240 FPS target locked.", status: "Calibrating shaders & polygons..." },
+    { text: "[NET] Omnidirectional quantum communication bridge established across nodes.", status: "Securing encryption sockets..." },
+    { text: "[SECURITY] Zero-trust kernel enclave verified. Cryptographic hash SHA-512 matched.", status: "Verifying checksums..." },
+    { text: "[KERNEL] Uncompressing MUNCIX_OMNI_SUPREME_KERNEL v999.9 into Ring 0...", status: "Injecting supreme core..." },
+    { text: "[READY] Quantum core stability 100%. Launching ultimate immersive interface...", status: "BOOT SEQUENCE COMPLETE." }
 ];
 
-const bootLogEl = document.getElementById('bootLog');
-const bootProgressBar = document.getElementById('bootProgressBar');
-const bootStatusText = document.getElementById('bootStatusText');
-const bootPercentText = document.getElementById('bootPercentText');
-const bootFooterStatus = document.getElementById('bootFooterStatus');
-const bootScreen = document.getElementById('bootScreen');
-let bootIdx = 0;
+const bootLogContainer = document.getElementById('bootLog');
+const bootProgressBarFill = document.getElementById('bootProgressBar');
+const bootStatusTxt = document.getElementById('bootStatusText');
+const bootPercentTxt = document.getElementById('bootPercentText');
+const bootFooterElement = document.getElementById('bootFooterStatus');
+const bootScreenElement = document.getElementById('bootScreen');
+let bootIndex = 0;
 
-function runSupremeBoot() {
-    if (bootIdx < supremeBootLogs.length) {
-        const log = supremeBootLogs[bootIdx];
-        bootLogEl.innerText += "\n" + log.text;
-        bootStatusText.innerText = log.status;
-        bootFooterStatus.innerText = "STATUS: " + log.status;
+function runOmniBootSequence() {
+    if (bootIndex < omniBootLogs.length) {
+        const item = omniBootLogs[bootIndex];
+        bootLogContainer.innerText += "\n" + item.text;
+        bootStatusTxt.innerText = item.status;
+        bootFooterElement.innerText = "STATUS: " + item.status;
         
-        const pct = Math.round(((bootIdx + 1) / supremeBootLogs.length) * 100);
-        bootProgressBar.style.width = pct + '%';
-        bootPercentText.innerText = pct + '%';
+        const pct = ((bootIndex + 1) / omniBootLogs.length) * 100;
+        bootProgressBarFill.style.width = pct + '%';
+        bootPercentTxt.innerText = pct.toFixed(1) + '%';
 
-        bootIdx++;
-        setTimeout(runSupremeBoot, 90);
+        bootIndex++;
+        setTimeout(runOmniBootSequence, 75);
     } else {
         setTimeout(() => {
-            bootScreen.style.opacity = '0';
-            bootScreen.style.transform = 'scale(1.06)';
+            bootScreenElement.style.opacity = '0';
+            bootScreenElement.style.transform = 'scale(1.08)';
             setTimeout(() => {
-                bootScreen.remove();
-                initQuantumVisuals();
-                createTerminalWindow('mainTerminal', 'MUNCIX_OS // SUPREME_QUANTUM_CORE [ONLINE]', '1337', true, true);
-                showToast("¡Núcleo Cuántico V99.9 inicializado con éxito absoluto!", "success");
-            }, 700);
-        }, 350);
+                bootScreenElement.remove();
+                initOmniVisuals();
+                createTerminalWindow('mainTerminal', 'MUNCIX_OS // OMNI_QUANTUM_CORE [ONLINE]', '1337', true, true);
+                showToast("¡Núcleo OMNI Cuántico v999.9 inicializado con éxito absoluto!", "success");
+            }, 750);
+        }, 400);
     }
 }
 
 window.addEventListener('load', () => {
-    setTimeout(runSupremeBoot, 100);
+    setTimeout(runOmniBootSequence, 120);
 });
 
 /* ========================================================================== */
-/* SISTEMA DE ARCHIVOS VIRTUAL EXPANDIDO                                      */
+/* SISTEMA DE ARCHIVOS VIRTUAL OMNI-EXPANDIDO                                 */
 /* ========================================================================== */
 
-const virtualFileSystem = {
-    "/": { type: "dir", contents: ["home", "sys", "bin", "readme.txt", "system.conf", "quantum.dat", "supreme.log"] },
+const omniVirtualFileSystem = {
+    "/": { type: "dir", contents: ["home", "sys", "bin", "readme.txt", "system.conf", "quantum.dat", "omni_core.log"] },
     "/home": { type: "dir", contents: ["muncix_op", "developer", "guest"] },
-    "/home/muncix_op": { type: "dir", contents: ["bio.txt", "secrets.dat", "socials.log", "projects.md"] },
-    "/home/developer": { type: "dir", contents: ["roblox_jjs_yuta.lua", "blockbench_model.json", "desmos_synth.js", "quantum_core.cpp"] },
+    "/home/muncix_op": { type: "dir", contents: ["bio.txt", "secrets.dat", "socials.log", "projects.md", "achievements.txt"] },
+    "/home/developer": { type: "dir", contents: ["roblox_jjs_yuta.lua", "blockbench_model.json", "desmos_synth.js", "quantum_core.cpp", "shaders_glsl.frag"] },
     "/home/guest": { type: "dir", contents: ["welcome_guest.txt"] },
-    "/sys": { type: "dir", contents: ["kernel_info", "quantum_mesh", "memory_map", "neural_net"] },
-    "/bin": { type: "dir", contents: ["help", "ls", "cd", "cat", "clear", "window", "ping", "nmap", "socials", "sysinfo", "date", "whoami", "matrix", "glitch", "theme", "reboot"] },
-    "/readme.txt": { type: "file", content: "MUNCIX_OS v99.9 SUPREME QUANTUM CORE. Miles de líneas de código optimizadas para máxima perfección visual, fluidez y animaciones de alta fidelidad." },
-    "/system.conf": { type: "file", content: "CORE_ENGINE=QUANTUM_HYPER_VOID_SUPREME\nDEBUG_MODE=FALSE\nSAFETY_MODE=ENABLED\nANIMATION_ENGINE=ULTRA_FLUID_120FPS\nTHEME=NEON_GREEN" },
-    "/quantum.dat": { type: "file", content: "QUANTUM_SIGNATURE: 0xFF9988AAB277 // SECURE SUPREME MESH HASH VERIFIED." },
-    "/supreme.log": { type: "file", content: "[LOG] All subroutines operational. Zero latency pipeline confirmed." },
-    "/home/muncix_op/bio.txt": { type: "file", content: "Desarrollador Principal: Muncix_Op\nEspecialidades: Roblox Studio (Jujutsu Shenanigans), Modelado 3D Blockbench de Escritorio, Desmos Audio & Gráficos." },
+    "/sys": { type: "dir", contents: ["kernel_info", "quantum_mesh", "memory_map", "neural_net", "raytracer_stats"] },
+    "/bin": { type: "dir", contents: ["help", "ls", "cd", "cat", "clear", "window", "ping", "nmap", "socials", "sysinfo", "date", "whoami", "matrix", "glitch", "theme", "audio", "reboot"] },
+    "/readme.txt": { type: "file", content: "MUNCIX_OS v999.9 OMNI-QUANTUM SUPREME NEXUS. Miles de líneas de código optimizadas al máximo nivel de perfección visual, fluidez y arquitectura inmersiva." },
+    "/system.conf": { type: "file", content: "CORE_ENGINE=OMNI_QUANTUM_HYPER_VOID_SUPREME\nDEBUG_MODE=FALSE\nSAFETY_MODE=ENABLED\nANIMATION_ENGINE=ULTRA_FLUID_240FPS\nTHEME=SUPREME_NEON" },
+    "/quantum.dat": { type: "file", content: "QUANTUM_SIGNATURE: 0xFF9988AAB2773399 // SECURE OMNI MESH HASH VERIFIED." },
+    "/omni_core.log": { type: "file", content: "[LOG] All supreme subroutines fully operational. Zero latency pipeline confirmed." },
+    "/home/muncix_op/bio.txt": { type: "file", content: "Desarrollador Principal: Muncix_Op\nEspecialidades: Roblox Studio (Jujutsu Shenanigans), Modelado 3D Blockbench de Alta Gama, Desmos Audio & Gráficos Computacionales." },
     "/home/muncix_op/socials.log": { type: "file", content: "TikTok: @muncixop\nX / Twitter: @MuncixOp\nCurseForge: muncixop" },
-    "/home/muncix_op/projects.md": { type: "file", content: "# Proyectos Destacados\n- JJS Skill Builder Custom Movesets\n- Blockbench Advanced 3D Assets\n- Tyler, The Creator Audio Synthesis in Desmos" },
-    "/home/developer/roblox_jjs_yuta.lua": { type: "file", content: "-- Jujutsu Shenanigans: Custom Yuta Okkotsu advanced moveset script v9 (Optimized)" },
-    "/home/developer/blockbench_model.json": { type: "file", content: "{\"model_name\": \"Muncix_QuantumBlade_Supreme\", \"format_version\": \"1.12\", \"software\": \"Blockbench Desktop\"}" },
-    "/home/developer/desmos_synth.js": { type: "file", content: "// Desmos audio synthesis mapping for Tyler, The Creator - Are We Still Friends? [Full Math Equiv]" },
-    "/home/developer/quantum_core.cpp": { type: "file", content: "#include <quantum>\nint main() { quantum::initialize_supreme_void(); return 0; }" },
-    "/home/guest/welcome_guest.txt": { type: "file", content: "Bienvenido al núcleo cuántico supremo. Escribe 'help' o abre la paleta con Ctrl+K." }
+    "/home/muncix_op/projects.md": { type: "file", content: "# Proyectos Destacados Omni\n- Jujutsu Shenanigans Custom Movesets (Advanced Luau)\n- Blockbench Supreme 3D Assets & Rigging\n- Tyler, The Creator Audio Synthesis in Desmos Calculators" },
+    "/home/muncix_op/achievements.txt": { type: "file", content: "- Master of Code Architecture\n- Quantum Mesh Pioneer\n- 100% Perfectionist Rating Achieved" },
+    "/home/developer/roblox_jjs_yuta.lua": { type: "file", content: "-- Jujutsu Shenanigans: Custom Yuta Okkotsu advanced moveset script v10 (Omni Optimized)" },
+    "/home/developer/blockbench_model.json": { type: "file", content: "{\"model_name\": \"Muncix_QuantumBlade_OmniSupreme\", \"format_version\": \"1.16\", \"software\": \"Blockbench Desktop Ultimate\"}" },
+    "/home/developer/desmos_synth.js": { type: "file", content: "// Desmos audio synthesis mapping for Tyler, The Creator - Are We Still Friends? [Full Supreme Math Equiv]" },
+    "/home/developer/quantum_core.cpp": { type: "file", content: "#include <quantum_omni.h>\nint main() { quantum::initialize_omni_supreme_void(); return 0; }" },
+    "/home/developer/shaders_glsl.frag": { type: "file", content: "uniform vec2 u_resolution; uniform float u_time;\nvoid main() { vec2 st = gl_FragCoord.xy/u_resolution; gl_FragColor = vec4(vec3(abs(sin(u_time))), 1.0); }" },
+    "/home/guest/welcome_guest.txt": { type: "file", content: "Bienvenido al núcleo cuántico omni supremo. Escribe 'help' o abre la paleta de comandos con Ctrl+K." }
 };
 
-const terminalStateSessions = {};
+const terminalSessionsMap = {};
 
 /* ========================================================================== */
-/* GESTIÓN DE VENTANAS Y COMPORTAMIENTO                                      */
+/* GESTIÓN DE VENTANAS Y COMPORTAMIENTO OMNI                                  */
 /* ========================================================================== */
 
-function setupWindowBehaviors(winEl, headerEl, closeBtn, minBtn, maxBtn, isMainTerminal) {
+function setupOmniWindowBehaviors(winEl, headerEl, closeBtn, minBtn, maxBtn, isMainTerminal) {
     let isDragging = false;
     let startX, startY, initialLeft, initialTop;
 
@@ -176,7 +178,7 @@ function setupWindowBehaviors(winEl, headerEl, closeBtn, minBtn, maxBtn, isMainT
         startY = e.clientY;
         initialLeft = parseFloat(winEl.style.left);
         initialTop = parseFloat(winEl.style.top);
-        bringToFront(winEl);
+        bringWindowToFront(winEl);
         document.addEventListener('mousemove', onMouseMove);
         document.addEventListener('mouseup', onMouseUp);
     });
@@ -190,15 +192,15 @@ function setupWindowBehaviors(winEl, headerEl, closeBtn, minBtn, maxBtn, isMainT
 
     closeBtn.addEventListener('click', () => {
         if (isMainTerminal) {
-            playGlitchSound();
+            playGlitchFXSound();
             winEl.classList.add('glitch-active');
             const outputEl = winEl.querySelector('[id$="_output"]');
-            if (outputEl) appendLine(outputEl, "[~] WATCHDOG QUANTUM: El núcleo principal está protegido contra cierre forzoso.", "warning");
+            if (outputEl) appendTerminalLine(outputEl, "[~] OMNI WATCHDOG: El núcleo principal está protegido contra cierre forzoso.", "warning");
             showToast("El núcleo principal está protegido.", "warning");
             setTimeout(() => winEl.classList.remove('glitch-active'), 500);
         } else {
             winEl.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease';
-            winEl.style.transform = 'scale(0.85) translateY(25px)';
+            winEl.style.transform = 'scale(0.82) translateY(30px)';
             winEl.style.opacity = '0';
             setTimeout(() => winEl.remove(), 300);
         }
@@ -220,54 +222,54 @@ function setupWindowBehaviors(winEl, headerEl, closeBtn, minBtn, maxBtn, isMainT
         if (!winEl.classList.contains('maximized')) initPosition();
     });
 
-    winEl.addEventListener('mousedown', () => bringToFront(winEl));
+    winEl.addEventListener('mousedown', () => bringWindowToFront(winEl));
 }
 
-let topZ = 20;
-function bringToFront(winEl) {
-    topZ++;
-    winEl.style.zIndex = topZ;
+let topZIndex = 20;
+function bringWindowToFront(winEl) {
+    topZIndex++;
+    winEl.style.zIndex = topZIndex;
 }
 
-function setupTerminalInterface(inputEl, outputContainerEl, bodyEl, winId) {
-    let history = [];
-    let historyIdx = -1;
+function setupTerminalInterfaceLogic(inputEl, outputContainerEl, bodyEl, winId) {
+    let historyStack = [];
+    let historyIndex = -1;
 
-    terminalStateSessions[winId] = { cwd: "/", authStep: 0 };
+    terminalSessionsMap[winId] = { cwd: "/", authStep: 0 };
 
-    inputEl.addEventListener('input', () => playKeySound());
+    inputEl.addEventListener('input', () => playKeyClickSound());
 
     inputEl.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
-            playEnterSound();
+            playEnterActionSound();
             const val = inputEl.value.trim();
             if (val !== '') {
-                history.push(val);
-                historyIdx = history.length;
+                historyStack.push(val);
+                historyIndex = historyStack.length;
             }
 
-            const session = terminalStateSessions[winId];
+            const session = terminalSessionsMap[winId];
             if (session && session.authStep > 0) {
-                handleAuthFlow(val, outputContainerEl, session);
+                handleAuthFlowOmni(val, outputContainerEl, session);
                 inputEl.value = '';
                 return;
             }
 
-            appendLine(outputContainerEl, `<span style="color: var(--cyan-neon);">muncix@quantum:${session.cwd}#</span> ${escapeHtml(val)}`, '');
-            processCommand(val, outputContainerEl, bodyEl, winId, session);
+            appendTerminalLine(outputContainerEl, `<span style="color: var(--neon-cyan);">muncix@omni:${session.cwd}#</span> ${escapeHtml(val)}`, '');
+            processOmniCommand(val, outputContainerEl, bodyEl, winId, session);
             inputEl.value = '';
         } else if (e.key === 'ArrowUp') {
-            if (historyIdx > 0) {
-                historyIdx--;
-                inputEl.value = history[historyIdx];
+            if (historyIndex > 0) {
+                historyIndex--;
+                inputEl.value = historyStack[historyIndex];
             }
             e.preventDefault();
         } else if (e.key === 'ArrowDown') {
-            if (historyIdx < history.length - 1) {
-                historyIdx++;
-                inputEl.value = history[historyIdx];
+            if (historyIndex < historyStack.length - 1) {
+                historyIndex++;
+                inputEl.value = historyStack[historyIndex];
             } else {
-                historyIdx = history.length;
+                historyIndex = historyStack.length;
                 inputEl.value = '';
             }
             e.preventDefault();
@@ -277,17 +279,17 @@ function setupTerminalInterface(inputEl, outputContainerEl, bodyEl, winId) {
     bodyEl.addEventListener('click', () => inputEl.focus());
 }
 
-function handleAuthFlow(val, outContainer, session) {
-    appendLine(outContainer, `<span style="color: var(--purple-neon);">auth@quantum:~#</span> ${escapeHtml(val || '[BYPASS]')}`, '');
+function handleAuthFlowOmni(val, outContainer, session) {
+    appendTerminalLine(outContainer, `<span style="color: var(--neon-purple);">auth@omni:~#</span> ${escapeHtml(val || '[BYPASS]')}`, '');
 
     if (session.authStep === 1) {
         session.authStep = 2;
-        appendLine(outContainer, "[+] FASE 1: Token de seguridad cuántica validado con éxito.", "success");
-        appendLine(outContainer, "[?] FASE 2/2: Escribe 'CONFIRMAR' para descifrar los enlaces oficiales de Muncix_Op:", "warning");
+        appendTerminalLine(outContainer, "[+] FASE 1: Token de seguridad cuántica supremo validado con éxito.", "success");
+        appendTerminalLine(outContainer, "[?] FASE 2/2: Escribe 'CONFIRMAR' para descifrar los canales oficiales de Muncix_Op:", "warning");
     } else if (session.authStep === 2) {
         session.authStep = 0;
-        appendLine(outContainer, "[✔] ACCESO SUPREMO CONCEDIDO: Canales oficiales descifrados.", "success");
-        appendLine(outContainer, `
+        appendTerminalLine(outContainer, "[✔] ACCESO SUPREMO CONCEDIDO: Canales oficiales descifrados.", "success");
+        appendTerminalLine(outContainer, `
             <div class="social-card">
                 <span>TikTok Oficial (@muncixop)</span>
                 <span class="action-link" onclick="window.open('https://www.tiktok.com/@muncixop', '_blank')">[ABRIR]</span>
@@ -305,7 +307,7 @@ function handleAuthFlow(val, outContainer, session) {
     }
 }
 
-function appendLine(container, html, className = '') {
+function appendTerminalLine(container, html, className = '') {
     const div = document.createElement('div');
     div.className = `output-line ${className}`;
     div.innerHTML = html;
@@ -319,55 +321,54 @@ function escapeHtml(text) {
 }
 
 /* ========================================================================== */
-/* LIENZOS GRÁFICOS AVANZADOS (MATRIX, PARTÍCULAS, RED NEURONAL)            */
+/* LIENZOS GRÁFICOS OMNI (MATRIX, PARTÍCULAS, RED NEURONAL, RAYTRACER)        */
 /* ========================================================================== */
 
-let matrixActive = true;
+let matrixRainActive = true;
 
-function initQuantumVisuals() {
-    // 1. Matrix Rain
+function initOmniVisuals() {
+    // 1. Matrix Rain WebGL / Canvas
     const matrixCanvas = document.getElementById('quantumMatrixCanvas');
     const mCtx = matrixCanvas.getContext('2d');
     matrixCanvas.width = window.innerWidth;
     matrixCanvas.height = window.innerHeight;
-    const chars = '0123456789ABCDEF@#$_-MUNCIX';
-    const fontSize = 14;
-    const columns = matrixCanvas.width / fontSize;
-    const drops = Array(Math.floor(columns)).fill(1);
+    const glyphs = '0123456789ABCDEF@#$_-MUNCIXOMNI';
+    const fSize = 14;
+    const colCount = matrixCanvas.width / fSize;
+    const dropArr = Array(Math.floor(colCount)).fill(1);
 
     setInterval(() => {
-        if (!matrixActive) return;
-        mCtx.fillStyle = 'rgba(0, 1, 2, 0.16)';
+        if (!matrixRainActive) return;
+        mCtx.fillStyle = 'rgba(0, 1, 3, 0.15)';
         mCtx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
-        mCtx.fillStyle = 'rgba(0, 255, 255, 0.45)';
-        mCtx.font = fontSize + 'px monospace';
-        for (let i = 0; i < drops.length; i++) {
-            const char = chars.charAt(Math.floor(Math.random() * chars.length));
-            mCtx.fillText(char, i * fontSize, drops[i] * fontSize);
-            if (drops[i] * fontSize > matrixCanvas.height && Math.random() > 0.97) drops[i] = 0;
-            drops[i]++;
+        mCtx.fillStyle = 'rgba(0, 255, 255, 0.5)';
+        mCtx.font = fSize + 'px monospace';
+        for (let i = 0; i < dropArr.length; i++) {
+            const ch = glyphs.charAt(Math.floor(Math.random() * glyphs.length));
+            mCtx.fillText(ch, i * fSize, dropArr[i] * fSize);
+            if (dropArr[i] * fSize > matrixCanvas.height && Math.random() > 0.97) dropArr[i] = 0;
+            dropArr[i]++;
         }
-    }, 32);
+    }, 30);
 
-    // 2. Partículas Cuánticas Flotantes
+    // 2. Partículas Cuánticas Supremas Flotantes
     const pCanvas = document.getElementById('particleFieldCanvas');
     const pCtx = pCanvas.getContext('2d');
     pCanvas.width = window.innerWidth;
     pCanvas.height = window.innerHeight;
     
-    const particles = Array.from({ length: 65 }, () => ({
+    const partList = Array.from({ length: 80 }, () => ({
         x: Math.random() * pCanvas.width,
         y: Math.random() * pCanvas.height,
-        vx: (Math.random() - 0.5) * 0.8,
-        vy: (Math.random() - 0.5) * 0.8,
-        radius: Math.random() * 2 + 1,
-        alpha: Math.random() * 0.5 + 0.2
+        vx: (Math.random() - 0.5) * 1.1,
+        vy: (Math.random() - 0.5) * 1.1,
+        radius: Math.random() * 2.2 + 1,
+        alpha: Math.random() * 0.6 + 0.25
     }));
 
-    function renderParticles() {
+    function renderParticlesOmni() {
         pCtx.clearRect(0, 0, pCanvas.width, pCanvas.height);
-        pCtx.fillStyle = 'rgba(0, 255, 102, 0.6)';
-        particles.forEach(p => {
+        partList.forEach(p => {
             p.x += p.vx;
             p.y += p.vy;
             if (p.x < 0) p.x = pCanvas.width;
@@ -380,52 +381,93 @@ function initQuantumVisuals() {
             pCtx.fillStyle = `rgba(0, 255, 255, ${p.alpha})`;
             pCtx.fill();
         });
-        requestAnimationFrame(renderParticles);
+        requestAnimationFrame(renderParticlesOmni);
     }
-    renderParticles();
+    renderParticlesOmni();
+
+    // 3. Red Neuronal Mesh Cinemática
+    const nCanvas = document.getElementById('neuralMeshCanvas');
+    const nCtx = nCanvas.getContext('2d');
+    nCanvas.width = window.innerWidth;
+    nCanvas.height = window.innerHeight;
+
+    const nodes = Array.from({ length: 30 }, () => ({
+        x: Math.random() * nCanvas.width,
+        y: Math.random() * nCanvas.height,
+        vx: (Math.random() - 0.5) * 0.4,
+        vy: (Math.random() - 0.5) * 0.4
+    }));
+
+    function renderNeuralMesh() {
+        nCtx.clearRect(0, 0, nCanvas.width, nCanvas.height);
+        nCtx.strokeStyle = 'rgba(0, 255, 102, 0.12)';
+        nCtx.lineWidth = 1;
+
+        for (let i = 0; i < nodes.length; i++) {
+            nodes[i].x += nodes[i].vx;
+            nodes[i].y += nodes[i].vy;
+            if (nodes[i].x < 0 || nodes[i].x > nCanvas.width) nodes[i].vx *= -1;
+            if (nodes[i].y < 0 || nodes[i].y > nCanvas.height) nodes[i].vy *= -1;
+
+            for (let j = i + 1; j < nodes.length; j++) {
+                const dist = Math.hypot(nodes[i].x - nodes[j].x, nodes[i].y - nodes[j].y);
+                if (dist < 140) {
+                    nCtx.beginPath();
+                    nCtx.moveTo(nodes[i].x, nodes[i].y);
+                    nCtx.lineTo(nodes[j].x, nodes[j].y);
+                    nCtx.stroke();
+                }
+            }
+        }
+        requestAnimationFrame(renderNeuralMesh);
+    }
+    renderNeuralMesh();
 
     window.addEventListener('resize', () => {
         matrixCanvas.width = window.innerWidth;
         matrixCanvas.height = window.innerHeight;
         pCanvas.width = window.innerWidth;
         pCanvas.height = window.innerHeight;
+        nCanvas.width = window.innerWidth;
+        nCanvas.height = window.innerHeight;
     });
 }
 
 /* ========================================================================== */
-/* PROCESADOR DE COMANDOS DEL SISTEMA                                         */
+/* PROCESADOR DE COMANDOS DEL SISTEMA OMNI                                    */
 /* ========================================================================== */
 
-function processCommand(rawCmd, outContainer, bodyEl, winId, session) {
+function processOmniCommand(rawCmd, outContainer, bodyEl, winId, session) {
     const parts = rawCmd.trim().split(' ');
     const cmd = parts[0].toLowerCase();
     const arg = parts[1];
 
     switch(cmd) {
         case 'help':
-            appendLine(outContainer, `Comandos supremos disponibles en MUNCIX_OS v99.9:
+            appendTerminalLine(outContainer, `Comandos omni-supremos disponibles en MUNCIX_OS v999.9:
   ls           - Lista los archivos del directorio virtual actual
-  cd <dir>     - Cambia de directorio virtual
-  cat <file>   - Visualiza el contenido detallado de un archivo
-  ping <host>  - Simula envío de paquetes cuánticos ICMP de alta velocidad
-  sysinfo      - Reporte profundo del núcleo y hardware cuántico
-  whoami       - Muestra el usuario activo con privilegios de raíz
-  date         - Muestra la marca temporal del núcleo cuántico
+  cd <dir>     - Cambia de directorio virtual en el árbol
+  cat <file>   - Visualiza el contenido detallado de cualquier archivo
+  ping <host>  - Simula envío de paquetes cuánticos ICMP de ultra alta velocidad
+  sysinfo      - Reporte profundo del núcleo, memoria y hardware omni
+  whoami       - Muestra el usuario activo con privilegios absolutos de raíz
+  date         - Muestra la marca temporal del núcleo cuántico sincronizado
   socials      - Muestra y descifra las redes oficiales de Muncix_Op
   matrix       - Alterna la lluvia de código digital en pantalla
-  glitch       - Genera una anomalía cromática y glitch de interfaz
-  theme        - Cambia la paleta de colores neón del sistema
-  clear        - Limpia la pantalla de la terminal
+  glitch       - Genera una anomalía cromática y glitch global de interfaz
+  theme        - Rota la paleta de colores neón del ecosistema
+  audio        - Alterna los efectos de sonido sintetizados
+  clear        - Limpia por completo la pantalla de la terminal
   window       - Abre una subterminal cuántica adicional flotante
-  reboot       - Reinicia el núcleo del sistema operativo`, 'system');
+  reboot       - Reinicia el núcleo del sistema operativo al instante`, 'system');
             break;
 
         case 'ls':
-            const currentDir = virtualFileSystem[session.cwd];
+            const currentDir = omniVirtualFileSystem[session.cwd];
             if (currentDir && currentDir.contents) {
-                appendLine(outContainer, currentDir.contents.join('   '), 'success');
+                appendTerminalLine(outContainer, currentDir.contents.join('   '), 'success');
             } else {
-                appendLine(outContainer, "Error: directorio no válido en la malla.", "error");
+                appendTerminalLine(outContainer, "Error: directorio no válido en la malla.", "error");
             }
             break;
 
@@ -440,76 +482,82 @@ function processCommand(rawCmd, outContainer, bodyEl, winId, session) {
                 }
             } else {
                 let target = arg.startsWith('/') ? arg : (session.cwd === '/' ? '/' + arg : session.cwd + '/' + arg);
-                if (virtualFileSystem[target] && virtualFileSystem[target].type === 'dir') {
+                if (omniVirtualFileSystem[target] && omniVirtualFileSystem[target].type === 'dir') {
                     session.cwd = target;
                 } else {
-                    appendLine(outContainer, `cd: no such file or directory: ${arg}`, 'error');
+                    appendTerminalLine(outContainer, `cd: no such file or directory: ${arg}`, 'error');
                 }
             }
             const promptEl = bodyEl.closest('.terminal-window').querySelector('.prompt');
-            if (promptEl) promptEl.innerText = `muncix@quantum:${session.cwd}#`;
+            if (promptEl) promptEl.innerText = `muncix@omni:${session.cwd}#`;
             break;
 
         case 'cat':
             if (!arg) {
-                appendLine(outContainer, "Uso: cat <archivo>", "warning");
+                appendTerminalLine(outContainer, "Uso: cat <archivo>", "warning");
                 break;
             }
             let filePath = arg.startsWith('/') ? arg : (session.cwd === '/' ? '/' + arg : session.cwd + '/' + arg);
-            if (virtualFileSystem[filePath] && virtualFileSystem[filePath].type === 'file') {
-                appendLine(outContainer, virtualFileSystem[filePath].content, 'system');
+            if (omniVirtualFileSystem[filePath] && omniVirtualFileSystem[filePath].type === 'file') {
+                appendTerminalLine(outContainer, omniVirtualFileSystem[filePath].content, 'system');
             } else {
-                appendLine(outContainer, `cat: ${arg}: Archivo no encontrado en el sistema`, 'error');
+                appendTerminalLine(outContainer, `cat: ${arg}: Archivo no encontrado en el sistema`, 'error');
             }
             break;
 
         case 'ping':
-            const targetHost = arg || 'quantum.void.supreme.node';
-            appendLine(outContainer, `PING ${targetHost} (127.0.0.1) 56 bytes of data.`, 'system');
+            const targetHost = arg || 'omni.quantum.supreme.node';
+            appendTerminalLine(outContainer, `PING ${targetHost} (127.0.0.1) 56 bytes of data.`, 'system');
             let pings = 0;
             const pingInterval = setInterval(() => {
                 pings++;
-                const time = (Math.random() * 0.9 + 0.1).toFixed(2);
-                appendLine(outContainer, `64 bytes from ${targetHost}: icmp_seq=${pings} time=${time} ms`, 'success');
+                const time = (Math.random() * 0.7 + 0.05).toFixed(2);
+                appendTerminalLine(outContainer, `64 bytes from ${targetHost}: icmp_seq=${pings} time=${time} ms`, 'success');
                 if (pings >= 4) clearInterval(pingInterval);
-            }, 250);
+            }, 220);
             break;
 
         case 'sysinfo':
-            appendLine(outContainer, `OS: MUNCIX_OS v99.9 SUPREME QUANTUM | Kernel: HyperVoid-X9 | Arch: x86_64-Q | Latency: 0.1ms`, 'system');
+            appendTerminalLine(outContainer, `OS: MUNCIX_OS v999.9 OMNI-QUANTUM | Kernel: OmniVoid-X12 | Arch: x86_64-OMNI | Latency: 0.02ms`, 'system');
             break;
 
         case 'whoami':
-            appendLine(outContainer, `muncix_op (UID: 0 [QUANTUM_SUPREME_ROOT])`, 'success');
+            appendTerminalLine(outContainer, `muncix_op (UID: 0 [OMNI_QUANTUM_SUPREME_ROOT])`, 'success');
             break;
 
         case 'date':
-            appendLine(outContainer, `Fri Sep 4 10:02:14 UTC 2026 [QUANTUM_SYNC_OK]`, 'system');
+            appendTerminalLine(outContainer, `Fri Sep 4 10:08:47 UTC 2026 [QUANTUM_OMNI_SYNC_OK]`, 'system');
             break;
 
         case 'matrix':
-            matrixActive = !matrixActive;
-            appendLine(outContainer, `Lluvia Matrix state: ${matrixActive ? 'ENABLED' : 'DISABLED'}`, 'success');
-            showToast(`Lluvia Matrix: ${matrixActive ? 'Activa' : 'Pausada'}`, 'info');
+            matrixRainActive = !matrixRainActive;
+            appendTerminalLine(outContainer, `Lluvia Matrix state: ${matrixRainActive ? 'ENABLED' : 'DISABLED'}`, 'success');
+            showToast(`Lluvia Matrix: ${matrixRainActive ? 'Activa' : 'Pausada'}`, 'info');
             break;
 
         case 'glitch':
-            playGlitchSound();
+            playGlitchFXSound();
             const win = bodyEl.closest('.terminal-window');
             win.classList.add('glitch-active');
             setTimeout(() => win.classList.remove('glitch-active'), 500);
-            appendLine(outContainer, "[!] Anomalía cuántica provocada con éxito.", "warning");
-            showToast("¡Glitch visual forzado!", "warning");
+            appendTerminalLine(outContainer, "[!] Anomalía cuántica omni provocada con éxito.", "warning");
+            showToast("¡Glitch visual forzado en el sistema!", "warning");
             break;
 
         case 'theme':
-            const themes = ['', 'theme-cyan', 'theme-purple', 'theme-danger'];
+            const themes = ['theme-supreme', 'theme-cyan', 'theme-purple', 'theme-danger', 'theme-gold'];
             const currentThemeIndex = themes.findIndex(t => document.body.classList.contains(t));
             const nextTheme = themes[(currentThemeIndex + 1) % themes.length];
-            themes.forEach(t => { if(t) document.body.classList.remove(t); });
-            if (nextTheme) document.body.classList.add(nextTheme);
-            appendLine(outContainer, `Tema visual actualizado: ${nextTheme || 'NEON_GREEN_DEFAULT'}`, 'success');
-            showToast(`Tema cambiado: ${nextTheme || 'Default'}`, 'success');
+            themes.forEach(t => document.body.classList.remove(t));
+            document.body.classList.add(nextTheme);
+            appendTerminalLine(outContainer, `Tema visual actualizado: ${nextTheme.toUpperCase()}`, 'success');
+            showToast(`Tema cambiado: ${nextTheme.toUpperCase()}`, 'success');
+            break;
+
+        case 'audio':
+            audioEnabled = !audioEnabled;
+            appendTerminalLine(outContainer, `Sintetizador de audio: ${audioEnabled ? 'ACTIVADO' : 'SILENCIADO'}`, 'success');
+            showToast(`Audio: ${audioEnabled ? 'Activado' : 'Silenciado'}`, 'success');
             break;
 
         case 'clear':
@@ -517,20 +565,20 @@ function processCommand(rawCmd, outContainer, bodyEl, winId, session) {
             break;
 
         case 'window':
-            spawnNewSubTerminal();
-            appendLine(outContainer, "Nueva subterminal cuántica flotante abierta.", "success");
+            spawnNewOmniSubTerminal();
+            appendTerminalLine(outContainer, "Nueva subterminal cuántica flotante abierta con éxito.", "success");
             showToast("Subterminal abierta", "success");
             break;
 
         case 'socials':
             session.authStep = 1;
-            appendLine(outContainer, "[!] VERIFICACIÓN DE SEGURIDAD CUÁNTICA SUPREMA:", "warning");
-            appendLine(outContainer, "[?] Escribe cualquier valor o presiona ENTER para continuar:", "warning");
+            appendTerminalLine(outContainer, "[!] VERIFICACIÓN DE SEGURIDAD CUÁNTICA OMNI:", "warning");
+            appendTerminalLine(outContainer, "[?] Escribe cualquier valor o presiona ENTER para continuar:", "warning");
             break;
 
         case 'reboot':
-            appendLine(outContainer, "Reiniciando núcleo cuántico supremo...", "error");
-            showToast("Reiniciando sistema...", "error");
+            appendTerminalLine(outContainer, "Reiniciando núcleo cuántico omni supremo...", "error");
+            showToast("Reiniciando sistema operativo...", "error");
             setTimeout(() => location.reload(), 900);
             break;
 
@@ -538,18 +586,18 @@ function processCommand(rawCmd, outContainer, bodyEl, winId, session) {
             break;
 
         default:
-            appendLine(outContainer, `comando no reconocido: '${escapeHtml(cmd)}'. Escribe 'help' para ver la lista de comandos.`, 'error');
+            appendTerminalLine(outContainer, `comando no reconocido: '${escapeHtml(cmd)}'. Escribe 'help' para ver la lista de comandos.`, 'error');
             break;
     }
 }
 
-let subCount = 0;
-function spawnNewSubTerminal() {
-    subCount++;
-    const winId = 'subWin_' + subCount;
-    const offX = (subCount * 40) % 220;
-    const offY = (subCount * 40) % 130;
-    createTerminalWindow(winId, `QUANTUM_SHELL #${subCount}`, `${990 + subCount}`, `top: calc(8vh + ${offY}px); left: calc(10vw + ${offX}px);`, false);
+let subWinCount = 0;
+function spawnNewOmniSubTerminal() {
+    subWinCount++;
+    const winId = 'subWin_' + subWinCount;
+    const offX = (subWinCount * 45) % 240;
+    const offY = (subWinCount * 45) % 140;
+    createTerminalWindow(winId, `OMNI_SHELL #${subWinCount}`, `${9900 + subWinCount}`, `top: calc(7vh + ${offY}px); left: calc(8vw + ${offX}px);`, false);
 }
 
 function createTerminalWindow(winId, title, pid, customStyle, isMainTerminal = false) {
@@ -573,27 +621,27 @@ function createTerminalWindow(winId, title, pid, customStyle, isMainTerminal = f
         </div>
 
         <div class="terminal-body" id="${winId}_body">
-            <div class="output-line system">MUNCIX_SUPREME_QUANTUM_KERNEL [Versión 99.9 STABLE]</div>
+            <div class="output-line system">MUNCIX_OMNI_QUANTUM_KERNEL [Versión 999.9 SUPREME]</div>
             <div class="output-line system corrupted-text">Escribe 'help' para explorar el sistema o usa Ctrl+K.</div>
             <div class="output-line" style="margin-bottom: 10px;">--------------------------------------------------------------------------------</div>
             
             <div id="${winId}_output"></div>
 
             <div class="input-line">
-                <span class="prompt">muncix@quantum:/#</span>
+                <span class="prompt">muncix@omni:/#</span>
                 <input type="text" id="${winId}_input" class="command-input" autocomplete="off" spellcheck="false">
             </div>
         </div>
 
         <div class="terminal-footer-hint">
-            <span>QUANTUM STATUS: 100% OPTIMAL / SECURE</span>
-            <span>UTF-8 // 120 FPS</span>
+            <span>OMNI STATUS: 100% OPTIMAL / SECURE ENCLAVE</span>
+            <span>UTF-8 // 240 FPS ULTRA FLUID</span>
         </div>
     `;
 
     container.appendChild(winDiv);
 
-    setupWindowBehaviors(
+    setupOmniWindowBehaviors(
         winDiv,
         winDiv.querySelector('.terminal-header'),
         document.getElementById(`${winId}_close`),
@@ -602,7 +650,7 @@ function createTerminalWindow(winId, title, pid, customStyle, isMainTerminal = f
         isMainTerminal
     );
 
-    setupTerminalInterface(
+    setupTerminalInterfaceLogic(
         document.getElementById(`${winId}_input`),
         document.getElementById(`${winId}_output`),
         document.getElementById(`${winId}_body`),
@@ -613,13 +661,13 @@ function createTerminalWindow(winId, title, pid, customStyle, isMainTerminal = f
 }
 
 /* ========================================================================== */
-/* SISTEMA DE TOASTS Y PALETA DE COMANDOS (MODAL)                             */
+/* SISTEMA DE TOASTS Y PALETA DE COMANDOS OMNI (MODAL)                        */
 /* ========================================================================== */
 
 function showToast(message, type = 'info') {
     const container = document.getElementById('toastNotificationContainer');
     const toast = document.createElement('div');
-    toast.className = 'toast-item';
+    toast.className = 'toast-box';
     
     let icon = '⚡';
     if (type === 'success') icon = '✔';
@@ -630,87 +678,97 @@ function showToast(message, type = 'info') {
     container.appendChild(toast);
 
     setTimeout(() => {
-        toast.style.animation = 'toast-out 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards';
+        toast.style.animation = 'toast-out-omni 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards';
         setTimeout(() => toast.remove(), 350);
-    }, 3500);
+    }, 3600);
 }
 
-// Paleta de comandos modal (Ctrl+K)
-const paletteModal = document.getElementById('commandPaletteModal');
-const paletteSearchInput = document.getElementById('paletteSearchInput');
-const paletteResults = document.getElementById('paletteResults');
+// Paleta de comandos omni modal (Ctrl+K)
+const paletteModalEl = document.getElementById('commandPaletteModal');
+const paletteSearchInputEl = document.getElementById('paletteSearchInput');
+const paletteResultsEl = document.getElementById('paletteResults');
 
 document.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        paletteModal.classList.toggle('hidden');
-        if (!paletteModal.classList.contains('hidden')) {
-            paletteSearchInput.focus();
+        paletteModalEl.classList.toggle('hidden');
+        if (!paletteModalEl.classList.contains('hidden')) {
+            paletteSearchInputEl.focus();
         }
-    } else if (e.key === 'Escape' && !paletteModal.classList.contains('hidden')) {
-        paletteModal.classList.add('hidden');
+    } else if (e.key === 'Escape' && !paletteModalEl.classList.contains('hidden')) {
+        paletteModalEl.classList.add('hidden');
     }
 });
 
-paletteModal.addEventListener('click', (e) => {
-    if (e.target === paletteModal) paletteModal.classList.add('hidden');
+paletteModalEl.addEventListener('click', (e) => {
+    if (e.target === paletteModalEl) paletteModalEl.classList.add('hidden');
 });
 
-paletteResults.addEventListener('click', (e) => {
-    const item = e.target.closest('.palette-item');
-    if (item) {
-        const cmd = item.getAttribute('data-cmd');
-        paletteModal.classList.add('hidden');
+paletteResultsEl.addEventListener('click', (e) => {
+    const row = e.target.closest('.palette-row');
+    if (row) {
+        const cmd = row.getAttribute('data-cmd');
+        paletteModalEl.classList.add('hidden');
         const mainInput = document.getElementById('mainTerminal_input');
         if (mainInput) {
             mainInput.value = cmd;
             mainInput.focus();
-            // Simular Enter
             const event = new KeyboardEvent('keydown', { key: 'Enter' });
             mainInput.dispatchEvent(event);
         }
     }
 });
 
-paletteSearchInput.addEventListener('input', (e) => {
-    const q = e.target.value.toLowerCase();
-    const items = paletteResults.querySelectorAll('.palette-item');
-    items.forEach(item => {
-        const text = item.innerText.toLowerCase();
-        item.style.display = text.includes(q) ? 'flex' : 'none';
+paletteSearchInputEl.addEventListener('input', (e) => {
+    const query = e.target.value.toLowerCase();
+    const rows = paletteResultsEl.querySelectorAll('.palette-row');
+    rows.forEach(r => {
+        const txt = r.innerText.toLowerCase();
+        r.style.display = txt.includes(query) ? 'flex' : 'none';
     });
 });
 
 /* ========================================================================== */
-/* DOCK FLOTANTE EVENTOS                                                      */
+/* DOCK FLOTANTE OMNI EVENTOS                                                 */
 /* ========================================================================== */
 
-document.getElementById('dockBtnTerminal').addEventListener('click', () => spawnNewSubTerminal());
+document.getElementById('dockBtnTerminal').addEventListener('click', () => spawnNewOmniSubTerminal());
 document.getElementById('dockBtnPalette').addEventListener('click', () => {
-    paletteModal.classList.toggle('hidden');
-    if (!paletteModal.classList.contains('hidden')) paletteSearchInput.focus();
+    paletteModalEl.classList.toggle('hidden');
+    if (!paletteModalEl.classList.contains('hidden')) paletteSearchInputEl.focus();
 });
 document.getElementById('dockBtnAudio').addEventListener('click', () => {
     audioEnabled = !audioEnabled;
     showToast(`Efectos de sonido: ${audioEnabled ? 'Activados' : 'Silenciados'}`, 'success');
 });
 document.getElementById('dockBtnMatrix').addEventListener('click', () => {
-    matrixActive = !matrixActive;
-    showToast(`Lluvia Matrix: ${matrixActive ? 'Activa' : 'Pausada'}`, 'info');
+    matrixRainActive = !matrixRainActive;
+    showToast(`Lluvia Matrix: ${matrixRainActive ? 'Activa' : 'Pausada'}`, 'info');
 });
 document.getElementById('dockBtnGlitch').addEventListener('click', () => {
-    playGlitchSound();
+    playGlitchFXSound();
     document.querySelectorAll('.terminal-window').forEach(w => {
         w.classList.add('glitch-active');
         setTimeout(() => w.classList.remove('glitch-active'), 500);
     });
-    showToast("¡Anomalía global disparada!", "warning");
+    showToast("¡Anomalía global disparada en todo el sistema!", "warning");
 });
 document.getElementById('dockBtnTheme').addEventListener('click', () => {
-    const themes = ['', 'theme-cyan', 'theme-purple', 'theme-danger'];
+    const themes = ['theme-supreme', 'theme-cyan', 'theme-purple', 'theme-danger', 'theme-gold'];
     const currentThemeIndex = themes.findIndex(t => document.body.classList.contains(t));
     const nextTheme = themes[(currentThemeIndex + 1) % themes.length];
-    themes.forEach(t => { if(t) document.body.classList.remove(t); });
-    if (nextTheme) document.body.classList.add(nextTheme);
-    showToast(`Tema cambiado: ${nextTheme || 'Default'}`, 'success');
+    themes.forEach(t => document.body.classList.remove(t));
+    document.body.classList.add(nextTheme);
+    showToast(`Tema cambiado: ${nextTheme.toUpperCase()}`, 'success');
+});
+document.getElementById('dockBtnMax').addEventListener('click', () => {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+        showToast("Modo Inmersivo Completo Activado", "success");
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+            showToast("Modo Inmersivo Desactivado", "info");
+        }
+    }
 });
