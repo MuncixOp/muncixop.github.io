@@ -1,32 +1,91 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="quantum-root">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MUNCIX_OP // HYPER_VOID KERNEL v25.0-STABLE</title>
+    <title>MUNCIX_OS // HYPER_VOID SUPREME QUANTUM CORE v99.9</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&family=JetBrains+Mono:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
 </head>
-<body>
+<body class="quantum-body-locked">
 
-    <div class="scanlines"></div>
-    <div class="bg-grid"></div>
-    <canvas id="matrixCanvas"></canvas>
-    <div class="vignette-overlay"></div>
+    <!-- CUBOS DE CAPAS VISUALES HIPER-AVANZADAS -->
+    <div class="quantum-glitch-layer" aria-hidden="true"></div>
+    <div class="scanlines" aria-hidden="true"></div>
+    <div class="bg-grid" aria-hidden="true"></div>
+    <div class="vignette-overlay" aria-hidden="true"></div>
+    <div class="ambient-pulse" aria-hidden="true"></div>
+    <div class="light-leak" aria-hidden="true"></div>
+    <div class="noise-overlay" aria-hidden="true"></div>
+    <div class="chromatic-aberration-base" aria-hidden="true"></div>
+    
+    <!-- LIENZOS DE RENDERIZADO CUÁNTICO MULTI-CAPA -->
+    <canvas id="quantumMatrixCanvas" aria-hidden="true"></canvas>
+    <canvas id="particleFieldCanvas" aria-hidden="true"></canvas>
+    <canvas id="neuralMeshCanvas" aria-hidden="true"></canvas>
 
-    <div id="bootScreen">
-        <div class="boot-header-info">
-            <span>MUNCIX-BIOS UEFI v25.09.12-HYPER</span>
-            <span>ARCH: x86_64-QUANTUM-HYPERCORE-V2</span>
-            <span>STATUS: HARDWARE COLD BOOT ACTIVE</span>
+    <!-- PANTALLA DE BOOTEO SUPREMA CON LOGS EXPANDIDOS -->
+    <div id="bootScreen" class="boot-screen-active">
+        <div class="boot-matrix-rain-overlay"></div>
+        <div class="boot-inner-wrapper">
+            <div class="boot-header-info">
+                <span class="boot-tag">[MUNCIX-BIOS EXTREME UEFI v99.9.42-OMEGA]</span>
+                <span class="boot-tag">ARCH: x86_64-QUANTUM-HYPERCORE-V9 [SECURE_ENCLAVE]</span>
+                <span class="boot-tag">STATUS: COLD BOOT SEQUENCE ACTIVE</span>
+            </div>
+            <div class="boot-terminal-frame">
+                <div class="boot-log" id="bootLog">INITIALIZING HARDWARE ABSTRACTION LAYERS & QUANTUM MESH NEURAL SYNAPSE...</div>
+            </div>
+            <div class="boot-progress-wrapper">
+                <div class="boot-progress-meta">
+                    <span id="bootPercentText">0%</span>
+                    <span id="bootStatusText">LOADING KERNEL MODULES...</span>
+                </div>
+                <div class="boot-progress-container">
+                    <div class="boot-progress-bar" id="bootProgressBar"></div>
+                    <div class="boot-progress-glow"></div>
+                </div>
+            </div>
+            <div class="boot-footer-status" id="bootFooterStatus">CRITICAL: QUANTUM SYNCHRONIZATION AT 100%</div>
         </div>
-        <div class="boot-log" id="bootLog">INITIALIZING SYSTEM HARDWARE ABSTRACTION LAYERS...</div>
-        <div class="boot-progress-container">
-            <div class="boot-progress-bar" id="bootProgressBar"></div>
-        </div>
-        <div class="boot-footer-status" id="bootFooterStatus">LOADING KERNEL MODULES...</div>
     </div>
 
-    <div id="terminalContainer"></div>
+    <!-- CONTENEDOR PRINCIPAL DE VENTANAS MÚLTIPLES -->
+    <div id="terminalContainer" class="terminal-container-grid"></div>
+
+    <!-- SISTEMA DE NOTIFICACIONES TOAST FLOTANTES -->
+    <div id="toastNotificationContainer" class="toast-container"></div>
+
+    <!-- PALETA DE COMANDOS / QUICK LAUNCHER MODAL -->
+    <div id="commandPaletteModal" class="command-palette-overlay hidden">
+        <div class="command-palette-box">
+            <div class="palette-input-wrapper">
+                <span class="palette-search-icon">🔍</span>
+                <input type="text" id="paletteSearchInput" placeholder="Escribe un comando o aplicación cuántica..." autocomplete="off" spellcheck="false">
+            </div>
+            <div class="palette-results" id="paletteResults">
+                <div class="palette-item active" data-cmd="help"><span>help</span><span class="desc">Muestra todos los comandos disponibles</span></div>
+                <div class="palette-item" data-cmd="socials"><span>socials</span><span class="desc">Despliega redes oficiales descifradas</span></div>
+                <div class="palette-item" data-cmd="matrix"><span>matrix</span><span class="desc">Alterna efectos de lluvia digital</span></div>
+                <div class="palette-item" data-cmd="glitch"><span>glitch</span><span class="desc">Provoca anomalía cromática en vivo</span></div>
+                <div class="palette-item" data-cmd="window"><span>window</span><span class="desc">Abre una subterminal flotante nueva</span></div>
+                <div class="palette-item" data-cmd="sysinfo"><span>sysinfo</span><span class="desc">Reporte detallado del hardware cuántico</span></div>
+                <div class="palette-item" data-cmd="reboot"><span>reboot</span><span class="desc">Reinicia el núcleo del sistema operativo</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANEL DE HERRAMIENTAS Y CONTROL DE AUDIO/VISUALES -->
+    <div class="floating-dock" id="floatingDock">
+        <button class="dock-btn" id="dockBtnTerminal" title="Abrir Subterminal">💻</button>
+        <button class="dock-btn" id="dockBtnPalette" title="Paleta de Comandos (Ctrl+K)">⚡</button>
+        <button class="dock-btn" id="dockBtnAudio" title="Alternar Audio Sintetizador">🔊</button>
+        <button class="dock-btn" id="dockBtnMatrix" title="Alternar Lluvia Matrix">🌧️</button>
+        <button class="dock-btn" id="dockBtnGlitch" title="Generar Glitch Forzado">💥</button>
+        <button class="dock-btn" id="dockBtnTheme" title="Cambiar Tema Neón">🎨</button>
+    </div>
 
     <script src="main.js"></script>
 </body>
