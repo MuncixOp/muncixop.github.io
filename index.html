@@ -1,79 +1,121 @@
 <!DOCTYPE html>
-<html lang="es" class="omni-apex-root">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MUNCIX_OS // KERNEL v9999.0 [APEX SUPREME]</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MUNCIX_OP // APEX WORKSPACE</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Orbitron:wght@600;850;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 </head>
-<body class="apex-body-locked theme-amber">
+<body>
 
-    <div class="crt-scanline-matrix" aria-hidden="true"></div>
-    <div class="chromatic-aberration-field" aria-hidden="true"></div>
-    <div class="vignette-hardware" aria-hidden="true"></div>
-    <div class="noise-film-grain" aria-hidden="true"></div>
+    <canvas id="neuralCanvas"></canvas>
+    <div class="ambient-glow"></div>
 
-    <canvas id="vectorMatrixCanvas" aria-hidden="true"></canvas>
-    <canvas id="quantumGridCanvas" aria-hidden="true"></canvas>
-
-    <div id="bootSequenceOverlay" class="boot-overlay-hardware">
-        <div class="boot-container-box">
-            <div class="boot-header-meta">
-                <span>[MUNCIX APEX UEFI v9999.0]</span>
-                <span>CPU: 64-CORE HYPER-THREADED CLUSTER @ 16.8 GHz</span>
-                <span>SECURE ENCLAVE: ENCRYPTED (AES-256-GCM)</span>
+    <main class="dashboard-wrapper">
+        
+        <header class="glass-card profile-header">
+            <div class="profile-avatar-container">
+                <div class="avatar-ring"></div>
+                <div class="avatar-core">MO</div>
             </div>
-            <div class="boot-console-viewport" id="bootConsoleOutput">
-                [0.000000] Initializing APEX Core Subsystem...
+            <div class="profile-info">
+                <div class="badge-status"><span class="pulse-dot"></span> SISTEMA ACTIVO // 240 FPS</div>
+                <h1>Muncix_Op</h1>
+                <p>Creative Developer & UI Engineer. Especialista en Roblox Studio (Jujutsu Shenanigans), Modelado 3D en Blockbench y Sistemas Web de Alto Rendimiento.</p>
             </div>
-            <div class="boot-progress-wrap">
-                <div class="boot-progress-labels">
-                    <span id="bootPercentIndicator">0.0%</span>
-                    <span id="bootStatusIndicator">SYNCING KERNEL BUS...</span>
+            <div class="header-actions">
+                <button class="action-pill glow-btn" id="btnQuickLaunch"><span>⚡ Acciones Rápidas</span></button>
+            </div>
+        </header>
+
+        <div class="bento-grid">
+            
+            <section class="glass-card bento-box stats-box">
+                <h3><span class="icon">📊</span> Rendimiento del Núcleo</h3>
+                <div class="metric-row">
+                    <span>CPU Cluster (64 Cores)</span>
+                    <span id="cpuUsageVal" class="val">14.2%</span>
                 </div>
-                <div class="boot-track-bar">
-                    <div class="boot-fill-bar" id="bootProgressBarFill"></div>
+                <div class="progress-track"><div id="cpuBar" class="progress-fill" style="width: 14%;"></div></div>
+
+                <div class="metric-row">
+                    <span>Memoria RAM (ECC)</span>
+                    <span id="ramUsageVal" class="val">42.8 GB / 128 GB</span>
                 </div>
+                <div class="progress-track"><div id="ramBar" class="progress-fill" style="width: 33%;"></div></div>
+
+                <div class="metric-row">
+                    <span>Latencia de Enlace</span>
+                    <span class="val success">0.02 ms</span>
+                </div>
+            </section>
+
+            <section class="glass-card bento-box projects-box">
+                <h3><span class="icon">🚀</span> Proyectos Destacados</h3>
+                <div class="project-list">
+                    <div class="project-item">
+                        <div class="proj-icon">⚔️</div>
+                        <div class="proj-details">
+                            <h4>Jujutsu Shenanigans Scripting</h4>
+                            <p>Sistemas avanzados de combate y mecánicas personalizadas en Roblox.</p>
+                        </div>
+                    </div>
+                    <div class="project-item">
+                        <div class="proj-icon">🧊</div>
+                        <div class="proj-details">
+                            <h4>Blockbench 3D Asset Pipeline</h4>
+                            <p>Modelado y rigging de alta fidelidad optimizado para motores gráficos.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="glass-card bento-box socials-box">
+                <h3><span class="icon">🌐</span> Canales Oficiales</h3>
+                <div class="social-grid">
+                    <a href="https://tiktok.com/@muncixop" target="_blank" class="social-chip">
+                        <span>TikTok</span>
+                        <span class="handle">@muncixop</span>
+                    </a>
+                    <a href="https://twitter.com" target="_blank" class="social-chip">
+                        <span>X / Twitter</span>
+                        <span class="handle">@MuncixOp</span>
+                    </a>
+                    <a href="https://curseforge.com" target="_blank" class="social-chip">
+                        <span>CurseForge</span>
+                        <span class="handle">muncixop</span>
+                    </a>
+                </div>
+            </section>
+
+        </div>
+
+    </main>
+
+    <div id="commandModal" class="modal-backdrop hidden">
+        <div class="modal-card glass-card">
+            <div class="modal-header">
+                <h3>Centro de Control Apex</h3>
+                <button class="close-modal" id="btnCloseModal">✕</button>
+            </div>
+            <div class="modal-body">
+                <button class="command-option" data-action="theme">
+                    <span>🎨 Alternar Tema Visual (Cyber Amber / Neon / Silver)</span>
+                </button>
+                <button class="command-option" data-action="glitch">
+                    <span>💥 Provocar Perturbación Visual de Hardware</span>
+                </button>
+                <button class="command-option" data-action="fullscreen">
+                    <span>🌌 Conmutar Pantalla Completa Inmersiva</span>
+                </button>
             </div>
         </div>
     </div>
 
-    <div id="windowManagerContainer" class="wm-container"></div>
-
-    <div id="apexToastStack" class="toast-stack-hardware"></div>
-
-    <div id="apexCommandPalette" class="palette-backdrop hidden">
-        <div class="palette-box">
-            <div class="palette-input-row">
-                <span class="palette-symbol">&gt;</span>
-                <input type="text" id="paletteSearchBox" placeholder="Escribe un comando del sistema o aplicación..." autocomplete="off" spellcheck="false">
-                <span class="palette-kbd">ESC</span>
-            </div>
-            <div class="palette-results-list" id="paletteResultsList">
-                <div class="palette-item active" data-cmd="help"><span>help</span><span class="desc">Lista todos los comandos del sistema operativo</span></div>
-                <div class="palette-item" data-cmd="matrix"><span>matrix</span><span class="desc">Alterna el flujo vectorial de códigos binarios</span></div>
-                <div class="palette-item" data-cmd="glitch"><span>glitch</span><span class="desc">Fuerza una fluctuación electromagnética local</span></div>
-                <div class="palette-item" data-cmd="window"><span>window</span><span class="desc">Genera una nueva instancia de terminal flotante</span></div>
-                <div class="palette-item" data-cmd="theme"><span>theme</span><span class="desc">Alterna esquemas de color de hardware real</span></div>
-                <div class="palette-item" data-cmd="sysinfo"><span>sysinfo</span><span class="desc">Reporte detallado de buses, memoria y latencias</span></div>
-                <div class="palette-item" data-cmd="audio"><span>audio</span><span class="desc">Conmuta los relés acústicos de retroalimentación</span></div>
-                <div class="palette-item" data-cmd="reboot"><span>reboot</span><span class="desc">Reinicializa el sistema operativo en frío</span></div>
-            </div>
-        </div>
-    </div>
-
-    <nav class="apex-dock-bar" id="apexDock">
-        <button class="dock-action-btn" id="dockBtnTerminal" title="Abrir Nueva Terminal (Ventana)">💻</button>
-        <button class="dock-action-btn" id="dockBtnPalette" title="Buscador Rápido de Comandos (Ctrl+K)">⚡</button>
-        <button class="dock-action-btn" id="dockBtnMatrix" title="Alternar Flujo Vectorial">🌧️</button>
-        <button class="dock-action-btn" id="dockBtnGlitch" title="Generar Perturbación EM">💥</button>
-        <button class="dock-action-btn" id="dockBtnTheme" title="Rotar Paleta de Hardware">🎨</button>
-        <button class="dock-action-btn" id="dockBtnAudio" title="Conmutar Relés Acústicos">🔊</button>
-        <button class="dock-action-btn" id="dockBtnMax" title="Modo Pantalla Completa Inmersiva">🌌</button>
-    </nav>
+    <div id="toastContainer" class="toast-container"></div>
 
     <script src="main.js"></script>
 </body>
