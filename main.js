@@ -1,125 +1,160 @@
+/* ========================================================================== */
+/* MUNCIX_OS // HYPER_VOID SUPREME QUANTUM CORE v99.9 - JAVASCRIPT ENGINE      */
+/* ========================================================================== */
+
 let audioCtx = null;
+let audioEnabled = true;
 
 function initAudio() {
-    if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (!audioCtx && audioEnabled) {
+        try {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        } catch(e) {}
     }
 }
 
-// Sonido de tecleo ultra sutil y suave
 function playKeySound() {
+    if (!audioEnabled) return;
     try {
         initAudio();
+        if (!audioCtx) return;
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(320, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.005, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.015);
+        osc.frequency.setValueAtTime(380, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.003, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.02);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
         osc.start();
-        osc.stop(audioCtx.currentTime + 0.015);
+        osc.stop(audioCtx.currentTime + 0.02);
     } catch(e) {}
 }
 
 function playEnterSound() {
+    if (!audioEnabled) return;
     try {
         initAudio();
+        if (!audioCtx) return;
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = 'triangle';
-        osc.frequency.setValueAtTime(440, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(220, audioCtx.currentTime + 0.04);
-        gain.gain.setValueAtTime(0.01, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.04);
+        osc.frequency.setValueAtTime(540, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(270, audioCtx.currentTime + 0.05);
+        gain.gain.setValueAtTime(0.007, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.05);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
         osc.start();
-        osc.stop(audioCtx.currentTime + 0.04);
+        osc.stop(audioCtx.currentTime + 0.05);
     } catch(e) {}
 }
 
-// Sonido de glitch más armónico, profundo y menos estridente
 function playGlitchSound() {
+    if (!audioEnabled) return;
     try {
         initAudio();
+        if (!audioCtx) return;
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(180, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(90, audioCtx.currentTime + 0.15);
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(240, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(70, audioCtx.currentTime + 0.2);
         gain.gain.setValueAtTime(0.012, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.2);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.22);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
         osc.start();
-        osc.stop(audioCtx.currentTime + 0.2);
+        osc.stop(audioCtx.currentTime + 0.22);
     } catch(e) {}
 }
 
-// Secuencia de booteo limpia
-const voidBootLogs = [
-    { text: "[BIOS] Initializing UEFI Subsystem & Quantum ACPI Core...", status: "Loading ACPI..." },
-    { text: "[CPU] Core #0 - #16 detected @ 9.8 GHz [HYPERCORE ARCHITECTURE]", status: "Checking clocks..." },
-    { text: "[MEM] Initializing 262144MB ECC RAM -> 0x00000 - 0xFFFFF [OK]", status: "Validating memory..." },
-    { text: "[PCI] High-speed PCIe Gen 5 lanes mapped. Secure bus active.", status: "Mounting storage..." },
-    { text: "[KERNEL] Uncompressing HYPER_VOID_KERNEL v25.0 into Ring 0...", status: "Injecting kernel..." },
-    { text: "[READY] All systems nominal. Launching interface...", status: "BOOT SEQUENCE COMPLETE." }
+/* ========================================================================== */
+/* SECUENCIA DE BOOTEO SUPREMA EXPANDIDA                                      */
+/* ========================================================================== */
+
+const supremeBootLogs = [
+    { text: "[BIOS] Initializing Quantum UEFI Subsystem & Mesh ACPI v9.4...", status: "Loading Quantum ACPI..." },
+    { text: "[CPU] Core #0 - #64 detected @ 14.8 GHz [HYPERQUANTUM SUPREME ARCHITECTURE]", status: "Checking quantum clocks..." },
+    { text: "[MEM] Initializing 2097152MB ECC Quantum RAM -> 0x00000 - 0xFFFFFF [OK]", status: "Validating memory mesh..." },
+    { text: "[PCI] High-speed PCIe Gen 7 lanes mapped. Secure quantum bus active.", status: "Mounting core storage..." },
+    { text: "[GPU] Neural Matrix Ray-Tracing Pipeline online. 120 FPS target locked.", status: "Calibrating shaders..." },
+    { text: "[NET] Quantum entanglement communication bridge established across nodes.", status: "Securing network socket..." },
+    { text: "[SECURITY] Zero-trust kernel enclave verified. Cryptographic hash matched.", status: "Verifying checksums..." },
+    { text: "[KERNEL] Uncompressing MUNCIX_HYPER_VOID_SUPREME_KERNEL v99.9 into Ring 0...", status: "Injecting secure kernel..." },
+    { text: "[READY] Quantum core stability 100%. Launching supreme visual interface...", status: "BOOT SEQUENCE COMPLETE." }
 ];
 
 const bootLogEl = document.getElementById('bootLog');
 const bootProgressBar = document.getElementById('bootProgressBar');
+const bootStatusText = document.getElementById('bootStatusText');
+const bootPercentText = document.getElementById('bootPercentText');
 const bootFooterStatus = document.getElementById('bootFooterStatus');
 const bootScreen = document.getElementById('bootScreen');
 let bootIdx = 0;
 
-function runVoidBoot() {
-    if (bootIdx < voidBootLogs.length) {
-        const log = voidBootLogs[bootIdx];
+function runSupremeBoot() {
+    if (bootIdx < supremeBootLogs.length) {
+        const log = supremeBootLogs[bootIdx];
         bootLogEl.innerText += "\n" + log.text;
+        bootStatusText.innerText = log.status;
         bootFooterStatus.innerText = "STATUS: " + log.status;
         
-        const pct = Math.round(((bootIdx + 1) / voidBootLogs.length) * 100);
+        const pct = Math.round(((bootIdx + 1) / supremeBootLogs.length) * 100);
         bootProgressBar.style.width = pct + '%';
+        bootPercentText.innerText = pct + '%';
 
         bootIdx++;
-        setTimeout(runVoidBoot, 120);
+        setTimeout(runSupremeBoot, 90);
     } else {
         setTimeout(() => {
             bootScreen.style.opacity = '0';
+            bootScreen.style.transform = 'scale(1.06)';
             setTimeout(() => {
                 bootScreen.remove();
-                initMatrixRain();
-                createTerminalWindow('mainTerminal', 'MUNCIX_OS // HYPER_VOID [ONLINE]', '202', true, true);
-            }, 350);
-        }, 200);
+                initQuantumVisuals();
+                createTerminalWindow('mainTerminal', 'MUNCIX_OS // SUPREME_QUANTUM_CORE [ONLINE]', '1337', true, true);
+                showToast("¡Núcleo Cuántico V99.9 inicializado con éxito absoluto!", "success");
+            }, 700);
+        }, 350);
     }
 }
 
 window.addEventListener('load', () => {
-    setTimeout(runVoidBoot, 150);
+    setTimeout(runSupremeBoot, 100);
 });
 
-// Sistema de archivos virtual
+/* ========================================================================== */
+/* SISTEMA DE ARCHIVOS VIRTUAL EXPANDIDO                                      */
+/* ========================================================================== */
+
 const virtualFileSystem = {
-    "/": { type: "dir", contents: ["home", "sys", "bin", "readme.txt", "system.conf"] },
+    "/": { type: "dir", contents: ["home", "sys", "bin", "readme.txt", "system.conf", "quantum.dat", "supreme.log"] },
     "/home": { type: "dir", contents: ["muncix_op", "developer", "guest"] },
-    "/home/muncix_op": { type: "dir", contents: ["bio.txt", "secrets.dat", "socials.log"] },
-    "/home/developer": { type: "dir", contents: ["roblox_jjs_yuta.lua", "blockbench_model.json"] },
+    "/home/muncix_op": { type: "dir", contents: ["bio.txt", "secrets.dat", "socials.log", "projects.md"] },
+    "/home/developer": { type: "dir", contents: ["roblox_jjs_yuta.lua", "blockbench_model.json", "desmos_synth.js", "quantum_core.cpp"] },
     "/home/guest": { type: "dir", contents: ["welcome_guest.txt"] },
-    "/sys": { type: "dir", contents: ["kernel_info", "memory_map"] },
-    "/bin": { type: "dir", contents: ["help", "ls", "cd", "cat", "clear", "window", "ping", "nmap", "socials", "sysinfo", "date", "whoami", "reboot"] },
-    "/readme.txt": { type: "file", content: "MUNCIX_OS v25.0 HYPER_VOID. Versión estable optimizada para una experiencia fluida y segura." },
-    "/system.conf": { type: "file", content: "CORE_ENGINE=HYPER_VOID\nDEBUG_MODE=FALSE\nSAFETY_MODE=ENABLED\nGLITCH_INTENSITY=CALM" },
-    "/home/muncix_op/bio.txt": { type: "file", content: "Desarrollador: Muncix_Op\nÁreas: Roblox Studio (Jujutsu Shenanigans), Blockbench 3D, Desmos." },
+    "/sys": { type: "dir", contents: ["kernel_info", "quantum_mesh", "memory_map", "neural_net"] },
+    "/bin": { type: "dir", contents: ["help", "ls", "cd", "cat", "clear", "window", "ping", "nmap", "socials", "sysinfo", "date", "whoami", "matrix", "glitch", "theme", "reboot"] },
+    "/readme.txt": { type: "file", content: "MUNCIX_OS v99.9 SUPREME QUANTUM CORE. Miles de líneas de código optimizadas para máxima perfección visual, fluidez y animaciones de alta fidelidad." },
+    "/system.conf": { type: "file", content: "CORE_ENGINE=QUANTUM_HYPER_VOID_SUPREME\nDEBUG_MODE=FALSE\nSAFETY_MODE=ENABLED\nANIMATION_ENGINE=ULTRA_FLUID_120FPS\nTHEME=NEON_GREEN" },
+    "/quantum.dat": { type: "file", content: "QUANTUM_SIGNATURE: 0xFF9988AAB277 // SECURE SUPREME MESH HASH VERIFIED." },
+    "/supreme.log": { type: "file", content: "[LOG] All subroutines operational. Zero latency pipeline confirmed." },
+    "/home/muncix_op/bio.txt": { type: "file", content: "Desarrollador Principal: Muncix_Op\nEspecialidades: Roblox Studio (Jujutsu Shenanigans), Modelado 3D Blockbench de Escritorio, Desmos Audio & Gráficos." },
     "/home/muncix_op/socials.log": { type: "file", content: "TikTok: @muncixop\nX / Twitter: @MuncixOp\nCurseForge: muncixop" },
-    "/home/developer/roblox_jjs_yuta.lua": { type: "file", content: "-- Jujutsu Shenanigans: Custom Yuta Okkotsu moveset script" },
-    "/home/developer/blockbench_model.json": { type: "file", content: "{\"model_name\": \"Muncix_CyberWeapon\", \"format_version\": \"1.10\"}" },
-    "/home/guest/welcome_guest.txt": { type: "file", content: "Hola invitado. Escribe 'help' para ver la lista de comandos disponibles." }
+    "/home/muncix_op/projects.md": { type: "file", content: "# Proyectos Destacados\n- JJS Skill Builder Custom Movesets\n- Blockbench Advanced 3D Assets\n- Tyler, The Creator Audio Synthesis in Desmos" },
+    "/home/developer/roblox_jjs_yuta.lua": { type: "file", content: "-- Jujutsu Shenanigans: Custom Yuta Okkotsu advanced moveset script v9 (Optimized)" },
+    "/home/developer/blockbench_model.json": { type: "file", content: "{\"model_name\": \"Muncix_QuantumBlade_Supreme\", \"format_version\": \"1.12\", \"software\": \"Blockbench Desktop\"}" },
+    "/home/developer/desmos_synth.js": { type: "file", content: "// Desmos audio synthesis mapping for Tyler, The Creator - Are We Still Friends? [Full Math Equiv]" },
+    "/home/developer/quantum_core.cpp": { type: "file", content: "#include <quantum>\nint main() { quantum::initialize_supreme_void(); return 0; }" },
+    "/home/guest/welcome_guest.txt": { type: "file", content: "Bienvenido al núcleo cuántico supremo. Escribe 'help' o abre la paleta con Ctrl+K." }
 };
 
 const terminalStateSessions = {};
+
+/* ========================================================================== */
+/* GESTIÓN DE VENTANAS Y COMPORTAMIENTO                                      */
+/* ========================================================================== */
 
 function setupWindowBehaviors(winEl, headerEl, closeBtn, minBtn, maxBtn, isMainTerminal) {
     let isDragging = false;
@@ -153,22 +188,19 @@ function setupWindowBehaviors(winEl, headerEl, closeBtn, minBtn, maxBtn, isMainT
     }
     function onMouseUp() { isDragging = false; document.removeEventListener('mousemove', onMouseMove); document.removeEventListener('mouseup', onMouseUp); }
 
-    // Cierre protegido con glitch estético y calmado
     closeBtn.addEventListener('click', () => {
         if (isMainTerminal) {
             playGlitchSound();
             winEl.classList.add('glitch-active');
-            
             const outputEl = winEl.querySelector('[id$="_output"]');
-            if (outputEl) {
-                appendLine(outputEl, "[~] KERNEL WATCHDOG: El proceso principal permanece protegido de forma segura.", "warning");
-            }
-
-            setTimeout(() => {
-                winEl.classList.remove('glitch-active');
-            }, 350);
+            if (outputEl) appendLine(outputEl, "[~] WATCHDOG QUANTUM: El núcleo principal está protegido contra cierre forzoso.", "warning");
+            showToast("El núcleo principal está protegido.", "warning");
+            setTimeout(() => winEl.classList.remove('glitch-active'), 500);
         } else {
-            winEl.remove();
+            winEl.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease';
+            winEl.style.transform = 'scale(0.85) translateY(25px)';
+            winEl.style.opacity = '0';
+            setTimeout(() => winEl.remove(), 300);
         }
     });
 
@@ -191,7 +223,7 @@ function setupWindowBehaviors(winEl, headerEl, closeBtn, minBtn, maxBtn, isMainT
     winEl.addEventListener('mousedown', () => bringToFront(winEl));
 }
 
-let topZ = 15;
+let topZ = 20;
 function bringToFront(winEl) {
     topZ++;
     winEl.style.zIndex = topZ;
@@ -203,9 +235,7 @@ function setupTerminalInterface(inputEl, outputContainerEl, bodyEl, winId) {
 
     terminalStateSessions[winId] = { cwd: "/", authStep: 0 };
 
-    inputEl.addEventListener('input', () => {
-        playKeySound();
-    });
+    inputEl.addEventListener('input', () => playKeySound());
 
     inputEl.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
@@ -223,7 +253,7 @@ function setupTerminalInterface(inputEl, outputContainerEl, bodyEl, winId) {
                 return;
             }
 
-            appendLine(outputContainerEl, `<span style="color: var(--danger-neon);">muncix@void:${session.cwd}#</span> ${escapeHtml(val)}`, '');
+            appendLine(outputContainerEl, `<span style="color: var(--cyan-neon);">muncix@quantum:${session.cwd}#</span> ${escapeHtml(val)}`, '');
             processCommand(val, outputContainerEl, bodyEl, winId, session);
             inputEl.value = '';
         } else if (e.key === 'ArrowUp') {
@@ -248,22 +278,22 @@ function setupTerminalInterface(inputEl, outputContainerEl, bodyEl, winId) {
 }
 
 function handleAuthFlow(val, outContainer, session) {
-    appendLine(outContainer, `<span style="color: var(--cyan-neon);">auth@void:~#</span> ${escapeHtml(val || '[BYPASS]')}`, '');
+    appendLine(outContainer, `<span style="color: var(--purple-neon);">auth@quantum:~#</span> ${escapeHtml(val || '[BYPASS]')}`, '');
 
     if (session.authStep === 1) {
         session.authStep = 2;
-        appendLine(outContainer, "[+] FASE 1: Token verificado con éxito.", "success");
-        appendLine(outContainer, "[?] FASE 2/2: Escriba 'CONFIRMAR' para revelar las redes oficiales de Muncix_Op:", "warning");
+        appendLine(outContainer, "[+] FASE 1: Token de seguridad cuántica validado con éxito.", "success");
+        appendLine(outContainer, "[?] FASE 2/2: Escribe 'CONFIRMAR' para descifrar los enlaces oficiales de Muncix_Op:", "warning");
     } else if (session.authStep === 2) {
         session.authStep = 0;
-        appendLine(outContainer, "[✔] ACCESO CONCEDIDO: Canales seguros descifrados.", "success");
+        appendLine(outContainer, "[✔] ACCESO SUPREMO CONCEDIDO: Canales oficiales descifrados.", "success");
         appendLine(outContainer, `
             <div class="social-card">
-                <span>TikTok (@muncixop)</span>
+                <span>TikTok Oficial (@muncixop)</span>
                 <span class="action-link" onclick="window.open('https://www.tiktok.com/@muncixop', '_blank')">[ABRIR]</span>
             </div>
             <div class="social-card">
-                <span>X / Twitter (@MuncixOp)</span>
+                <span>X / Twitter Oficial (@MuncixOp)</span>
                 <span class="action-link" onclick="window.open('https://x.com/MuncixOp', '_blank')">[ABRIR]</span>
             </div>
             <div class="social-card">
@@ -271,6 +301,7 @@ function handleAuthFlow(val, outContainer, session) {
                 <span class="action-link" onclick="window.open('https://www.curseforge.com/members/muncixop/projects', '_blank')">[ABRIR]</span>
             </div>
         `, '');
+        showToast("¡Redes oficiales descifradas correctamente!", "success");
     }
 }
 
@@ -287,35 +318,83 @@ function escapeHtml(text) {
     return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-const canvas = document.getElementById('matrixCanvas');
-const ctx = canvas.getContext('2d');
+/* ========================================================================== */
+/* LIENZOS GRÁFICOS AVANZADOS (MATRIX, PARTÍCULAS, RED NEURONAL)            */
+/* ========================================================================== */
 
-function initMatrixRain() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    const chars = '0123456789ABCDEF';
+let matrixActive = true;
+
+function initQuantumVisuals() {
+    // 1. Matrix Rain
+    const matrixCanvas = document.getElementById('quantumMatrixCanvas');
+    const mCtx = matrixCanvas.getContext('2d');
+    matrixCanvas.width = window.innerWidth;
+    matrixCanvas.height = window.innerHeight;
+    const chars = '0123456789ABCDEF@#$_-MUNCIX';
     const fontSize = 14;
-    const columns = canvas.width / fontSize;
+    const columns = matrixCanvas.width / fontSize;
     const drops = Array(Math.floor(columns)).fill(1);
 
     setInterval(() => {
-        ctx.fillStyle = 'rgba(0, 1, 2, 0.2)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = 'rgba(0, 255, 102, 0.35)';
-        ctx.font = fontSize + 'px monospace';
+        if (!matrixActive) return;
+        mCtx.fillStyle = 'rgba(0, 1, 2, 0.16)';
+        mCtx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
+        mCtx.fillStyle = 'rgba(0, 255, 255, 0.45)';
+        mCtx.font = fontSize + 'px monospace';
         for (let i = 0; i < drops.length; i++) {
             const char = chars.charAt(Math.floor(Math.random() * chars.length));
-            ctx.fillText(char, i * fontSize, drops[i] * fontSize);
-            if (drops[i] * fontSize > canvas.height && Math.random() > 0.98) drops[i] = 0;
+            mCtx.fillText(char, i * fontSize, drops[i] * fontSize);
+            if (drops[i] * fontSize > matrixCanvas.height && Math.random() > 0.97) drops[i] = 0;
             drops[i]++;
         }
-    }, 40);
+    }, 32);
+
+    // 2. Partículas Cuánticas Flotantes
+    const pCanvas = document.getElementById('particleFieldCanvas');
+    const pCtx = pCanvas.getContext('2d');
+    pCanvas.width = window.innerWidth;
+    pCanvas.height = window.innerHeight;
+    
+    const particles = Array.from({ length: 65 }, () => ({
+        x: Math.random() * pCanvas.width,
+        y: Math.random() * pCanvas.height,
+        vx: (Math.random() - 0.5) * 0.8,
+        vy: (Math.random() - 0.5) * 0.8,
+        radius: Math.random() * 2 + 1,
+        alpha: Math.random() * 0.5 + 0.2
+    }));
+
+    function renderParticles() {
+        pCtx.clearRect(0, 0, pCanvas.width, pCanvas.height);
+        pCtx.fillStyle = 'rgba(0, 255, 102, 0.6)';
+        particles.forEach(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+            if (p.x < 0) p.x = pCanvas.width;
+            if (p.x > pCanvas.width) p.x = 0;
+            if (p.y < 0) p.y = pCanvas.height;
+            if (p.y > pCanvas.height) p.y = 0;
+
+            pCtx.beginPath();
+            pCtx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+            pCtx.fillStyle = `rgba(0, 255, 255, ${p.alpha})`;
+            pCtx.fill();
+        });
+        requestAnimationFrame(renderParticles);
+    }
+    renderParticles();
 
     window.addEventListener('resize', () => {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        matrixCanvas.width = window.innerWidth;
+        matrixCanvas.height = window.innerHeight;
+        pCanvas.width = window.innerWidth;
+        pCanvas.height = window.innerHeight;
     });
 }
+
+/* ========================================================================== */
+/* PROCESADOR DE COMANDOS DEL SISTEMA                                         */
+/* ========================================================================== */
 
 function processCommand(rawCmd, outContainer, bodyEl, winId, session) {
     const parts = rawCmd.trim().split(' ');
@@ -324,18 +403,21 @@ function processCommand(rawCmd, outContainer, bodyEl, winId, session) {
 
     switch(cmd) {
         case 'help':
-            appendLine(outContainer, `Comandos disponibles en MUNCIX_OS:
-  ls           - Lista los archivos del directorio actual
+            appendLine(outContainer, `Comandos supremos disponibles en MUNCIX_OS v99.9:
+  ls           - Lista los archivos del directorio virtual actual
   cd <dir>     - Cambia de directorio virtual
-  cat <file>   - Visualiza el contenido de un archivo
-  ping <host>  - Simula envío de paquetes ICMP
-  sysinfo      - Información detallada del sistema
-  whoami       - Muestra el usuario activo
-  date         - Muestra la marca temporal
-  socials      - Muestra las redes oficiales de Muncix_Op
-  clear        - Limpia la pantalla
-  window       - Abre una subterminal adicional
-  reboot       - Reinicia el sistema`, 'system');
+  cat <file>   - Visualiza el contenido detallado de un archivo
+  ping <host>  - Simula envío de paquetes cuánticos ICMP de alta velocidad
+  sysinfo      - Reporte profundo del núcleo y hardware cuántico
+  whoami       - Muestra el usuario activo con privilegios de raíz
+  date         - Muestra la marca temporal del núcleo cuántico
+  socials      - Muestra y descifra las redes oficiales de Muncix_Op
+  matrix       - Alterna la lluvia de código digital en pantalla
+  glitch       - Genera una anomalía cromática y glitch de interfaz
+  theme        - Cambia la paleta de colores neón del sistema
+  clear        - Limpia la pantalla de la terminal
+  window       - Abre una subterminal cuántica adicional flotante
+  reboot       - Reinicia el núcleo del sistema operativo`, 'system');
             break;
 
         case 'ls':
@@ -343,7 +425,7 @@ function processCommand(rawCmd, outContainer, bodyEl, winId, session) {
             if (currentDir && currentDir.contents) {
                 appendLine(outContainer, currentDir.contents.join('   '), 'success');
             } else {
-                appendLine(outContainer, "Error: directorio no válido.", "error");
+                appendLine(outContainer, "Error: directorio no válido en la malla.", "error");
             }
             break;
 
@@ -365,7 +447,7 @@ function processCommand(rawCmd, outContainer, bodyEl, winId, session) {
                 }
             }
             const promptEl = bodyEl.closest('.terminal-window').querySelector('.prompt');
-            if (promptEl) promptEl.innerText = `muncix@void:${session.cwd}#`;
+            if (promptEl) promptEl.innerText = `muncix@quantum:${session.cwd}#`;
             break;
 
         case 'cat':
@@ -377,32 +459,57 @@ function processCommand(rawCmd, outContainer, bodyEl, winId, session) {
             if (virtualFileSystem[filePath] && virtualFileSystem[filePath].type === 'file') {
                 appendLine(outContainer, virtualFileSystem[filePath].content, 'system');
             } else {
-                appendLine(outContainer, `cat: ${arg}: No se encuentra el archivo`, 'error');
+                appendLine(outContainer, `cat: ${arg}: Archivo no encontrado en el sistema`, 'error');
             }
             break;
 
         case 'ping':
-            const targetHost = arg || 'void.hyper.node';
+            const targetHost = arg || 'quantum.void.supreme.node';
             appendLine(outContainer, `PING ${targetHost} (127.0.0.1) 56 bytes of data.`, 'system');
             let pings = 0;
             const pingInterval = setInterval(() => {
                 pings++;
-                const time = (Math.random() * 2 + 0.5).toFixed(2);
+                const time = (Math.random() * 0.9 + 0.1).toFixed(2);
                 appendLine(outContainer, `64 bytes from ${targetHost}: icmp_seq=${pings} time=${time} ms`, 'success');
                 if (pings >= 4) clearInterval(pingInterval);
-            }, 350);
+            }, 250);
             break;
 
         case 'sysinfo':
-            appendLine(outContainer, `OS: MUNCIX_OS v25.0 | Kernel: Linux Quantum | Arch: x86_64 | Status: Stable`, 'system');
+            appendLine(outContainer, `OS: MUNCIX_OS v99.9 SUPREME QUANTUM | Kernel: HyperVoid-X9 | Arch: x86_64-Q | Latency: 0.1ms`, 'system');
             break;
 
         case 'whoami':
-            appendLine(outContainer, `muncix_op (UID: 0 [ROOT])`, 'success');
+            appendLine(outContainer, `muncix_op (UID: 0 [QUANTUM_SUPREME_ROOT])`, 'success');
             break;
 
         case 'date':
-            appendLine(outContainer, `Wed Sep 2 07:53:45 UTC 2026`, 'system');
+            appendLine(outContainer, `Fri Sep 4 10:02:14 UTC 2026 [QUANTUM_SYNC_OK]`, 'system');
+            break;
+
+        case 'matrix':
+            matrixActive = !matrixActive;
+            appendLine(outContainer, `Lluvia Matrix state: ${matrixActive ? 'ENABLED' : 'DISABLED'}`, 'success');
+            showToast(`Lluvia Matrix: ${matrixActive ? 'Activa' : 'Pausada'}`, 'info');
+            break;
+
+        case 'glitch':
+            playGlitchSound();
+            const win = bodyEl.closest('.terminal-window');
+            win.classList.add('glitch-active');
+            setTimeout(() => win.classList.remove('glitch-active'), 500);
+            appendLine(outContainer, "[!] Anomalía cuántica provocada con éxito.", "warning");
+            showToast("¡Glitch visual forzado!", "warning");
+            break;
+
+        case 'theme':
+            const themes = ['', 'theme-cyan', 'theme-purple', 'theme-danger'];
+            const currentThemeIndex = themes.findIndex(t => document.body.classList.contains(t));
+            const nextTheme = themes[(currentThemeIndex + 1) % themes.length];
+            themes.forEach(t => { if(t) document.body.classList.remove(t); });
+            if (nextTheme) document.body.classList.add(nextTheme);
+            appendLine(outContainer, `Tema visual actualizado: ${nextTheme || 'NEON_GREEN_DEFAULT'}`, 'success');
+            showToast(`Tema cambiado: ${nextTheme || 'Default'}`, 'success');
             break;
 
         case 'clear':
@@ -411,18 +518,20 @@ function processCommand(rawCmd, outContainer, bodyEl, winId, session) {
 
         case 'window':
             spawnNewSubTerminal();
-            appendLine(outContainer, "Nueva subterminal abierta.", "success");
+            appendLine(outContainer, "Nueva subterminal cuántica flotante abierta.", "success");
+            showToast("Subterminal abierta", "success");
             break;
 
         case 'socials':
             session.authStep = 1;
-            appendLine(outContainer, "[!] VERIFICACIÓN DE SEGURIDAD: Para acceder al canal seguro,", "warning");
-            appendLine(outContainer, "[?] Ingrese cualquier valor o presione ENTER para continuar:", "warning");
+            appendLine(outContainer, "[!] VERIFICACIÓN DE SEGURIDAD CUÁNTICA SUPREMA:", "warning");
+            appendLine(outContainer, "[?] Escribe cualquier valor o presiona ENTER para continuar:", "warning");
             break;
 
         case 'reboot':
-            appendLine(outContainer, "Reiniciando sistema...", "error");
-            setTimeout(() => location.reload(), 800);
+            appendLine(outContainer, "Reiniciando núcleo cuántico supremo...", "error");
+            showToast("Reiniciando sistema...", "error");
+            setTimeout(() => location.reload(), 900);
             break;
 
         case '':
@@ -438,9 +547,9 @@ let subCount = 0;
 function spawnNewSubTerminal() {
     subCount++;
     const winId = 'subWin_' + subCount;
-    const offX = (subCount * 30) % 180;
-    const offY = (subCount * 30) % 100;
-    createTerminalWindow(winId, `SUB_SHELL #${subCount}`, `${980 + subCount}`, `top: calc(12vh + ${offY}px); left: calc(15vw + ${offX}px);`, false);
+    const offX = (subCount * 40) % 220;
+    const offY = (subCount * 40) % 130;
+    createTerminalWindow(winId, `QUANTUM_SHELL #${subCount}`, `${990 + subCount}`, `top: calc(8vh + ${offY}px); left: calc(10vw + ${offX}px);`, false);
 }
 
 function createTerminalWindow(winId, title, pid, customStyle, isMainTerminal = false) {
@@ -464,21 +573,21 @@ function createTerminalWindow(winId, title, pid, customStyle, isMainTerminal = f
         </div>
 
         <div class="terminal-body" id="${winId}_body">
-            <div class="output-line system">MUNCIX_KERNEL [Versión 25.0 STABLE]</div>
-            <div class="output-line system corrupted-text">Escribe 'help' para ver los comandos disponibles.</div>
-            <div class="output-line" style="margin-bottom: 8px;">----------------------------------------------------------------</div>
+            <div class="output-line system">MUNCIX_SUPREME_QUANTUM_KERNEL [Versión 99.9 STABLE]</div>
+            <div class="output-line system corrupted-text">Escribe 'help' para explorar el sistema o usa Ctrl+K.</div>
+            <div class="output-line" style="margin-bottom: 10px;">--------------------------------------------------------------------------------</div>
             
             <div id="${winId}_output"></div>
 
             <div class="input-line">
-                <span class="prompt">muncix@void:/#</span>
+                <span class="prompt">muncix@quantum:/#</span>
                 <input type="text" id="${winId}_input" class="command-input" autocomplete="off" spellcheck="false">
             </div>
         </div>
 
         <div class="terminal-footer-hint">
-            <span>SYSTEM STATUS: STABLE / NOMINAL</span>
-            <span>UTF-8</span>
+            <span>QUANTUM STATUS: 100% OPTIMAL / SECURE</span>
+            <span>UTF-8 // 120 FPS</span>
         </div>
     `;
 
@@ -502,3 +611,106 @@ function createTerminalWindow(winId, title, pid, customStyle, isMainTerminal = f
 
     document.getElementById(`${winId}_input`).focus();
 }
+
+/* ========================================================================== */
+/* SISTEMA DE TOASTS Y PALETA DE COMANDOS (MODAL)                             */
+/* ========================================================================== */
+
+function showToast(message, type = 'info') {
+    const container = document.getElementById('toastNotificationContainer');
+    const toast = document.createElement('div');
+    toast.className = 'toast-item';
+    
+    let icon = '⚡';
+    if (type === 'success') icon = '✔';
+    if (type === 'warning') icon = '⚠';
+    if (type === 'error') icon = '✖';
+
+    toast.innerHTML = `<span>${icon}</span><span>${escapeHtml(message)}</span>`;
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.animation = 'toast-out 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards';
+        setTimeout(() => toast.remove(), 350);
+    }, 3500);
+}
+
+// Paleta de comandos modal (Ctrl+K)
+const paletteModal = document.getElementById('commandPaletteModal');
+const paletteSearchInput = document.getElementById('paletteSearchInput');
+const paletteResults = document.getElementById('paletteResults');
+
+document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        paletteModal.classList.toggle('hidden');
+        if (!paletteModal.classList.contains('hidden')) {
+            paletteSearchInput.focus();
+        }
+    } else if (e.key === 'Escape' && !paletteModal.classList.contains('hidden')) {
+        paletteModal.classList.add('hidden');
+    }
+});
+
+paletteModal.addEventListener('click', (e) => {
+    if (e.target === paletteModal) paletteModal.classList.add('hidden');
+});
+
+paletteResults.addEventListener('click', (e) => {
+    const item = e.target.closest('.palette-item');
+    if (item) {
+        const cmd = item.getAttribute('data-cmd');
+        paletteModal.classList.add('hidden');
+        const mainInput = document.getElementById('mainTerminal_input');
+        if (mainInput) {
+            mainInput.value = cmd;
+            mainInput.focus();
+            // Simular Enter
+            const event = new KeyboardEvent('keydown', { key: 'Enter' });
+            mainInput.dispatchEvent(event);
+        }
+    }
+});
+
+paletteSearchInput.addEventListener('input', (e) => {
+    const q = e.target.value.toLowerCase();
+    const items = paletteResults.querySelectorAll('.palette-item');
+    items.forEach(item => {
+        const text = item.innerText.toLowerCase();
+        item.style.display = text.includes(q) ? 'flex' : 'none';
+    });
+});
+
+/* ========================================================================== */
+/* DOCK FLOTANTE EVENTOS                                                      */
+/* ========================================================================== */
+
+document.getElementById('dockBtnTerminal').addEventListener('click', () => spawnNewSubTerminal());
+document.getElementById('dockBtnPalette').addEventListener('click', () => {
+    paletteModal.classList.toggle('hidden');
+    if (!paletteModal.classList.contains('hidden')) paletteSearchInput.focus();
+});
+document.getElementById('dockBtnAudio').addEventListener('click', () => {
+    audioEnabled = !audioEnabled;
+    showToast(`Efectos de sonido: ${audioEnabled ? 'Activados' : 'Silenciados'}`, 'success');
+});
+document.getElementById('dockBtnMatrix').addEventListener('click', () => {
+    matrixActive = !matrixActive;
+    showToast(`Lluvia Matrix: ${matrixActive ? 'Activa' : 'Pausada'}`, 'info');
+});
+document.getElementById('dockBtnGlitch').addEventListener('click', () => {
+    playGlitchSound();
+    document.querySelectorAll('.terminal-window').forEach(w => {
+        w.classList.add('glitch-active');
+        setTimeout(() => w.classList.remove('glitch-active'), 500);
+    });
+    showToast("¡Anomalía global disparada!", "warning");
+});
+document.getElementById('dockBtnTheme').addEventListener('click', () => {
+    const themes = ['', 'theme-cyan', 'theme-purple', 'theme-danger'];
+    const currentThemeIndex = themes.findIndex(t => document.body.classList.contains(t));
+    const nextTheme = themes[(currentThemeIndex + 1) % themes.length];
+    themes.forEach(t => { if(t) document.body.classList.remove(t); });
+    if (nextTheme) document.body.classList.add(nextTheme);
+    showToast(`Tema cambiado: ${nextTheme || 'Default'}`, 'success');
+});
