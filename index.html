@@ -1,90 +1,79 @@
 <!DOCTYPE html>
-<html lang="es" class="quantum-hyper-root">
+<html lang="es" class="omni-apex-root">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MUNCIX_OS // OMNI-QUANTUM SUPREME NEXUS v999.9 [ULTIMATE]</title>
+    <title>MUNCIX_OS // KERNEL v9999.0 [APEX SUPREME]</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&family=JetBrains+Mono:ital,wght@0,300..800;1,300..800&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Orbitron:wght@600;850;900&display=swap" rel="stylesheet">
 </head>
-<body class="quantum-body-locked theme-supreme">
+<body class="apex-body-locked theme-amber">
 
-    <div class="quantum-glitch-overlay" aria-hidden="true"></div>
-    <div class="scanlines-omni" aria-hidden="true"></div>
-    <div class="bg-matrix-grid" aria-hidden="true"></div>
-    <div class="vignette-cinematic" aria-hidden="true"></div>
-    <div class="core-pulsar-ambient" aria-hidden="true"></div>
-    <div class="hyper-light-leak" aria-hidden="true"></div>
-    <div class="quantum-noise-texture" aria-hidden="true"></div>
-    <div class="chromatic-aberration-layer" aria-hidden="true"></div>
-    <div class="omni-lens-flare" aria-hidden="true"></div>
+    <div class="crt-scanline-matrix" aria-hidden="true"></div>
+    <div class="chromatic-aberration-field" aria-hidden="true"></div>
+    <div class="vignette-hardware" aria-hidden="true"></div>
+    <div class="noise-film-grain" aria-hidden="true"></div>
 
-    <canvas id="quantumMatrixCanvas" aria-hidden="true"></canvas>
-    <canvas id="particleFieldCanvas" aria-hidden="true"></canvas>
-    <canvas id="neuralMeshCanvas" aria-hidden="true"></canvas>
-    <canvas id="raytracerCanvas" aria-hidden="true"></canvas>
+    <canvas id="vectorMatrixCanvas" aria-hidden="true"></canvas>
+    <canvas id="quantumGridCanvas" aria-hidden="true"></canvas>
 
-    <div id="bootScreen" class="boot-screen-omni">
-        <div class="boot-radial-gradient"></div>
-        <div class="boot-inner-card">
-            <div class="boot-top-meta">
-                <span class="boot-badge">[MUNCIX-BIOS UEFI v999.9.0-OMNI]</span>
-                <span class="boot-badge">ARCH: x86_64-QUANTUM-HYPERVOID [SECURE ENCLAVE ACTIVE]</span>
-                <span class="boot-badge">STATUS: HARDWARE COLD-BOOT SEQUENCE</span>
+    <div id="bootSequenceOverlay" class="boot-overlay-hardware">
+        <div class="boot-container-box">
+            <div class="boot-header-meta">
+                <span>[MUNCIX APEX UEFI v9999.0]</span>
+                <span>CPU: 64-CORE HYPER-THREADED CLUSTER @ 16.8 GHz</span>
+                <span>SECURE ENCLAVE: ENCRYPTED (AES-256-GCM)</span>
             </div>
-            <div class="boot-terminal-box">
-                <div class="boot-log-content" id="bootLog">INITIALIZING QUANTUM MESH NEURAL SYNAPSE & ZERO-LATENCY KERNEL PIPELINES...</div>
+            <div class="boot-console-viewport" id="bootConsoleOutput">
+                [0.000000] Initializing APEX Core Subsystem...
             </div>
-            <div class="boot-progress-area">
+            <div class="boot-progress-wrap">
                 <div class="boot-progress-labels">
-                    <span id="bootPercentText">0.0%</span>
-                    <span id="bootStatusText">CALIBRATING QUANTUM CLOCKS...</span>
+                    <span id="bootPercentIndicator">0.0%</span>
+                    <span id="bootStatusIndicator">SYNCING KERNEL BUS...</span>
                 </div>
-                <div class="boot-bar-track">
-                    <div class="boot-bar-fill" id="bootProgressBar"></div>
-                    <div class="boot-bar-glow"></div>
+                <div class="boot-track-bar">
+                    <div class="boot-fill-bar" id="bootProgressBarFill"></div>
                 </div>
-            </div>
-            <div class="boot-bottom-status" id="bootFooterStatus">CRITICAL: MESH ENTANGLEMENT STABILITY 100%</div>
-        </div>
-    </div>
-
-    <div id="terminalContainer" class="terminal-container-omni"></div>
-
-    <div id="toastNotificationContainer" class="toast-stack"></div>
-
-    <div id="commandPaletteModal" class="command-palette-wrapper hidden">
-        <div class="command-palette-card">
-            <div class="palette-search-row">
-                <span class="palette-icon">⚡</span>
-                <input type="text" id="paletteSearchInput" placeholder="Escribe un comando supremo o aplicación cuántica..." autocomplete="off" spellcheck="false">
-                <span class="palette-shortcut-badge">ESC para cerrar</span>
-            </div>
-            <div class="palette-list" id="paletteResults">
-                <div class="palette-row active" data-cmd="help"><span>help</span><span class="desc">Despliega todos los comandos del núcleo supremo</span></div>
-                <div class="palette-row" data-cmd="socials"><span>socials</span><span class="desc">Descifra los enlaces oficiales de Muncix_Op</span></div>
-                <div class="palette-row" data-cmd="matrix"><span>matrix</span><span class="desc">Alterna la lluvia de código digital en vivo</span></div>
-                <div class="palette-row" data-cmd="glitch"><span>glitch</span><span class="desc">Provoca anomalía cromática global en el sistema</span></div>
-                <div class="palette-row" data-cmd="window"><span>window</span><span class="desc">Abre una subterminal flotante independiente</span></div>
-                <div class="palette-row" data-cmd="sysinfo"><span>sysinfo</span><span class="desc">Reporte detallado de hardware cuántico y memoria</span></div>
-                <div class="palette-row" data-cmd="audio"><span>audio</span><span class="desc">Alterna el sintetizador de sonido interactivo</span></div>
-                <div class="palette-row" data-cmd="theme"><span>theme</span><span class="desc">Cambia la paleta de colores del ecosistema neón</span></div>
-                <div class="palette-row" data-cmd="reboot"><span>reboot</span><span class="desc">Reinicia por completo el núcleo operativo</span></div>
             </div>
         </div>
     </div>
 
-    <div class="floating-dock-omni" id="floatingDock">
-        <button class="omni-dock-btn" id="dockBtnTerminal" title="Abrir Nueva Subterminal (Ventana)">💻</button>
-        <button class="omni-dock-btn" id="dockBtnPalette" title="Paleta de Comandos Suprema (Ctrl+K)">⚡</button>
-        <button class="omni-dock-btn" id="dockBtnAudio" title="Sintetizador de Audio Interactivo">🔊</button>
-        <button class="omni-dock-btn" id="dockBtnMatrix" title="Alternar Lluvia Matrix WebGL">🌧️</button>
-        <button class="omni-dock-btn" id="dockBtnGlitch" title="Generar Anomalía / Glitch Global">💥</button>
-        <button class="omni-dock-btn" id="dockBtnTheme" title="Rotar Tema Neón Dinámico">🎨</button>
-        <button class="omni-dock-btn" id="dockBtnMax" title="Modo Pantalla Completa Inmersiva">🌌</button>
+    <div id="windowManagerContainer" class="wm-container"></div>
+
+    <div id="apexToastStack" class="toast-stack-hardware"></div>
+
+    <div id="apexCommandPalette" class="palette-backdrop hidden">
+        <div class="palette-box">
+            <div class="palette-input-row">
+                <span class="palette-symbol">&gt;</span>
+                <input type="text" id="paletteSearchBox" placeholder="Escribe un comando del sistema o aplicación..." autocomplete="off" spellcheck="false">
+                <span class="palette-kbd">ESC</span>
+            </div>
+            <div class="palette-results-list" id="paletteResultsList">
+                <div class="palette-item active" data-cmd="help"><span>help</span><span class="desc">Lista todos los comandos del sistema operativo</span></div>
+                <div class="palette-item" data-cmd="matrix"><span>matrix</span><span class="desc">Alterna el flujo vectorial de códigos binarios</span></div>
+                <div class="palette-item" data-cmd="glitch"><span>glitch</span><span class="desc">Fuerza una fluctuación electromagnética local</span></div>
+                <div class="palette-item" data-cmd="window"><span>window</span><span class="desc">Genera una nueva instancia de terminal flotante</span></div>
+                <div class="palette-item" data-cmd="theme"><span>theme</span><span class="desc">Alterna esquemas de color de hardware real</span></div>
+                <div class="palette-item" data-cmd="sysinfo"><span>sysinfo</span><span class="desc">Reporte detallado de buses, memoria y latencias</span></div>
+                <div class="palette-item" data-cmd="audio"><span>audio</span><span class="desc">Conmuta los relés acústicos de retroalimentación</span></div>
+                <div class="palette-item" data-cmd="reboot"><span>reboot</span><span class="desc">Reinicializa el sistema operativo en frío</span></div>
+            </div>
+        </div>
     </div>
+
+    <nav class="apex-dock-bar" id="apexDock">
+        <button class="dock-action-btn" id="dockBtnTerminal" title="Abrir Nueva Terminal (Ventana)">💻</button>
+        <button class="dock-action-btn" id="dockBtnPalette" title="Buscador Rápido de Comandos (Ctrl+K)">⚡</button>
+        <button class="dock-action-btn" id="dockBtnMatrix" title="Alternar Flujo Vectorial">🌧️</button>
+        <button class="dock-action-btn" id="dockBtnGlitch" title="Generar Perturbación EM">💥</button>
+        <button class="dock-action-btn" id="dockBtnTheme" title="Rotar Paleta de Hardware">🎨</button>
+        <button class="dock-action-btn" id="dockBtnAudio" title="Conmutar Relés Acústicos">🔊</button>
+        <button class="dock-action-btn" id="dockBtnMax" title="Modo Pantalla Completa Inmersiva">🌌</button>
+    </nav>
 
     <script src="main.js"></script>
 </body>
