@@ -1,122 +1,23 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MUNCIX_OP // APEX WORKSPACE</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#060606">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="VOID">
+<meta name="description" content="MuncixOp — Creative Developer & UI Engineer. Terminal interactiva.">
+<meta name="format-detection" content="telephone=no">
+<title>~/muncixop — VOID SYSTEMS</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-    <canvas id="neuralCanvas"></canvas>
-    <div class="ambient-glow"></div>
-
-    <main class="dashboard-wrapper">
-        
-        <header class="glass-card profile-header">
-            <div class="profile-avatar-container">
-                <div class="avatar-ring"></div>
-                <div class="avatar-core">MO</div>
-            </div>
-            <div class="profile-info">
-                <div class="badge-status"><span class="pulse-dot"></span> SISTEMA ACTIVO // 240 FPS</div>
-                <h1>Muncix_Op</h1>
-                <p>Creative Developer & UI Engineer. Especialista en Roblox Studio (Jujutsu Shenanigans), Modelado 3D en Blockbench y Sistemas Web de Alto Rendimiento.</p>
-            </div>
-            <div class="header-actions">
-                <button class="action-pill glow-btn" id="btnQuickLaunch"><span>⚡ Acciones Rápidas</span></button>
-            </div>
-        </header>
-
-        <div class="bento-grid">
-            
-            <section class="glass-card bento-box stats-box">
-                <h3><span class="icon">📊</span> Rendimiento del Núcleo</h3>
-                <div class="metric-row">
-                    <span>CPU Cluster (64 Cores)</span>
-                    <span id="cpuUsageVal" class="val">14.2%</span>
-                </div>
-                <div class="progress-track"><div id="cpuBar" class="progress-fill" style="width: 14%;"></div></div>
-
-                <div class="metric-row">
-                    <span>Memoria RAM (ECC)</span>
-                    <span id="ramUsageVal" class="val">42.8 GB / 128 GB</span>
-                </div>
-                <div class="progress-track"><div id="ramBar" class="progress-fill" style="width: 33%;"></div></div>
-
-                <div class="metric-row">
-                    <span>Latencia de Enlace</span>
-                    <span class="val success">0.02 ms</span>
-                </div>
-            </section>
-
-            <section class="glass-card bento-box projects-box">
-                <h3><span class="icon">🚀</span> Proyectos Destacados</h3>
-                <div class="project-list">
-                    <div class="project-item">
-                        <div class="proj-icon">⚔️</div>
-                        <div class="proj-details">
-                            <h4>Jujutsu Shenanigans Scripting</h4>
-                            <p>Sistemas avanzados de combate y mecánicas personalizadas en Roblox.</p>
-                        </div>
-                    </div>
-                    <div class="project-item">
-                        <div class="proj-icon">🧊</div>
-                        <div class="proj-details">
-                            <h4>Blockbench 3D Asset Pipeline</h4>
-                            <p>Modelado y rigging de alta fidelidad optimizado para motores gráficos.</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section class="glass-card bento-box socials-box">
-                <h3><span class="icon">🌐</span> Canales Oficiales</h3>
-                <div class="social-grid">
-                    <a href="https://tiktok.com/@muncixop" target="_blank" class="social-chip">
-                        <span>TikTok</span>
-                        <span class="handle">@muncixop</span>
-                    </a>
-                    <a href="https://twitter.com" target="_blank" class="social-chip">
-                        <span>X / Twitter</span>
-                        <span class="handle">@MuncixOp</span>
-                    </a>
-                    <a href="https://curseforge.com" target="_blank" class="social-chip">
-                        <span>CurseForge</span>
-                        <span class="handle">muncixop</span>
-                    </a>
-                </div>
-            </section>
-
-        </div>
-
-    </main>
-
-    <div id="commandModal" class="modal-backdrop hidden">
-        <div class="modal-card glass-card">
-            <div class="modal-header">
-                <h3>Centro de Control Apex</h3>
-                <button class="close-modal" id="btnCloseModal">✕</button>
-            </div>
-            <div class="modal-body">
-                <button class="command-option" data-action="theme">
-                    <span>🎨 Alternar Tema Visual (Cyber Amber / Neon / Silver)</span>
-                </button>
-                <button class="command-option" data-action="glitch">
-                    <span>💥 Provocar Perturbación Visual de Hardware</span>
-                </button>
-                <button class="command-option" data-action="fullscreen">
-                    <span>🌌 Conmutar Pantalla Completa Inmersiva</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <div id="toastContainer" class="toast-container"></div>
-
-    <script src="main.js"></script>
+<canvas id="c" aria-hidden="true"></canvas>
+<div id="wins" role="application" aria-label="Terminal workspace"></div>
+<div id="dock" class="dock" aria-label="Ventanas minimizadas"></div>
+<input id="ki" type="text" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" aria-hidden="true">
+<script src="main.js"></script>
 </body>
 </html>
