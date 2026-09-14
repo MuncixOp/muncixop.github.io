@@ -11,10 +11,25 @@ body{
 #c{position:fixed;inset:0;opacity:.05;z-index:0;pointer-events:none;will-change:opacity}
 #wins{position:fixed;inset:0;z-index:1;-webkit-overflow-scrolling:touch}
 
+/* === HIDDEN INPUT (para móvil) === */
 #ki{
-  position:fixed;bottom:0;left:0;width:2px;height:2px;
+  position:fixed;bottom:0;left:0;width:1px;height:1px;
   opacity:0;border:none;outline:none;background:transparent;
-  z-index:9999;pointer-events:none;font-size:16px;
+  z-index:-1;pointer-events:none;font-size:16px;
+  caret-color:transparent;
+  -webkit-user-select:text;user-select:text;
+}
+
+/* === CURSOR VISUAL (para teclado físico) === */
+.fake-caret{
+  display:inline-block;width:.6em;height:1.05em;
+  background:#3ddc84;vertical-align:text-bottom;
+  margin-left:2px;
+  box-shadow:0 0 8px #3ddc8480,0 0 16px #3ddc8440;
+  animation:curBlink 1s step-end infinite;
+}
+@keyframes curBlink{
+  0%,100%{opacity:1}40%{opacity:1}50%{opacity:0}55%{opacity:0}60%{opacity:1}
 }
 
 /* === WINDOW === */
@@ -87,6 +102,7 @@ body{
   -webkit-overflow-scrolling:touch;
   background:#141416;
   scrollbar-width:thin;scrollbar-color:#333 transparent;
+  caret-color:transparent;
 }
 .win-body::-webkit-scrollbar{width:5px}
 .win-body::-webkit-scrollbar-track{background:transparent}
@@ -113,6 +129,7 @@ body{
 .out.accent{color:#3ddc84;font-weight:600;letter-spacing:.05em}
 .out.h1{color:#fff;font-size:clamp(13px,1.5vw,16px);font-weight:700;letter-spacing:.08em}
 .out.spacer{height:.6em}
+.out.mono-dim{color:#5a5a5f;font-size:.95em}
 
 /* === INPUT LINE === */
 .input-line{
@@ -122,7 +139,7 @@ body{
 }
 .input-line .pr{color:#3ddc84;flex-shrink:0;font-weight:600}
 .input-line .pr .path{color:#5eaaff}
-.input-line .typed{color:#fff;transition:color .05s,text-shadow .05s;word-break:break-all}
+.input-line .typed{color:#fff;word-break:break-all;white-space:pre-wrap}
 .input-line .typed.glitch-flash{
   color:#0ff;
   text-shadow:0 0 8px #0ff,0 0 16px #0ff80,0 0 24px #0ff40;
@@ -135,12 +152,9 @@ body{
 }
 .input-line .cur{
   display:inline-block;
-  color:#3ddc84;margin-left:2px;font-weight:700;
+  color:#3ddc84;margin-left:1px;font-weight:700;
   animation:curBlink 1s step-end infinite,curGlow 2s ease-in-out infinite;
   text-shadow:0 0 8px #3ddc8480,0 0 16px #3ddc8440;
-}
-@keyframes curBlink{
-  0%,100%{opacity:1}40%{opacity:1}50%{opacity:0}55%{opacity:0}60%{opacity:1}
 }
 @keyframes curGlow{
   0%,100%{text-shadow:0 0 6px #3ddc8460,0 0 12px #3ddc8430}
@@ -411,3 +425,56 @@ body.mx-hit{animation:bodyHit .35s cubic-bezier(.25,.46,.45,.94)}
 }
 ::selection{background:#3ddc8430;color:#fff}
 :focus-visible{outline:2px solid #5eaaff;outline-offset:2px;border-radius:4px}
+
+/* ============================================================
+   === SISTEMA DE DESBLOQUEO / BRUTEFORCE / TOKEN ===
+   ============================================================ */
+
+/* Ventana especial de bruteforce */
+.brute-panel{
+  font-family:inherit;
+  display:flex;flex-direction:column;gap:12px;
+}
+
+.brute-header{
+  color:#ff453a;font-weight:700;letter-spacing:.08em;
+  font-size:clamp(11px,1.3vw,13px);
+  display:flex;align-items:center;gap:8px;
+  border-bottom:1px dashed #ff453a40;padding-bottom:8px;
+}
+.brute-header .lock{animation:lockPulse 1.2s ease-in-out infinite}
+@keyframes lockPulse{
+  0%,100%{opacity:1;transform:scale(1)}
+  50%{opacity:.4;transform:scale(1.15)}
+}
+
+.brute-target{
+  background:#0c0c0e;border:1px solid #ffffff10;
+  border-radius:6px;padding:10px 14px;
+  color:#5eaaff;font-size:clamp(10px,1.15vw,12.5px);
+  letter-spacing:.03em;word-break:break-all;
+  line-height:1.5;
+}
+.brute-target .label{color:#48484c}
+.brute-target .val{color:#5eaaff;text-shadow:0 0 8px #5eaaff40}
+
+/* Display de intentos */
+.brute-display{
+  background:#0c0c0e;border:1px solid #ffffff10;
+  border-radius:6px;padding:12px 14px;
+  font-size:clamp(10px,1.15vw,12.5px);
+  color:#888;line-height:1.7;
+  min-height:120px;max-height:180px;overflow-y:auto;
+  scrollbar-width:thin;scrollbar-color:#222 transparent;
+}
+.brute-display::-webkit-scrollbar{width:4px}
+.brute-display::-webkit-scrollbar-thumb{background:#222;border-radius:4px}
+.brute-line{white-space:pre-wrap;word-break:break-all}
+.brute-line .hash{color:#48484c}
+.brute-line .attempt{color:#ffcc00}
+.brute-line .fail{color:#666}
+.brute-line .success{color:#3ddc84;text-shadow:0 0 10px #3ddc8460;font-weight:700}
+
+/* Barra de progreso */
+.brute-progress{
+  height:6px;background:#0c0c0e;border-radius:
