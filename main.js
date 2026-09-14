@@ -1,7 +1,7 @@
 /* ============================================================
-   VOID SYSTEMS v5.1 — Terminal / OS Simulator
+   VOID SYSTEMS v6.0 — Terminal / OS Simulator
    Author: MuncixOp
-   FIX: input con renderizado inmediato sin conflicto
+   FIX: wobbly windows + prompt guardian + input inmediato
    ============================================================ */
 
 /* ---------- OS DETECTION ---------- */
@@ -313,11 +313,6 @@ function playImpact() {
     g.gain.exponentialRampToValueAtTime(.001, t + .4);
     o.connect(g); g.connect(a.destination);
     o.start(t); o.stop(t + .4);
-    const n = a.createBufferSource(), ng = a.createGain();
-    n.buffer = noiseBuf(a, .15);
-    ng.gain.setValueAtTime(.08, t);
-    ng.gain.exponentialRampToValueAtTime(.001, t + .15);
-    n.connect(ng); ng.connect(a.destination); n.start(t); n.stop(t + .15);
   } catch (e) {}
 }
 function playPowerUp() {
@@ -531,40 +526,115 @@ function updateLauncher() {
   launcher.classList.toggle('on', shouldShow);
 }
 
+/* ============================================================
+   DRAG CON WOBBLY WINDOWS (efecto gelatina tipo Compiz)
+   ============================================================ */
 function makeDraggable(win, handle) {
   let sx, sy, ox, oy, dragging = false;
+  let lastX = 0, lastY = 0, lastTime = 0;
+  let velX = 0, velY = 0;
+
+  const applyWobble = (vx, vy) => {
+    const maxV = 2.4;
+    const sx2 = Math.max(-maxV, Math.min(maxV, vx));
+    const sy2 = Math.max(-maxV, Math.min(maxV, vy));
+
+    // Cap mínimo — si es muy pequeña, no aplicar para evitar "temblor"
+    if (Math.abs(sx2) < .05 && Math.abs(sy2) < .05) {
+      win.style.transform = '';
+      return;
+    }
+
+    const scaleX = 1 + Math.abs(sx2) * 0.04;
+    const scaleY = 1 + Math.abs(sy2) * 0.04;
+    const skewX = -sy2 * 1.4;
+    const skewY = sx2 * 1.4;
+    const translateX = sx2 * 3;
+    const translateY = sy2 * 3;
+
+    win.style.transform =
+      `translate3d(${translateX}px, ${translateY}px, 0) ` +
+      `scale(${scaleX}, ${scaleY}) ` +
+      `skew(${skewX}deg, ${skewY}deg) ` +
+      `rotate(${sx2 * 0.3}deg)`;
+  };
+
+  const releaseWobble = () => {
+    win.classList.remove('dragging');
+    win.classList.add('releasing');
+    win.style.transform = 'scale(1.02, 0.98) skew(0, 0) rotate(0.3deg)';
+    setTimeout(() => {
+      win.style.transform = 'scale(0.99, 1.01) skew(0, 0) rotate(-0.2deg)';
+    }, 150);
+    setTimeout(() => {
+      win.style.transform = 'scale(1.005, 0.995) skew(0, 0)';
+    }, 320);
+    setTimeout(() => {
+      win.style.transform = '';
+      win.classList.remove('releasing');
+    }, 800);
+  };
+
   const start = (e) => {
     if (win.classList.contains('maximized')) return;
     if (e.target.closest('.btn')) return;
     const p = e.touches ? e.touches[0] : e;
-    sx = p.clientX; sy = p.clientY; ox = win.offsetLeft; oy = win.offsetTop;
-    dragging = true; win.classList.add('dragging'); win.style.zIndex = ++zIndex;
+    sx = p.clientX; sy = p.clientY;
+    ox = win.offsetLeft; oy = win.offsetTop;
+    lastX = p.clientX; lastY = p.clientY;
+    lastTime = performance.now();
+    velX = 0; velY = 0;
+    dragging = true;
+    win.classList.add('dragging');
+    win.classList.remove('releasing');
+    win.style.zIndex = ++zIndex;
+
     document.addEventListener('mousemove', move);
     document.addEventListener('touchmove', move, { passive: false });
     document.addEventListener('mouseup', end);
     document.addEventListener('touchend', end);
   };
+
   const move = (e) => {
     if (!dragging) return;
     if (e.cancelable) e.preventDefault();
     const p = e.touches ? e.touches[0] : e;
+
+    const now = performance.now();
+    const dt = Math.max(1, now - lastTime);
+    const dx = p.clientX - lastX;
+    const dy = p.clientY - lastY;
+    velX = velX * 0.6 + (dx / dt * 16) * 0.4;
+    velY = velY * 0.6 + (dy / dt * 16) * 0.4;
+
+    lastX = p.clientX;
+    lastY = p.clientY;
+    lastTime = now;
+
     let nx = ox + (p.clientX - sx);
     let ny = oy + (p.clientY - sy);
     nx = Math.max(-win.offsetWidth + 80, Math.min(nx, window.innerWidth - 80));
     ny = Math.max(0, Math.min(ny, window.innerHeight - 40));
     win.style.left = nx + 'px';
     win.style.top = ny + 'px';
+
+    applyWobble(velX, velY);
   };
+
   const end = () => {
-    dragging = false; win.classList.remove('dragging');
+    if (!dragging) return;
+    dragging = false;
+    releaseWobble();
     document.removeEventListener('mousemove', move);
     document.removeEventListener('touchmove', move);
     document.removeEventListener('mouseup', end);
     document.removeEventListener('touchend', end);
   };
+
   handle.addEventListener('mousedown', start);
   handle.addEventListener('touchstart', start, { passive: false });
 }
+
 function makeResizable(win, handle) {
   let sx, sy, ow, oh, resizing = false;
   const start = (e) => {
@@ -927,7 +997,7 @@ const COMMANDS = {
         ['cowsay <texto>', 'vaca que dice cosas'],
         ['fortune', 'frase aleatoria'],
         ['weather [ciudad]', 'clima simulado'],
-        ['crypto [symbol]', 'precios de cripto simulados'],
+        ['crypto [symbol]', 'precios de cripto'],
         ['dice [caras]', 'tira los dados'],
         ['8ball <pregunta>', 'bola magica'],
         ['random', 'dato aleatorio'],
@@ -947,17 +1017,17 @@ const COMMANDS = {
         ['achievements', 'logros desbloqueados'],
         ['fastfetch', 'info del sistema (con ojo)'],
         ['neofetch', 'alias de fastfetch'],
-        ['list', 'muestra tokens ya desbloqueados'],
+        ['list', 'muestra tokens desbloqueados'],
         ['whoami', 'quien eres'],
         ['date', 'fecha y hora actual'],
         ['clear', 'limpia la pantalla'],
-        ['matrix', 'activa/desactiva fondo Matrix'],
+        ['matrix', 'toggle fondo Matrix'],
         ['glitch', 'efecto glitch'],
         ['os <mac|win|linux|android|ios>', 'cambia el tema de SO'],
-        ['sound', 'activa/desactiva audio'],
+        ['sound', 'toggle audio'],
         ['reset', 'borra tokens guardados'],
         ['reboot', 'reinicia la terminal'],
-        ['void', 'abre una nueva terminal'],
+        ['void', 'abre nueva terminal'],
         ['close', 'cierra la terminal'],
         ['sudo', 'prueba suerte'],
         ['banner', 'muestra el banner'],
@@ -1158,10 +1228,10 @@ const COMMANDS = {
       printLine(body, '  ' + '-'.repeat(30), 'dim');
 
       const info = [
-        ['OS',       'VOID SYSTEMS v5.1'],
+        ['OS',       'VOID SYSTEMS v6.0'],
         ['Host',     'muncixop.github.io'],
         ['Kernel',   'glitch-6.6.6-x64'],
-        ['Shell',    'voidsh 5.1'],
+        ['Shell',    'voidsh 6.0'],
         ['Uptime',   uptime + 's'],
         ['CPU',      'Void Core (64) @ 3.20GHz'],
         ['GPU',      'Phantom Renderer'],
@@ -1170,7 +1240,6 @@ const COMMANDS = {
         ['Theme',    (document.body.className.match(/theme-\w+/)?.[0] || 'glitch-cyberpunk').replace('theme-', '')],
         ['Links',    unlocked + '/' + total + ' desbloqueados'],
         ['User',     achievements.first_unlock ? 'hacker' : 'guest'],
-        ['Mode',     document.body.classList.contains('cyberpunk') ? 'CYBERPUNK' : 'normal'],
       ];
 
       info.forEach(([k, v]) => {
@@ -1300,8 +1369,8 @@ const COMMANDS = {
       }
       printLine(body, '');
       printLine(body, `--- ${escapeHTML(host)} ping statistics ---`, 'dim');
-      printLine(body, `${n} packets transmitted, ${n} received, 0% packet loss, time ${(n * 800)}ms`, 'dim');
-      printLine(body, `rtt min/avg/max/mdev = ${min.toFixed(1)}/${(sum / n).toFixed(1)}/${max.toFixed(1)}/${(Math.random() * 5 + 1).toFixed(1)} ms`, 'info');
+      printLine(body, `${n} packets transmitted, ${n} received, 0% packet loss`, 'dim');
+      printLine(body, `rtt min/avg/max = ${min.toFixed(1)}/${(sum / n).toFixed(1)}/${max.toFixed(1)} ms`, 'info');
       unlockAch('pinger', 'Ping Master');
     }
   },
@@ -1349,7 +1418,7 @@ const COMMANDS = {
       printLine(body, `date: ${new Date().toUTCString()}`, '');
       printLine(body, 'cache-control: max-age=600', '');
       printLine(body, 'content-length: ' + (Math.floor(Math.random() * 50000) + 1000), '');
-      printLine(body, 'x-github-request-id: ' + randomHex(8) + ':' + randomHex(8) + ':' + randomHex(8) + ':' + randomHex(4), 'dim');
+      printLine(body, 'x-github-request-id: ' + randomHex(8) + ':' + randomHex(8), 'dim');
       printLine(body, '');
       printLine(body, '<!DOCTYPE html>', 'mono-dim');
       printLine(body, '<html lang="es">', 'mono-dim');
@@ -1387,11 +1456,11 @@ const COMMANDS = {
   top: {
     desc: 'Monitor de recursos',
     run: async (body) => {
-      printLine(body, 'top - ' + new Date().toLocaleTimeString() + ' up 5 days, 3:21, 1 user, load average: 0.42, 0.38, 0.31', 'accent');
+      printLine(body, 'top - ' + new Date().toLocaleTimeString() + ' up 5 days, load average: 0.42, 0.38, 0.31', 'accent');
       printLine(body, '');
-      printLine(body, 'Tasks: 142 total,   2 running, 140 sleeping,   0 stopped,   0 zombie', 'dim');
+      printLine(body, 'Tasks: 142 total,   2 running, 140 sleeping', 'dim');
       printLine(body, '%Cpu(s):  ' + (5 + Math.random() * 15).toFixed(1) + ' us,  ' + (Math.random() * 3).toFixed(1) + ' sy,  0.0 ni, ' + (80 + Math.random() * 10).toFixed(1) + ' id', 'dim');
-      printLine(body, 'MiB Mem : 131072.0 total,  ' + (40000 + Math.random() * 10000).toFixed(1) + ' free,  ' + (45000 + Math.random() * 10000).toFixed(1) + ' used', 'dim');
+      printLine(body, 'MiB Mem : 131072.0 total,  ' + (40000 + Math.random() * 10000).toFixed(1) + ' free', 'dim');
       printLine(body, '');
       printLine(body, '  PID USER      PR  NI    VIRT    RES  %CPU  %MEM     TIME+ COMMAND', 'info');
       const procs = [
@@ -1508,12 +1577,9 @@ const COMMANDS = {
         'No es un bug, es una feature no documentada.',
         'Si funciona, no lo toques.',
         'La mejor forma de predecir el futuro es programarlo.',
-        'La programacion es el arte de decirle a un tonto como hacer algo.',
-        'El codigo que escribes hoy sera el legado que maldigas manana.',
         'Un buen programador resuelve problemas. Un gran programador los evita.',
         'La unica constante en el desarrollo es el cambio.',
         'No cuentes los dias, haz que los dias cuenten.',
-        'Habla poco, programa mucho.',
         'La simplicidad es la maxima sofisticacion.',
         'Los comentarios mienten. El codigo no.',
         'Piensa. Programa. Repite.',
@@ -1971,7 +2037,7 @@ const COMMANDS = {
         ['  ╚██╗ ██╔╝██║   ██║██║██║  ██║', 'ok'],
         ['   ╚████╔╝ ╚██████╔╝██║██████╔╝', 'ok'],
         ['    ╚═══╝   ╚═════╝ ╚═╝╚═════╝ ', 'ok'],
-        ['  --- VOID SYSTEMS v5.1 ---', 'accent'],
+        ['  --- VOID SYSTEMS v6.0 ---', 'accent'],
       ]);
     }
   },
@@ -2014,8 +2080,9 @@ async function bootSequence(isReboot = false) {
     ['  [OK] Red eth0 192.168.1.42/24', 'ok', 70],
     ['  [OK] Modulo de audio sintetizado', 'ok', 60],
     ['  [OK] Motor de glitch cargado', 'ok', 60],
+    ['  [OK] Wobbly windows activado', 'ok', 60],
     ['', '', 60],
-    ['Cargando VOID SYSTEMS v5.1...', 'info', 220],
+    ['Cargando VOID SYSTEMS v6.0...', 'info', 220],
     ['', '', 100],
   ];
   for (const [text, cls, delay] of bootLines) {
@@ -2038,11 +2105,11 @@ async function bootSequence(isReboot = false) {
 
   printLines(body, [
     ['', ''],
-    ['  Bienvenido a VOID SYSTEMS v5.1, muncixop.', 'accent'],
+    ['  Bienvenido a VOID SYSTEMS v6.0, muncixop.', 'accent'],
     ['  Escribe <span class="ok">help</span> para ver los comandos.', 'dim'],
     ['  Prueba <span class="ok">fastfetch</span> para ver el ojo.', 'dim'],
     ['  Prueba <span class="ok">social</span> para ver paginas bloqueadas.', 'dim'],
-    ['  Prueba <span class="ok">confetti</span>, <span class="ok">rainbow</span>, <span class="ok">cyberpunk</span>...', 'dim'],
+    ['  Arrastra las ventanas para ver el efecto Wobbly.', 'dim'],
     ['', ''],
   ]);
   await sleep(200);
@@ -2051,7 +2118,7 @@ async function bootSequence(isReboot = false) {
 }
 
 /* ============================================================
-   INPUT LOOP v5.1 — renderizado inmediato, cero conflicto
+   INPUT LOOP v6.0 — prompt guardián + render inmediato
    ============================================================ */
 function startInput(term) {
   const body = term.body;
@@ -2067,6 +2134,7 @@ function startInput(term) {
   let idleTimer = null;
   let lastKeyTime = 0;
   let typingBurst = 0;
+  let promptGuardTimer = null;
 
   const createInputLine = () => {
     if (currentLine) currentLine.remove();
@@ -2080,13 +2148,35 @@ function startInput(term) {
     updateSuggest();
   };
 
-  // Render síncrono — la letra se pinta en el mismo tick
+  // GUARDIÁN: cada 400ms verifica que el prompt exista. Si no, lo recrea.
+  const startPromptGuardian = () => {
+    if (promptGuardTimer) clearInterval(promptGuardTimer);
+    promptGuardTimer = setInterval(() => {
+      if (!document.body.contains(body)) {
+        clearInterval(promptGuardTimer);
+        return;
+      }
+      const hasInputLine = body.querySelector('.input-line');
+      if (!hasInputLine && !currentLine) {
+        createInputLine();
+      }
+      // Asegurar que el prompt esté al fondo
+      if (currentLine && currentLine.parentNode === body) {
+        if (body.lastElementChild !== currentLine) {
+          body.appendChild(currentLine);
+        }
+      }
+    }, 400);
+  };
+
+  // Render síncrono inmediato
   const renderTyped = () => {
-    if (!currentLine) return;
+    if (!currentLine) createInputLine();
     const typedEl = currentLine.querySelector('.typed');
-    if (typedEl) typedEl.textContent = typed;
-    // Forzar reflow para que se pinte YA
-    if (typedEl) void typedEl.offsetHeight;
+    if (typedEl) {
+      typedEl.textContent = typed;
+      void typedEl.offsetHeight; // reflow forzado
+    }
     updateSuggest();
     if (currentLine.classList.contains('idle')) currentLine.classList.remove('idle');
     resetIdleTimer();
@@ -2099,7 +2189,6 @@ function startInput(term) {
     }, 3000);
   };
 
-  /* --- SUGGESTIONS --- */
   const hideSuggest = () => {
     if (suggestBox) { suggestBox.remove(); suggestBox = null; }
     suggestItems = [];
@@ -2151,17 +2240,19 @@ function startInput(term) {
       runCommand(cmd, body, term);
     }
 
+    // SIEMPRE recrear el prompt — doble refuerzo
     setTimeout(() => createInputLine(), 10);
+    setTimeout(() => {
+      if (!body.querySelector('.input-line')) createInputLine();
+    }, 100);
     body.scrollTop = body.scrollHeight;
   };
 
   createInputLine();
+  startPromptGuardian();
 
-  /* ============================================================
-     TECLADO FÍSICO — fuente principal (desktop)
-     ============================================================ */
+  /* --- TECLADO FÍSICO --- */
   document.addEventListener('keydown', (e) => {
-    // Atajos globales
     if (e.ctrlKey && e.shiftKey && (e.key === 'T' || e.key === 't')) {
       e.preventDefault();
       bootSequence(true);
@@ -2176,9 +2267,7 @@ function startInput(term) {
       document.body.classList.remove('cyberpunk');
     }
 
-    // Si el input oculto tiene foco, NO procesar aquí (lo maneja el input)
     if (inputHasFocus) return;
-
     const tag = document.activeElement && document.activeElement.tagName;
     if (tag === 'INPUT' || tag === 'TEXTAREA') return;
 
@@ -2256,7 +2345,7 @@ function startInput(term) {
       lastKeyTime = now;
 
       typed += e.key;
-      renderTyped();     // ← render inmediato
+      renderTyped();
       playKey();
 
       if (currentLine && Math.random() > 0.85) {
@@ -2269,9 +2358,7 @@ function startInput(term) {
     }
   });
 
-  /* ============================================================
-     INPUT OCULTO — usado SOLO en móvil / tap
-     ============================================================ */
+  /* --- INPUT MÓVIL --- */
   const focusKI = () => {
     if (!mob) {
       const isTouch = 'ontouchstart' in window && matchMedia('(hover:none)').matches;
@@ -2395,7 +2482,6 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-console.log('%c VOID SYSTEMS v5.1 ', 'background:#3ddc84;color:#000;font-weight:bold;padding:4px 8px;border-radius:4px;font-size:14px');
+console.log('%c VOID SYSTEMS v6.0 ', 'background:#3ddc84;color:#000;font-weight:bold;padding:4px 8px;border-radius:4px;font-size:14px');
 console.log('%c Bienvenido, muncixop. ', 'color:#3ddc84;font-weight:bold;font-size:12px');
-console.log('%c Prueba el codigo Konami: ↑ ↑ ↓ ↓ ← → ← → B A ', 'color:#5eaaff;font-style:italic');
-console.log('%c Fix v5.1: input ahora renderiza al instante ', 'color:#ffcc00;font-style:italic');
+console.log('%c Wobbly windows activados + prompt guardián activo ', 'color:#5eaaff;font-style:italic');
