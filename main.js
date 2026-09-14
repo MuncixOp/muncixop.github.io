@@ -1,6 +1,7 @@
 /* ============================================================
-   VOID SYSTEMS v5.0 — Terminal / OS Simulator
+   VOID SYSTEMS v5.1 — Terminal / OS Simulator
    Author: MuncixOp
+   FIX: input con renderizado inmediato sin conflicto
    ============================================================ */
 
 /* ---------- OS DETECTION ---------- */
@@ -336,7 +337,7 @@ function playPowerUp() {
 }
 
 /* ============================================================
-   MATRIX CANVAS (fondo)
+   MATRIX CANVAS
    ============================================================ */
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
@@ -373,7 +374,7 @@ function drawMatrix() {
 if (!reducedMotion) drawMatrix();
 
 /* ============================================================
-   PARTICLE CANVAS (encima)
+   PARTICLE CANVAS
    ============================================================ */
 const pcanvas = document.getElementById('p');
 const pctx = pcanvas.getContext('2d');
@@ -389,8 +390,8 @@ const particles = [];
 const PARTICLE_COUNT = mob ? 20 : 50;
 for (let i = 0; i < PARTICLE_COUNT; i++) {
   particles.push({
-    x: Math.random() * (pW || window.innerWidth),
-    y: Math.random() * (pH || window.innerHeight),
+    x: Math.random() * window.innerWidth,
+    y: Math.random() * window.innerHeight,
     vx: (Math.random() - .5) * .4,
     vy: (Math.random() - .5) * .4,
     size: Math.random() * 2 + .5,
@@ -398,7 +399,6 @@ for (let i = 0; i < PARTICLE_COUNT; i++) {
     char: Math.random() > .5 ? '·' : '˙',
   });
 }
-
 function drawParticles() {
   if (reducedMotion) { requestAnimationFrame(drawParticles); return; }
   pctx.clearRect(0, 0, pW, pH);
@@ -465,10 +465,7 @@ function createWindow(title, options = {}) {
   updateLauncher();
 
   win.addEventListener('mousedown', () => { win.style.zIndex = ++zIndex; });
-
-  // Double click title bar = maximize
   win.querySelector('.win-bar').addEventListener('dblclick', () => toggleMaximize(id));
-
   win.querySelector('.close').addEventListener('click', (e) => { e.stopPropagation(); closeWindow(id); });
   win.querySelector('.min').addEventListener('click', (e) => { e.stopPropagation(); minimizeWindow(id); });
   win.querySelector('.max').addEventListener('click', (e) => { e.stopPropagation(); toggleMaximize(id); });
@@ -476,7 +473,6 @@ function createWindow(title, options = {}) {
   makeDraggable(win, win.querySelector('.win-bar'));
   makeResizable(win, win.querySelector('.rz'));
 
-  // Custom event when window body is set up
   return { id, el: win, body: win.querySelector('.win-body') };
 }
 
@@ -530,7 +526,6 @@ function updateDock() {
   });
   dock.classList.toggle('on', hasMin);
 }
-
 function updateLauncher() {
   const shouldShow = openWindows.size === 0;
   launcher.classList.toggle('on', shouldShow);
@@ -614,7 +609,7 @@ function showError(title, message) {
 }
 
 /* ============================================================
-   EFFECTS HELPERS
+   EFFECTS
    ============================================================ */
 function effectRipple(x, y) {
   const r = document.createElement('div');
@@ -626,7 +621,6 @@ function effectRipple(x, y) {
   document.body.appendChild(r);
   setTimeout(() => r.remove(), 800);
 }
-
 function effectFlash(color) {
   const f = document.createElement('div');
   f.className = 'screen-flash';
@@ -634,7 +628,6 @@ function effectFlash(color) {
   document.body.appendChild(f);
   setTimeout(() => f.remove(), 320);
 }
-
 function effectQuake() {
   document.body.classList.remove('quake');
   void document.body.offsetWidth;
@@ -642,7 +635,6 @@ function effectQuake() {
   playImpact();
   setTimeout(() => document.body.classList.remove('quake'), 700);
 }
-
 function effectGlitchSlice() {
   for (let i = 0; i < 3; i++) {
     setTimeout(() => {
@@ -654,7 +646,6 @@ function effectGlitchSlice() {
     }, i * 60);
   }
 }
-
 function effectConfetti(count = 30) {
   const colors = ['#3ddc84', '#5eaaff', '#c77dff', '#ffcc00', '#ff5fa2', '#00ffff'];
   const glyphs = ['*', '+', '·', '×', '◆', '□', '■', '◇', '○', '●'];
@@ -667,13 +658,11 @@ function effectConfetti(count = 30) {
       c.style.color = colors[Math.floor(Math.random() * colors.length)];
       c.style.fontSize = (Math.random() * 14 + 10) + 'px';
       c.style.animationDuration = (Math.random() * 2 + 2) + 's';
-      c.style.animationDelay = '0s';
       document.body.appendChild(c);
       setTimeout(() => c.remove(), 4200);
     }, i * 30);
   }
 }
-
 function scrambleText(el, target, duration = 500) {
   const chars = '!@#$%^&*()_+-=[]{}|;:<>?/\\`~0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   const start = performance.now();
@@ -683,11 +672,8 @@ function scrambleText(el, target, duration = 500) {
     const progress = Math.min(elapsed / duration, 1);
     let out = '';
     for (let i = 0; i < original.length; i++) {
-      if (i < original.length * progress) {
-        out += original[i];
-      } else {
-        out += chars[Math.floor(Math.random() * chars.length)];
-      }
+      if (i < original.length * progress) out += original[i];
+      else out += chars[Math.floor(Math.random() * chars.length)];
     }
     el.textContent = out;
     if (progress < 1) requestAnimationFrame(frame);
@@ -791,11 +777,7 @@ function launchBruteforce(win, linkKey) {
     '[!] Servidor respondiendo lento, aumentando timeout...',
     '[+] Descifrando handshake TLS...',
     '[+] Interceptando paquetes en la subred...',
-    '[+] Inyectando payload en el handshake...',
-    '[!] Sobrecalentando GPU, bajando intensidad...',
-    '[+] Corrompiendo checksum del servidor...',
   ];
-
   const termInterval = setInterval(() => {
     if (!running) return;
     if (Math.random() > .55) {
@@ -811,19 +793,14 @@ function launchBruteforce(win, linkKey) {
   function attempt() {
     if (!running) return;
     attempts += Math.floor(Math.random() * 800) + 200;
-
     for (let i = 0; i < 2; i++) {
       const fakeHash = randomHex(12);
       const line = document.createElement('div');
       line.className = 'brute-line';
       const r = Math.random();
-      if (r > 0.92) {
-        line.innerHTML = `<span class="hash">0x${fakeHash}</span>  <span class="attempt">-> ${randomHex(16)}</span>  <span class="success">[MATCH?]</span>`;
-      } else if (r > 0.7) {
-        line.innerHTML = `<span class="hash">0x${fakeHash}</span>  <span class="attempt">-> ${randomHex(16)}</span>  <span class="fail">x</span>`;
-      } else {
-        line.innerHTML = `<span class="hash">0x${fakeHash}</span>  <span class="attempt">-> ${randomHex(16)}</span>`;
-      }
+      if (r > 0.92) line.innerHTML = `<span class="hash">0x${fakeHash}</span>  <span class="attempt">-> ${randomHex(16)}</span>  <span class="success">[MATCH?]</span>`;
+      else if (r > 0.7) line.innerHTML = `<span class="hash">0x${fakeHash}</span>  <span class="attempt">-> ${randomHex(16)}</span>  <span class="fail">x</span>`;
+      else line.innerHTML = `<span class="hash">0x${fakeHash}</span>  <span class="attempt">-> ${randomHex(16)}</span>`;
       displayEl.appendChild(line);
     }
     while (displayEl.children.length > 25) displayEl.removeChild(displayEl.firstChild);
@@ -916,6 +893,7 @@ function blinkEye(body) {
     }, 180);
   }
 }
+
 /* ============================================================
    COMANDOS
    ============================================================ */
@@ -1161,9 +1139,6 @@ const COMMANDS = {
     }
   },
 
-  /* ============================================================
-     FASTFETCH
-     ============================================================ */
   fastfetch: {
     desc: 'Info del sistema (con ojo)',
     run: (body) => {
@@ -1179,15 +1154,14 @@ const COMMANDS = {
       });
 
       printLine(body, '', '');
-
       printLine(body, `  <span class="ok">muncixop</span><span class="dim">@</span><span class="ok">void</span>`, '');
       printLine(body, '  ' + '-'.repeat(30), 'dim');
 
       const info = [
-        ['OS',       'VOID SYSTEMS v5.0'],
+        ['OS',       'VOID SYSTEMS v5.1'],
         ['Host',     'muncixop.github.io'],
         ['Kernel',   'glitch-6.6.6-x64'],
-        ['Shell',    'voidsh 5.0'],
+        ['Shell',    'voidsh 5.1'],
         ['Uptime',   uptime + 's'],
         ['CPU',      'Void Core (64) @ 3.20GHz'],
         ['GPU',      'Phantom Renderer'],
@@ -1204,11 +1178,9 @@ const COMMANDS = {
       });
 
       printLine(body, '');
-
       setTimeout(() => blinkEye(body), 1200);
       setTimeout(() => blinkEye(body), 5500);
       setTimeout(() => blinkEye(body), 11000);
-
       unlockAch('first_fetch', 'El ojo te vio');
     }
   },
@@ -1218,9 +1190,6 @@ const COMMANDS = {
     run: (body, win, args) => COMMANDS.fastfetch.run(body, win, args)
   },
 
-  /* ============================================================
-     SCAN
-     ============================================================ */
   scan: {
     desc: 'Escaneo de red visual',
     run: async (body) => {
@@ -1243,8 +1212,7 @@ const COMMANDS = {
 
       for (const h of hosts) {
         await sleep(200 + Math.random() * 300);
-        const line = printLine(body, `  ${padEnd(h.ip, 16)}${padEnd(h.mac, 20)}${padEnd(h.name, 18)}${h.port}`);
-        line.style.animation = 'lineIn .2s ease';
+        printLine(body, `  ${padEnd(h.ip, 16)}${padEnd(h.mac, 20)}${padEnd(h.name, 18)}${h.port}`);
         playTick(700 + Math.random() * 500);
       }
 
@@ -1255,9 +1223,6 @@ const COMMANDS = {
     }
   },
 
-  /* ============================================================
-     TRACE
-     ============================================================ */
   trace: {
     desc: 'Traceroute simulado',
     run: async (body, win, args) => {
@@ -1288,9 +1253,6 @@ const COMMANDS = {
     }
   },
 
-  /* ============================================================
-     WHOIS
-     ============================================================ */
   whois: {
     desc: 'Whois simulado',
     run: async (body, win, args) => {
@@ -1319,9 +1281,6 @@ const COMMANDS = {
     }
   },
 
-  /* ============================================================
-     PING
-     ============================================================ */
   ping: {
     desc: 'Ping simulado',
     run: async (body, win, args) => {
@@ -1347,14 +1306,11 @@ const COMMANDS = {
     }
   },
 
-  /* ============================================================
-     NMAP
-     ============================================================ */
   nmap: {
     desc: 'Escaneo de puertos',
     run: async (body, win, args) => {
       const target = (args[0] || '192.168.1.1').toLowerCase();
-      printLine(body, `Starting Nmap 7.94 ( https://nmap.org ) at ${new Date().toISOString().slice(0, 16).replace('T', ' ')}`, 'accent');
+      printLine(body, `Starting Nmap 7.94 at ${new Date().toISOString().slice(0, 16).replace('T', ' ')}`, 'accent');
       printLine(body, `Nmap scan report for ${escapeHTML(target)}`, '');
       printLine(body, `Host is up (0.0${Math.floor(Math.random() * 9) + 1}s latency).`, 'dim');
       printLine(body, '');
@@ -1381,9 +1337,6 @@ const COMMANDS = {
     }
   },
 
-  /* ============================================================
-     CURL
-     ============================================================ */
   curl: {
     desc: 'HTTP GET simulado',
     run: async (body, win, args) => {
@@ -1409,9 +1362,6 @@ const COMMANDS = {
     }
   },
 
-  /* ============================================================
-     PS
-     ============================================================ */
   ps: {
     desc: 'Procesos en ejecucion',
     run: (body) => {
@@ -1434,9 +1384,6 @@ const COMMANDS = {
     }
   },
 
-  /* ============================================================
-     TOP
-     ============================================================ */
   top: {
     desc: 'Monitor de recursos',
     run: async (body) => {
@@ -1444,7 +1391,7 @@ const COMMANDS = {
       printLine(body, '');
       printLine(body, 'Tasks: 142 total,   2 running, 140 sleeping,   0 stopped,   0 zombie', 'dim');
       printLine(body, '%Cpu(s):  ' + (5 + Math.random() * 15).toFixed(1) + ' us,  ' + (Math.random() * 3).toFixed(1) + ' sy,  0.0 ni, ' + (80 + Math.random() * 10).toFixed(1) + ' id', 'dim');
-      printLine(body, 'MiB Mem : 131072.0 total,  ' + (40000 + Math.random() * 10000).toFixed(1) + ' free,  ' + (45000 + Math.random() * 10000).toFixed(1) + ' used,  ' + (20000 + Math.random() * 5000).toFixed(1) + ' buff/cache', 'dim');
+      printLine(body, 'MiB Mem : 131072.0 total,  ' + (40000 + Math.random() * 10000).toFixed(1) + ' free,  ' + (45000 + Math.random() * 10000).toFixed(1) + ' used', 'dim');
       printLine(body, '');
       printLine(body, '  PID USER      PR  NI    VIRT    RES  %CPU  %MEM     TIME+ COMMAND', 'info');
       const procs = [
@@ -1457,14 +1404,9 @@ const COMMANDS = {
       procs.forEach((p, i) => {
         printLine(body, `  ${padStart(p[0], 4)} ${padEnd(p[1], 8)} ${padStart(p[2], 4)} ${padStart(p[3], 3)} ${padStart(p[4], 6)} ${padStart(p[5], 6)} ${padStart(p[6].toFixed(1), 5)} ${padStart(p[7].toFixed(1), 5)} ${padStart(p[8], 10)} ${p[9]}`, i === 0 ? 'ok' : '');
       });
-      printLine(body, '');
-      printLine(body, 'Monitor en vivo - presiona otra tecla para salir', 'dim');
     }
   },
 
-  /* ============================================================
-     TREE
-     ============================================================ */
   tree: {
     desc: 'Arbol de directorios',
     run: (body) => {
@@ -1479,28 +1421,19 @@ const COMMANDS = {
         '│   ├── eye.ascii',
         '│   ├── matrix.js',
         '│   └── sounds/',
-        '│       ├── boot.wav',
-        '│       └── glitch.wav',
         '├── projects/',
         '│   ├── jujutsu-shenanigans/',
-        '│   │   ├── combat.lua',
-        '│   │   └── abilities.lua',
         '│   └── blockbench-pipeline/',
-        '│       ├── models/',
-        '│       └── scripts/',
         '├── .gitignore',
         '├── package.json',
         '└── README.md',
       ];
       lines.forEach(l => printLine(body, l, 'mono-dim'));
       printLine(body, '');
-      printLine(body, '4 directories, 15 files', 'dim');
+      printLine(body, '4 directories, 12 files', 'dim');
     }
   },
 
-  /* ============================================================
-     LS / PWD
-     ============================================================ */
   ls: {
     desc: 'Lista archivos',
     run: (body) => {
@@ -1513,9 +1446,6 @@ const COMMANDS = {
     run: (body) => printLine(body, '/home/muncixop/void-systems', 'info')
   },
 
-  /* ============================================================
-     DECRYPT
-     ============================================================ */
   decrypt: {
     desc: 'Minijuego de descifrado',
     run: async (body) => {
@@ -1549,9 +1479,6 @@ const COMMANDS = {
     }
   },
 
-  /* ============================================================
-     COWSAY
-     ============================================================ */
   cowsay: {
     desc: 'La vaca que dice cosas',
     run: (body, win, args) => {
@@ -1573,9 +1500,6 @@ const COMMANDS = {
     }
   },
 
-  /* ============================================================
-     FORTUNE
-     ============================================================ */
   fortune: {
     desc: 'Frase aleatoria',
     run: (body) => {
@@ -1584,7 +1508,6 @@ const COMMANDS = {
         'No es un bug, es una feature no documentada.',
         'Si funciona, no lo toques.',
         'La mejor forma de predecir el futuro es programarlo.',
-        'Hay dos formas de escribir codigo sin errores: no escribirlo, o hacerlo tan simple que no haya errores obvios.',
         'La programacion es el arte de decirle a un tonto como hacer algo.',
         'El codigo que escribes hoy sera el legado que maldigas manana.',
         'Un buen programador resuelve problemas. Un gran programador los evita.',
@@ -1592,13 +1515,8 @@ const COMMANDS = {
         'No cuentes los dias, haz que los dias cuenten.',
         'Habla poco, programa mucho.',
         'La simplicidad es la maxima sofisticacion.',
-        'Si no puedes explicarlo simple, no lo entiendes bien.',
         'Los comentarios mienten. El codigo no.',
         'Piensa. Programa. Repite.',
-        'El unico modo de aprender un lenguaje nuevo es escribir un programa en el.',
-        'La depuracion es el doble de dificil que escribir el codigo. Si escribes el codigo lo mas inteligente que puedes, por definicion no eres lo suficientemente inteligente para depurarlo.',
-        'Antes de que el software sea reutilizable, primero tiene que ser utilizable.',
-        'La perfeccion se alcanza no cuando no hay nada que agregar, sino cuando no hay nada que quitar.',
       ];
       printLine(body, ':: FORTUNE', 'accent');
       printLine(body, '');
@@ -1607,9 +1525,6 @@ const COMMANDS = {
     }
   },
 
-  /* ============================================================
-     WEATHER
-     ============================================================ */
   weather: {
     desc: 'Clima simulado',
     run: async (body, win, args) => {
@@ -1634,9 +1549,6 @@ const COMMANDS = {
     }
   },
 
-  /* ============================================================
-     CRYPTO
-     ============================================================ */
   crypto: {
     desc: 'Precios de cripto simulados',
     run: async (body, win, args) => {
@@ -1661,9 +1573,6 @@ const COMMANDS = {
     }
   },
 
-  /* ============================================================
-     DICE / 8BALL / RANDOM
-     ============================================================ */
   dice: {
     desc: 'Tira los dados',
     run: (body, win, args) => {
@@ -1683,7 +1592,7 @@ const COMMANDS = {
       const answers = [
         'Si, definitivamente.', 'No lo creo.', 'Sin duda.', 'Pregunta otra vez.',
         'No cuentes con eso.', 'Es seguro.', 'Muy dudoso.', 'Las señales apuntan a si.',
-        'Concéntrate y pregunta de nuevo.', 'No.', 'Probablemente.', 'El futuro es incierto.'
+        'Concentrate y pregunta de nuevo.', 'No.', 'Probablemente.', 'El futuro es incierto.'
       ];
       printLine(body, `Pregunta: ${escapeHTML(q)}`, 'dim');
       const line = printLine(body, '', '');
@@ -1696,16 +1605,13 @@ const COMMANDS = {
     desc: 'Dato aleatorio',
     run: (body) => {
       const facts = [
-        'El primer bug informático real fue una polilla atrapada en un relé en 1947.',
-        'El código más antiguo aún en uso es COBOL, de 1959.',
-        'Un byte son 8 bits, un nibble son 4 bits, un bit es un bit.',
-        'El primer videojuego fue "Tennis for Two" (1958).',
+        'El primer bug informatico real fue una polilla atrapada en un rele en 1947.',
+        'El codigo mas antiguo aun en uso es COBOL, de 1959.',
         'La primera programadora fue Ada Lovelace (1843).',
-        'Linux empezó como un proyecto personal de Linus Torvalds en 1991.',
-        'JavaScript se hizo en 10 días.',
-        'Python se llama así por Monty Python, no por la serpiente.',
-        'El código de la NASA tiene menos de 1 bug por cada 400,000 líneas.',
-        'El 90% del código del mundo es COBOL.',
+        'Linux empezo como un proyecto personal de Linus Torvalds en 1991.',
+        'JavaScript se hizo en 10 dias.',
+        'Python se llama asi por Monty Python, no por la serpiente.',
+        'El codigo de la NASA tiene menos de 1 bug por cada 400,000 lineas.',
       ];
       printLine(body, ':: DATO ALEATORIO', 'accent');
       printLine(body, '');
@@ -1713,16 +1619,13 @@ const COMMANDS = {
     }
   },
 
-  /* ============================================================
-     COUNTDOWN
-     ============================================================ */
   countdown: {
     desc: 'Cuenta atras',
     run: async (body, win, args) => {
       let n = parseInt(args[0]) || 5;
       n = Math.min(Math.max(n, 1), 20);
       for (let i = n; i > 0; i--) {
-        const line = printLine(body, `  ${i}...`, 'accent');
+        printLine(body, `  ${i}...`, 'accent');
         playBeep(400 + i * 60, .15);
         effectFlash('rgba(61,220,132,.05)');
         await sleep(500);
@@ -1734,9 +1637,6 @@ const COMMANDS = {
     }
   },
 
-  /* ============================================================
-     SPINNER
-     ============================================================ */
   spinner: {
     desc: 'Spinner animado',
     run: async (body) => {
@@ -1750,9 +1650,6 @@ const COMMANDS = {
     }
   },
 
-  /* ============================================================
-     TYPE
-     ============================================================ */
   type: {
     desc: 'Efecto typewriter',
     run: async (body, win, args) => {
@@ -1766,9 +1663,6 @@ const COMMANDS = {
     }
   },
 
-  /* ============================================================
-     RAINBOW
-     ============================================================ */
   rainbow: {
     desc: 'Texto arcoiris',
     run: (body, win, args) => {
@@ -1784,9 +1678,6 @@ const COMMANDS = {
     }
   },
 
-  /* ============================================================
-     SCRAMBLE
-     ============================================================ */
   scramble: {
     desc: 'Efecto scramble',
     run: async (body, win, args) => {
@@ -1797,9 +1688,6 @@ const COMMANDS = {
     }
   },
 
-  /* ============================================================
-     ASCII (banner)
-     ============================================================ */
   ascii: {
     desc: 'Banner ASCII simple',
     run: (body, win, args) => {
@@ -1843,9 +1731,6 @@ const COMMANDS = {
     }
   },
 
-  /* ============================================================
-     CONFETTI
-     ============================================================ */
   confetti: {
     desc: 'Lluvia de confetti',
     run: (body) => {
@@ -1856,9 +1741,6 @@ const COMMANDS = {
     }
   },
 
-  /* ============================================================
-     THEME
-     ============================================================ */
   theme: {
     desc: 'Cambia el color de acento',
     run: (body, win, args) => {
@@ -1884,9 +1766,6 @@ const COMMANDS = {
     }
   },
 
-  /* ============================================================
-     CYBERPUNK
-     ============================================================ */
   cyberpunk: {
     desc: 'Modo glitch extremo',
     run: (body) => {
@@ -1899,9 +1778,6 @@ const COMMANDS = {
     }
   },
 
-  /* ============================================================
-     HYPNOTIZE
-     ============================================================ */
   hypnotize: {
     desc: 'Efecto hipnotico',
     run: (body) => {
@@ -1915,9 +1791,6 @@ const COMMANDS = {
     }
   },
 
-  /* ============================================================
-     FLASH
-     ============================================================ */
   flash: {
     desc: 'Flash de pantalla',
     run: (body) => {
@@ -1927,9 +1800,6 @@ const COMMANDS = {
     }
   },
 
-  /* ============================================================
-     QUAKE
-     ============================================================ */
   quake: {
     desc: 'Terremoto visual',
     run: (body) => {
@@ -1939,9 +1809,6 @@ const COMMANDS = {
     }
   },
 
-  /* ============================================================
-     HISTORY
-     ============================================================ */
   history: {
     desc: 'Historial de comandos',
     run: (body) => {
@@ -1957,9 +1824,6 @@ const COMMANDS = {
     }
   },
 
-  /* ============================================================
-     ACHIEVEMENTS
-     ============================================================ */
   achievements: {
     desc: 'Logros desbloqueados',
     run: (body) => {
@@ -2066,9 +1930,6 @@ const COMMANDS = {
     }
   },
 
-  /* ============================================================
-     VOID / CLOSE — abrir y cerrar terminal
-     ============================================================ */
   void: {
     desc: 'Abre una nueva terminal',
     run: (body) => {
@@ -2110,7 +1971,7 @@ const COMMANDS = {
         ['  ╚██╗ ██╔╝██║   ██║██║██║  ██║', 'ok'],
         ['   ╚████╔╝ ╚██████╔╝██║██████╔╝', 'ok'],
         ['    ╚═══╝   ╚═════╝ ╚═╝╚═════╝ ', 'ok'],
-        ['  --- VOID SYSTEMS v5.0 ---', 'accent'],
+        ['  --- VOID SYSTEMS v5.1 ---', 'accent'],
       ]);
     }
   },
@@ -2154,7 +2015,7 @@ async function bootSequence(isReboot = false) {
     ['  [OK] Modulo de audio sintetizado', 'ok', 60],
     ['  [OK] Motor de glitch cargado', 'ok', 60],
     ['', '', 60],
-    ['Cargando VOID SYSTEMS v5.0...', 'info', 220],
+    ['Cargando VOID SYSTEMS v5.1...', 'info', 220],
     ['', '', 100],
   ];
   for (const [text, cls, delay] of bootLines) {
@@ -2162,23 +2023,22 @@ async function bootSequence(isReboot = false) {
     await sleep(delay);
   }
 
-  // Banner con scramble
-  const banner1 = printLine(body, '  ██████╗ ███████╗███████╗████████╗', 'ok');
+  printLine(body, '  ██████╗ ███████╗███████╗████████╗', 'ok');
   await sleep(80);
-  const banner2 = printLine(body, '  ██╔══██╗██╔════╝██╔════╝╚══██╔══╝', 'ok');
+  printLine(body, '  ██╔══██╗██╔════╝██╔════╝╚══██╔══╝', 'ok');
   await sleep(80);
-  const banner3 = printLine(body, '  ██████╔╝█████╗  █████╗     ██║   ', 'ok');
+  printLine(body, '  ██████╔╝█████╗  █████╗     ██║   ', 'ok');
   await sleep(80);
-  const banner4 = printLine(body, '  ██╔══██╗██╔══╝  ██╔══╝     ██║   ', 'ok');
+  printLine(body, '  ██╔══██╗██╔══╝  ██╔══╝     ██║   ', 'ok');
   await sleep(80);
-  const banner5 = printLine(body, '  ██║  ██║███████╗██║        ██║   ', 'ok');
+  printLine(body, '  ██║  ██║███████╗██║        ██║   ', 'ok');
   await sleep(80);
-  const banner6 = printLine(body, '  ╚═╝  ╚═╝╚══════╝╚═╝        ╚═╝   ', 'ok');
+  printLine(body, '  ╚═╝  ╚═╝╚══════╝╚═╝        ╚═╝   ', 'ok');
   await sleep(80);
 
   printLines(body, [
     ['', ''],
-    ['  Bienvenido a VOID SYSTEMS v5.0, muncixop.', 'accent'],
+    ['  Bienvenido a VOID SYSTEMS v5.1, muncixop.', 'accent'],
     ['  Escribe <span class="ok">help</span> para ver los comandos.', 'dim'],
     ['  Prueba <span class="ok">fastfetch</span> para ver el ojo.', 'dim'],
     ['  Prueba <span class="ok">social</span> para ver paginas bloqueadas.', 'dim'],
@@ -2191,7 +2051,7 @@ async function bootSequence(isReboot = false) {
 }
 
 /* ============================================================
-   INPUT LOOP
+   INPUT LOOP v5.1 — renderizado inmediato, cero conflicto
    ============================================================ */
 function startInput(term) {
   const body = term.body;
@@ -2200,7 +2060,7 @@ function startInput(term) {
   let currentLine = null;
   let typed = '';
   let histIdx = cmdHistory.length;
-  let isMobileInput = false;
+  let inputHasFocus = false;
   let suggestBox = null;
   let suggestItems = [];
   let suggestIdx = 0;
@@ -2220,10 +2080,13 @@ function startInput(term) {
     updateSuggest();
   };
 
+  // Render síncrono — la letra se pinta en el mismo tick
   const renderTyped = () => {
     if (!currentLine) return;
-    currentLine.querySelector('.typed').textContent = typed;
-    body.scrollTop = body.scrollHeight;
+    const typedEl = currentLine.querySelector('.typed');
+    if (typedEl) typedEl.textContent = typed;
+    // Forzar reflow para que se pinte YA
+    if (typedEl) void typedEl.offsetHeight;
     updateSuggest();
     if (currentLine.classList.contains('idle')) currentLine.classList.remove('idle');
     resetIdleTimer();
@@ -2232,9 +2095,7 @@ function startInput(term) {
   const resetIdleTimer = () => {
     if (idleTimer) clearTimeout(idleTimer);
     idleTimer = setTimeout(() => {
-      if (currentLine && typed === '') {
-        currentLine.classList.add('idle');
-      }
+      if (currentLine && typed === '') currentLine.classList.add('idle');
     }, 3000);
   };
 
@@ -2259,7 +2120,7 @@ function startInput(term) {
       item.innerHTML = `<span class="key">${escapeHTML(m)}</span><span class="desc">${escapeHTML(COMMANDS[m].desc)}</span>`;
       item.addEventListener('click', () => {
         typed = m + ' ';
-        ki.value = typed;
+        if (ki) ki.value = typed;
         renderTyped();
       });
       suggestBox.appendChild(item);
@@ -2270,7 +2131,7 @@ function startInput(term) {
 
   const submit = () => {
     const cmd = typed.trim();
-    ki.value = '';
+    if (ki) ki.value = '';
     typed = '';
     hideSuggest();
 
@@ -2296,9 +2157,11 @@ function startInput(term) {
 
   createInputLine();
 
-  /* --- TECLADO FÍSICO --- */
+  /* ============================================================
+     TECLADO FÍSICO — fuente principal (desktop)
+     ============================================================ */
   document.addEventListener('keydown', (e) => {
-    // Atajos globales primero
+    // Atajos globales
     if (e.ctrlKey && e.shiftKey && (e.key === 'T' || e.key === 't')) {
       e.preventDefault();
       bootSequence(true);
@@ -2309,13 +2172,13 @@ function startInput(term) {
       closeWindow(term.id);
       return;
     }
-    if (e.key === 'Escape') {
-      if (document.body.classList.contains('cyberpunk')) {
-        document.body.classList.remove('cyberpunk');
-      }
+    if (e.key === 'Escape' && document.body.classList.contains('cyberpunk')) {
+      document.body.classList.remove('cyberpunk');
     }
 
-    if (document.activeElement === ki) return;
+    // Si el input oculto tiene foco, NO procesar aquí (lo maneja el input)
+    if (inputHasFocus) return;
+
     const tag = document.activeElement && document.activeElement.tagName;
     if (tag === 'INPUT' || tag === 'TEXTAREA') return;
 
@@ -2360,7 +2223,6 @@ function startInput(term) {
       e.preventDefault();
       if (suggestItems.length) {
         typed = suggestItems[suggestIdx] + ' ';
-        ki.value = typed;
         renderTyped();
         return;
       }
@@ -2394,19 +2256,39 @@ function startInput(term) {
       lastKeyTime = now;
 
       typed += e.key;
-      renderTyped();
+      renderTyped();     // ← render inmediato
       playKey();
-      if (Math.random() > 0.85) {
+
+      if (currentLine && Math.random() > 0.85) {
         const t = currentLine.querySelector('.typed');
-        t.classList.add('glitch-flash');
-        setTimeout(() => t.classList.remove('glitch-flash'), 80);
+        if (t) {
+          t.classList.add('glitch-flash');
+          setTimeout(() => t.classList.remove('glitch-flash'), 80);
+        }
       }
     }
   });
 
-  /* --- INPUT MÓVIL --- */
+  /* ============================================================
+     INPUT OCULTO — usado SOLO en móvil / tap
+     ============================================================ */
+  const focusKI = () => {
+    if (!mob) {
+      const isTouch = 'ontouchstart' in window && matchMedia('(hover:none)').matches;
+      if (!isTouch) return;
+    }
+    inputHasFocus = true;
+    ki.value = typed;
+    ki.focus({ preventScroll: true });
+  };
+
+  body.addEventListener('click', focusKI);
+  body.addEventListener('touchstart', (e) => {
+    if (mob || (e.touches && e.touches.length)) focusKI();
+  }, { passive: true });
+
   ki.addEventListener('input', () => {
-    if (!isMobileInput) return;
+    if (!inputHasFocus) return;
     typed = ki.value;
     renderTyped();
   });
@@ -2416,32 +2298,18 @@ function startInput(term) {
       e.preventDefault();
       submit();
       ki.blur();
-      isMobileInput = false;
     } else if (e.key === 'Escape') {
       ki.blur();
-      isMobileInput = false;
     }
   });
 
   ki.addEventListener('blur', () => {
-    isMobileInput = false;
+    inputHasFocus = false;
     if (ki.value !== typed) {
       typed = ki.value;
       renderTyped();
     }
   });
-
-  const focusKI = () => {
-    isMobileInput = true;
-    ki.value = typed;
-    ki.focus({ preventScroll: true });
-  };
-  body.addEventListener('click', focusKI);
-  body.addEventListener('touchstart', focusKI, { passive: true });
-
-  setTimeout(() => {
-    try { ki.focus({ preventScroll: true }); isMobileInput = true; } catch (e) {}
-  }, 100);
 }
 
 /* ---------- RUN COMMAND ---------- */
@@ -2476,20 +2344,17 @@ window.addEventListener('load', () => {
   setTimeout(bootSequence, 300);
 });
 
-// Ripple global en clicks
 document.addEventListener('click', (e) => {
   if (e.target.closest('.btn') || e.target.closest('.launcher') || e.target.closest('.copy-token') || e.target.closest('.err-btn')) return;
   effectRipple(e.clientX, e.clientY);
 });
 
-// Launcher → abrir nueva terminal
 launcher.addEventListener('click', () => {
   playSuccess();
   effectFlash('rgba(61,220,132,.15)');
   bootSequence(true);
 });
 
-// Prevenir zoom en doble tap
 let lastTouch = 0;
 document.addEventListener('touchend', (e) => {
   const now = Date.now();
@@ -2497,7 +2362,7 @@ document.addEventListener('touchend', (e) => {
   lastTouch = now;
 }, { passive: false });
 
-// Konami code easter egg
+// Konami code
 const konamiSeq = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
 let konamiIdx = 0;
 document.addEventListener('keydown', (e) => {
@@ -2505,14 +2370,12 @@ document.addEventListener('keydown', (e) => {
     konamiIdx++;
     if (konamiIdx === konamiSeq.length) {
       konamiIdx = 0;
-      // Activar efectos extremos
       document.body.classList.add('cyberpunk');
       effectConfetti(100);
       effectFlash('rgba(199,125,255,.4)');
       effectQuake();
       playPowerUp();
       unlockAch('konami', 'Codigo Konami');
-      // Mostrar toast personalizado
       const toast = document.createElement('div');
       toast.className = 'ach-toast';
       toast.innerHTML = `
@@ -2525,7 +2388,6 @@ document.addEventListener('keydown', (e) => {
         toast.style.animation = 'achIn .4s reverse forwards';
         setTimeout(() => toast.remove(), 400);
       }, 4000);
-      // Desactivar cyberpunk después de 8s
       setTimeout(() => document.body.classList.remove('cyberpunk'), 8000);
     }
   } else {
@@ -2533,6 +2395,7 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-console.log('%c VOID SYSTEMS v5.0 ', 'background:#3ddc84;color:#000;font-weight:bold;padding:4px 8px;border-radius:4px;font-size:14px');
+console.log('%c VOID SYSTEMS v5.1 ', 'background:#3ddc84;color:#000;font-weight:bold;padding:4px 8px;border-radius:4px;font-size:14px');
 console.log('%c Bienvenido, muncixop. ', 'color:#3ddc84;font-weight:bold;font-size:12px');
 console.log('%c Prueba el codigo Konami: ↑ ↑ ↓ ↓ ← → ← → B A ', 'color:#5eaaff;font-style:italic');
+console.log('%c Fix v5.1: input ahora renderiza al instante ', 'color:#ffcc00;font-style:italic');
