@@ -1,5 +1,5 @@
 /* ============================================================
-   VOID SYSTEMS v3.0 — Terminal / OS Simulator
+   VOID SYSTEMS v5.0 — Terminal / OS Simulator
    Author: MuncixOp
    ============================================================ */
 
@@ -46,7 +46,7 @@ const LINKS_DB = {
 };
 
 /* ============================================================
-   OJO ASCII — MuncixOp (61 chars, 32 lineas)
+   OJO ASCII
    ============================================================ */
 const EYE_ASCII = [
   '@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@',
@@ -130,13 +130,17 @@ function unlockAch(key, name) {
 function showAchToast(name) {
   const toast = document.createElement('div');
   toast.className = 'ach-toast';
-  toast.innerHTML = `<div class="ach-title">LOGRO DESBLOQUEADO</div><div class="ach-desc">${escapeHTML(name)}</div>`;
+  toast.innerHTML = `
+    <div class="ach-title">LOGRO DESBLOQUEADO</div>
+    <div class="ach-desc">${escapeHTML(name)}</div>
+    <div class="ach-meta">${new Date().toLocaleTimeString()}</div>
+  `;
   document.body.appendChild(toast);
   playSuccess();
   setTimeout(() => {
     toast.style.animation = 'achIn .4s reverse forwards';
     setTimeout(() => toast.remove(), 400);
-  }, 3200);
+  }, 3400);
 }
 
 const UNLOCKED_KEY = 'void_unlocked_links';
@@ -225,17 +229,17 @@ function playGlitch() {
   try {
     const a = audio(), t = a.currentTime;
     const n1 = a.createBufferSource(), g1 = a.createGain();
-    n1.buffer = noiseBuf(a, .15);
-    g1.gain.setValueAtTime(.06, t);
-    g1.gain.exponentialRampToValueAtTime(.001, t + .15);
-    n1.connect(g1); g1.connect(a.destination); n1.start(t); n1.stop(t + .15);
+    n1.buffer = noiseBuf(a, .2);
+    g1.gain.setValueAtTime(.08, t);
+    g1.gain.exponentialRampToValueAtTime(.001, t + .2);
+    n1.connect(g1); g1.connect(a.destination); n1.start(t); n1.stop(t + .2);
     const o = a.createOscillator(), g2 = a.createGain();
     o.type = 'sawtooth';
     o.frequency.setValueAtTime(2000, t);
-    o.frequency.exponentialRampToValueAtTime(100, t + .1);
-    g2.gain.setValueAtTime(.04, t);
-    g2.gain.exponentialRampToValueAtTime(.001, t + .1);
-    o.connect(g2); g2.connect(a.destination); o.start(t); o.stop(t + .1);
+    o.frequency.exponentialRampToValueAtTime(100, t + .15);
+    g2.gain.setValueAtTime(.05, t);
+    g2.gain.exponentialRampToValueAtTime(.001, t + .15);
+    o.connect(g2); g2.connect(a.destination); o.start(t); o.stop(t + .15);
   } catch (e) {}
 }
 function playBoot() {
@@ -296,8 +300,44 @@ function playWhoosh() {
     n.start(t); n.stop(t + .5);
   } catch (e) {}
 }
+function playImpact() {
+  if (!audioEnabled) return;
+  try {
+    const a = audio(), t = a.currentTime;
+    const o = a.createOscillator(), g = a.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(80, t);
+    o.frequency.exponentialRampToValueAtTime(30, t + .4);
+    g.gain.setValueAtTime(.15, t);
+    g.gain.exponentialRampToValueAtTime(.001, t + .4);
+    o.connect(g); g.connect(a.destination);
+    o.start(t); o.stop(t + .4);
+    const n = a.createBufferSource(), ng = a.createGain();
+    n.buffer = noiseBuf(a, .15);
+    ng.gain.setValueAtTime(.08, t);
+    ng.gain.exponentialRampToValueAtTime(.001, t + .15);
+    n.connect(ng); ng.connect(a.destination); n.start(t); n.stop(t + .15);
+  } catch (e) {}
+}
+function playPowerUp() {
+  if (!audioEnabled) return;
+  try {
+    const a = audio(), t = a.currentTime;
+    for (let i = 0; i < 5; i++) {
+      const o = a.createOscillator(), g = a.createGain();
+      o.type = 'square';
+      o.frequency.setValueAtTime(300 + i * 200, t + i * .06);
+      g.gain.setValueAtTime(.03, t + i * .06);
+      g.gain.exponentialRampToValueAtTime(.001, t + i * .06 + .1);
+      o.connect(g); g.connect(a.destination);
+      o.start(t + i * .06); o.stop(t + i * .06 + .1);
+    }
+  } catch (e) {}
+}
 
-/* ---------- MATRIX CANVAS ---------- */
+/* ============================================================
+   MATRIX CANVAS (fondo)
+   ============================================================ */
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
 let W, H, cols, drops, fontSize = 14;
@@ -332,9 +372,60 @@ function drawMatrix() {
 }
 if (!reducedMotion) drawMatrix();
 
-/* ---------- WINDOW SYSTEM ---------- */
+/* ============================================================
+   PARTICLE CANVAS (encima)
+   ============================================================ */
+const pcanvas = document.getElementById('p');
+const pctx = pcanvas.getContext('2d');
+let pW, pH;
+function resizeParticles() {
+  pW = pcanvas.width = window.innerWidth;
+  pH = pcanvas.height = window.innerHeight;
+}
+resizeParticles();
+window.addEventListener('resize', resizeParticles);
+
+const particles = [];
+const PARTICLE_COUNT = mob ? 20 : 50;
+for (let i = 0; i < PARTICLE_COUNT; i++) {
+  particles.push({
+    x: Math.random() * (pW || window.innerWidth),
+    y: Math.random() * (pH || window.innerHeight),
+    vx: (Math.random() - .5) * .4,
+    vy: (Math.random() - .5) * .4,
+    size: Math.random() * 2 + .5,
+    alpha: Math.random() * .5 + .2,
+    char: Math.random() > .5 ? '·' : '˙',
+  });
+}
+
+function drawParticles() {
+  if (reducedMotion) { requestAnimationFrame(drawParticles); return; }
+  pctx.clearRect(0, 0, pW, pH);
+  const accent = getComputedStyle(document.body).getPropertyValue('--accent').trim() || '#3ddc84';
+  particles.forEach(p => {
+    p.x += p.vx;
+    p.y += p.vy;
+    if (p.x < 0) p.x = pW;
+    if (p.x > pW) p.x = 0;
+    if (p.y < 0) p.y = pH;
+    if (p.y > pH) p.y = 0;
+    pctx.fillStyle = accent;
+    pctx.globalAlpha = p.alpha;
+    pctx.font = `${p.size * 4}px monospace`;
+    pctx.fillText(p.char, p.x, p.y);
+  });
+  pctx.globalAlpha = 1;
+  requestAnimationFrame(drawParticles);
+}
+drawParticles();
+
+/* ============================================================
+   WINDOW SYSTEM
+   ============================================================ */
 const winsContainer = document.getElementById('wins');
 const dock = document.getElementById('dock');
+const launcher = document.getElementById('launcher');
 let zIndex = 10;
 const openWindows = new Map();
 
@@ -371,8 +462,12 @@ function createWindow(title, options = {}) {
 
   winsContainer.appendChild(win);
   openWindows.set(id, { el: win, title, minimized: false });
+  updateLauncher();
 
   win.addEventListener('mousedown', () => { win.style.zIndex = ++zIndex; });
+
+  // Double click title bar = maximize
+  win.querySelector('.win-bar').addEventListener('dblclick', () => toggleMaximize(id));
 
   win.querySelector('.close').addEventListener('click', (e) => { e.stopPropagation(); closeWindow(id); });
   win.querySelector('.min').addEventListener('click', (e) => { e.stopPropagation(); minimizeWindow(id); });
@@ -381,15 +476,21 @@ function createWindow(title, options = {}) {
   makeDraggable(win, win.querySelector('.win-bar'));
   makeResizable(win, win.querySelector('.rz'));
 
+  // Custom event when window body is set up
   return { id, el: win, body: win.querySelector('.win-body') };
 }
 
 function closeWindow(id) {
   const entry = openWindows.get(id);
   if (!entry) return;
-  entry.el.style.animation = 'winIn .3s cubic-bezier(.22,1,.36,1) reverse forwards';
-  setTimeout(() => { entry.el.remove(); openWindows.delete(id); updateDock(); }, 260);
+  entry.el.classList.add('closing');
   playGlitch();
+  setTimeout(() => {
+    entry.el.remove();
+    openWindows.delete(id);
+    updateDock();
+    updateLauncher();
+  }, 380);
 }
 function minimizeWindow(id) {
   const entry = openWindows.get(id);
@@ -428,6 +529,11 @@ function updateDock() {
     }
   });
   dock.classList.toggle('on', hasMin);
+}
+
+function updateLauncher() {
+  const shouldShow = openWindows.size === 0;
+  launcher.classList.toggle('on', shouldShow);
 }
 
 function makeDraggable(win, handle) {
@@ -507,7 +613,92 @@ function showError(title, message) {
   setTimeout(() => { if (pop.parentNode) close(); }, 6000);
 }
 
-/* ---------- HELPERS ---------- */
+/* ============================================================
+   EFFECTS HELPERS
+   ============================================================ */
+function effectRipple(x, y) {
+  const r = document.createElement('div');
+  r.className = 'ripple';
+  r.style.left = x + 'px';
+  r.style.top = y + 'px';
+  r.style.width = '20px';
+  r.style.height = '20px';
+  document.body.appendChild(r);
+  setTimeout(() => r.remove(), 800);
+}
+
+function effectFlash(color) {
+  const f = document.createElement('div');
+  f.className = 'screen-flash';
+  if (color) f.style.background = color;
+  document.body.appendChild(f);
+  setTimeout(() => f.remove(), 320);
+}
+
+function effectQuake() {
+  document.body.classList.remove('quake');
+  void document.body.offsetWidth;
+  document.body.classList.add('quake');
+  playImpact();
+  setTimeout(() => document.body.classList.remove('quake'), 700);
+}
+
+function effectGlitchSlice() {
+  for (let i = 0; i < 3; i++) {
+    setTimeout(() => {
+      const s = document.createElement('div');
+      s.className = 'glitch-slice';
+      s.style.top = (Math.random() * window.innerHeight) + 'px';
+      document.body.appendChild(s);
+      setTimeout(() => s.remove(), 320);
+    }, i * 60);
+  }
+}
+
+function effectConfetti(count = 30) {
+  const colors = ['#3ddc84', '#5eaaff', '#c77dff', '#ffcc00', '#ff5fa2', '#00ffff'];
+  const glyphs = ['*', '+', '·', '×', '◆', '□', '■', '◇', '○', '●'];
+  for (let i = 0; i < count; i++) {
+    setTimeout(() => {
+      const c = document.createElement('div');
+      c.className = 'confetti';
+      c.textContent = glyphs[Math.floor(Math.random() * glyphs.length)];
+      c.style.left = Math.random() * 100 + 'vw';
+      c.style.color = colors[Math.floor(Math.random() * colors.length)];
+      c.style.fontSize = (Math.random() * 14 + 10) + 'px';
+      c.style.animationDuration = (Math.random() * 2 + 2) + 's';
+      c.style.animationDelay = '0s';
+      document.body.appendChild(c);
+      setTimeout(() => c.remove(), 4200);
+    }, i * 30);
+  }
+}
+
+function scrambleText(el, target, duration = 500) {
+  const chars = '!@#$%^&*()_+-=[]{}|;:<>?/\\`~0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const start = performance.now();
+  const original = target;
+  function frame() {
+    const elapsed = performance.now() - start;
+    const progress = Math.min(elapsed / duration, 1);
+    let out = '';
+    for (let i = 0; i < original.length; i++) {
+      if (i < original.length * progress) {
+        out += original[i];
+      } else {
+        out += chars[Math.floor(Math.random() * chars.length)];
+      }
+    }
+    el.textContent = out;
+    if (progress < 1) requestAnimationFrame(frame);
+    else el.textContent = original;
+  }
+  frame();
+}
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
 const PROMPT_USER = 'muncixop';
 const PROMPT_HOST = 'void';
 const PROMPT_PATH = '~';
@@ -554,6 +745,7 @@ function launchBruteforce(win, linkKey) {
   printLine(body, `:: Pista: ${escapeHTML(link.hint)}`, 'warn');
   printLine(body, `:: Escribe: unlock ${linkKey} TOKEN`, 'dim');
   printLine(body, '');
+  effectGlitchSlice();
 
   const panel = document.createElement('div');
   panel.className = 'brute-panel';
@@ -599,6 +791,9 @@ function launchBruteforce(win, linkKey) {
     '[!] Servidor respondiendo lento, aumentando timeout...',
     '[+] Descifrando handshake TLS...',
     '[+] Interceptando paquetes en la subred...',
+    '[+] Inyectando payload en el handshake...',
+    '[!] Sobrecalentando GPU, bajando intensidad...',
+    '[+] Corrompiendo checksum del servidor...',
   ];
 
   const termInterval = setInterval(() => {
@@ -666,6 +861,8 @@ function showUnlockResult(win, linkKey) {
   unlockedLinks[linkKey] = true;
   saveUnlocked();
   playSuccess();
+  effectConfetti(40);
+  effectFlash('rgba(61,220,132,.3)');
   unlockAch('first_unlock', 'Primer desbloqueo');
 
   printLine(body, '');
@@ -702,6 +899,24 @@ function showUnlockResult(win, linkKey) {
 }
 
 /* ============================================================
+   BLINK DEL OJO
+   ============================================================ */
+function blinkEye(body) {
+  const eyeLines = body.querySelectorAll('.out.eye');
+  if (!eyeLines.length) return;
+  eyeLines.forEach(l => l.style.opacity = '0');
+  playBeep(180, .04);
+  setTimeout(() => {
+    eyeLines.forEach(l => l.style.opacity = '1');
+  }, 110);
+  if (Math.random() > .5) {
+    setTimeout(() => {
+      eyeLines.forEach(l => l.style.opacity = '0');
+      setTimeout(() => eyeLines.forEach(l => l.style.opacity = '1'), 70);
+    }, 180);
+  }
+}
+/* ============================================================
    COMANDOS
    ============================================================ */
 const COMMANDS = {
@@ -722,12 +937,34 @@ const COMMANDS = {
         ['scan', 'escaneo de red visual'],
         ['trace <host>', 'traceroute simulado'],
         ['whois <host>', 'informacion whois simulada'],
+        ['ping <host>', 'ping simulado'],
+        ['nmap <target>', 'escaneo de puertos'],
+        ['curl <url>', 'HTTP GET simulado'],
+        ['ps', 'procesos en ejecucion'],
+        ['top', 'monitor de recursos'],
+        ['tree', 'arbol de directorios'],
+        ['ls', 'lista archivos'],
+        ['pwd', 'directorio actual'],
         ['decrypt', 'minijuego de descifrado'],
         ['cowsay <texto>', 'vaca que dice cosas'],
         ['fortune', 'frase aleatoria'],
         ['weather [ciudad]', 'clima simulado'],
         ['crypto [symbol]', 'precios de cripto simulados'],
+        ['dice [caras]', 'tira los dados'],
+        ['8ball <pregunta>', 'bola magica'],
+        ['random', 'dato aleatorio'],
+        ['countdown <n>', 'cuenta atras'],
+        ['spinner', 'spinner animado'],
+        ['type <texto>', 'efecto typewriter'],
+        ['rainbow <texto>', 'texto arcoiris'],
+        ['scramble <texto>', 'efecto scramble'],
+        ['ascii <texto>', 'banner ASCII'],
+        ['confetti', 'lluvia de confetti'],
         ['theme <color>', 'cambia el color de acento'],
+        ['cyberpunk', 'modo glitch extremo'],
+        ['hypnotize', 'efecto hipnotico'],
+        ['flash', 'flash de pantalla'],
+        ['quake', 'terremoto visual'],
         ['history', 'historial de comandos'],
         ['achievements', 'logros desbloqueados'],
         ['fastfetch', 'info del sistema (con ojo)'],
@@ -742,6 +979,8 @@ const COMMANDS = {
         ['sound', 'activa/desactiva audio'],
         ['reset', 'borra tokens guardados'],
         ['reboot', 'reinicia la terminal'],
+        ['void', 'abre una nueva terminal'],
+        ['close', 'cierra la terminal'],
         ['sudo', 'prueba suerte'],
         ['banner', 'muestra el banner'],
         ['exit', 'cierra la ventana'],
@@ -900,8 +1139,9 @@ const COMMANDS = {
         printLine(body, `x TOKEN INVALIDO: ${escapeHTML(token)}`, 'err');
         printLine(body, `  Pista: ${escapeHTML(LINKS_DB[key].hint)}`, 'dim');
         playError();
+        effectQuake();
         win.el.classList.add('corrupt-shake');
-        setTimeout(() => win.el.classList.remove('corrupt-shake'), 700);
+        setTimeout(() => win.el.classList.remove('corrupt-shake'), 800);
       }
     }
   },
@@ -922,7 +1162,7 @@ const COMMANDS = {
   },
 
   /* ============================================================
-     FASTFETCH — Ojo + info
+     FASTFETCH
      ============================================================ */
   fastfetch: {
     desc: 'Info del sistema (con ojo)',
@@ -934,22 +1174,20 @@ const COMMANDS = {
       const mem = (40 + Math.random() * 10).toFixed(1);
       const lat = (Math.random() * 0.05).toFixed(3);
 
-      // ---- OJO ----
       eye.forEach(line => {
         printLine(body, `<span class="eye">${escapeHTML(line)}</span>`, 'eye');
       });
 
       printLine(body, '', '');
 
-      // ---- INFO ----
       printLine(body, `  <span class="ok">muncixop</span><span class="dim">@</span><span class="ok">void</span>`, '');
       printLine(body, '  ' + '-'.repeat(30), 'dim');
 
       const info = [
-        ['OS',       'VOID SYSTEMS v3.0'],
+        ['OS',       'VOID SYSTEMS v5.0'],
         ['Host',     'muncixop.github.io'],
         ['Kernel',   'glitch-6.6.6-x64'],
-        ['Shell',    'voidsh 3.0'],
+        ['Shell',    'voidsh 5.0'],
         ['Uptime',   uptime + 's'],
         ['CPU',      'Void Core (64) @ 3.20GHz'],
         ['GPU',      'Phantom Renderer'],
@@ -958,6 +1196,7 @@ const COMMANDS = {
         ['Theme',    (document.body.className.match(/theme-\w+/)?.[0] || 'glitch-cyberpunk').replace('theme-', '')],
         ['Links',    unlocked + '/' + total + ' desbloqueados'],
         ['User',     achievements.first_unlock ? 'hacker' : 'guest'],
+        ['Mode',     document.body.classList.contains('cyberpunk') ? 'CYBERPUNK' : 'normal'],
       ];
 
       info.forEach(([k, v]) => {
@@ -966,7 +1205,6 @@ const COMMANDS = {
 
       printLine(body, '');
 
-      // ---- PARPADEO (opcional, creepy) ----
       setTimeout(() => blinkEye(body), 1200);
       setTimeout(() => blinkEye(body), 5500);
       setTimeout(() => blinkEye(body), 11000);
@@ -990,6 +1228,7 @@ const COMMANDS = {
       printLine(body, ':: Interfaz: eth0 (192.168.1.0/24)', 'dim');
       printLine(body, '');
       playWhoosh();
+      effectGlitchSlice();
 
       const hosts = [
         { ip: '192.168.1.1',  mac: 'A4:2B:B0:' + randomHex(2) + ':' + randomHex(2) + ':' + randomHex(2), name: 'router.local',      port: '80,443' },
@@ -1004,12 +1243,14 @@ const COMMANDS = {
 
       for (const h of hosts) {
         await sleep(200 + Math.random() * 300);
-        printLine(body, `  ${padEnd(h.ip, 16)}${padEnd(h.mac, 20)}${padEnd(h.name, 18)}${h.port}`);
+        const line = printLine(body, `  ${padEnd(h.ip, 16)}${padEnd(h.mac, 20)}${padEnd(h.name, 18)}${h.port}`);
+        line.style.animation = 'lineIn .2s ease';
         playTick(700 + Math.random() * 500);
       }
 
       printLine(body, '');
       printLine(body, '[OK] Escaneo completado. 5 hosts detectados.', 'ok');
+      effectFlash('rgba(61,220,132,.15)');
       unlockAch('scanner', 'Escaneo completo');
     }
   },
@@ -1079,6 +1320,200 @@ const COMMANDS = {
   },
 
   /* ============================================================
+     PING
+     ============================================================ */
+  ping: {
+    desc: 'Ping simulado',
+    run: async (body, win, args) => {
+      const host = (args[0] || 'muncixop.github.io').toLowerCase();
+      printLine(body, `PING ${escapeHTML(host)} (185.199.108.153) 56(84) bytes of data.`, 'accent');
+      printLine(body, '');
+      let min = Infinity, max = 0, sum = 0;
+      const n = 4;
+      for (let i = 0; i < n; i++) {
+        await sleep(700 + Math.random() * 300);
+        const t = (Math.random() * 30 + 8).toFixed(1);
+        min = Math.min(min, parseFloat(t));
+        max = Math.max(max, parseFloat(t));
+        sum += parseFloat(t);
+        printLine(body, `64 bytes from ${escapeHTML(host)}: icmp_seq=${i + 1} ttl=57 time=${t} ms`, 'ok');
+        playTick(800 + Math.random() * 300);
+      }
+      printLine(body, '');
+      printLine(body, `--- ${escapeHTML(host)} ping statistics ---`, 'dim');
+      printLine(body, `${n} packets transmitted, ${n} received, 0% packet loss, time ${(n * 800)}ms`, 'dim');
+      printLine(body, `rtt min/avg/max/mdev = ${min.toFixed(1)}/${(sum / n).toFixed(1)}/${max.toFixed(1)}/${(Math.random() * 5 + 1).toFixed(1)} ms`, 'info');
+      unlockAch('pinger', 'Ping Master');
+    }
+  },
+
+  /* ============================================================
+     NMAP
+     ============================================================ */
+  nmap: {
+    desc: 'Escaneo de puertos',
+    run: async (body, win, args) => {
+      const target = (args[0] || '192.168.1.1').toLowerCase();
+      printLine(body, `Starting Nmap 7.94 ( https://nmap.org ) at ${new Date().toISOString().slice(0, 16).replace('T', ' ')}`, 'accent');
+      printLine(body, `Nmap scan report for ${escapeHTML(target)}`, '');
+      printLine(body, `Host is up (0.0${Math.floor(Math.random() * 9) + 1}s latency).`, 'dim');
+      printLine(body, '');
+      printLine(body, 'PORT     STATE    SERVICE       VERSION', 'info');
+      const ports = [
+        ['22/tcp',   'open',   'ssh',     'OpenSSH 9.0'],
+        ['80/tcp',   'open',   'http',    'nginx 1.24'],
+        ['443/tcp',  'open',   'https',   'nginx 1.24 (TLS 1.3)'],
+        ['3306/tcp', 'closed', 'mysql',   ''],
+        ['5432/tcp', 'filtered', 'postgresql', ''],
+        ['8080/tcp', 'open',   'http-proxy', 'Void Proxy 1.0'],
+        ['9000/tcp', 'open',   'cslistener', 'Phantom Server'],
+      ];
+      for (const [p, s, svc, ver] of ports) {
+        await sleep(250 + Math.random() * 200);
+        const stateCls = s === 'open' ? 'ok' : (s === 'closed' ? 'dim' : 'warn');
+        printLine(body, `${padEnd(p, 9)}<span class="${stateCls}">${padEnd(s, 9)}</span>${padEnd(svc, 14)}${ver}`, '');
+        playTick(500 + Math.random() * 500);
+      }
+      printLine(body, '');
+      printLine(body, `Nmap done: 1 IP address (1 host up) scanned in ${(Math.random() * 5 + 1).toFixed(2)} seconds`, 'dim');
+      effectGlitchSlice();
+      unlockAch('nmap', 'Puertos Abiertos');
+    }
+  },
+
+  /* ============================================================
+     CURL
+     ============================================================ */
+  curl: {
+    desc: 'HTTP GET simulado',
+    run: async (body, win, args) => {
+      const url = args[0] || 'https://muncixop.github.io';
+      printLine(body, `:: curl -i ${escapeHTML(url)}`, 'accent');
+      await sleep(400);
+      printLine(body, 'HTTP/2 200', 'ok');
+      printLine(body, 'content-type: text/html; charset=utf-8', '');
+      printLine(body, 'server: GitHub.com', '');
+      printLine(body, `date: ${new Date().toUTCString()}`, '');
+      printLine(body, 'cache-control: max-age=600', '');
+      printLine(body, 'content-length: ' + (Math.floor(Math.random() * 50000) + 1000), '');
+      printLine(body, 'x-github-request-id: ' + randomHex(8) + ':' + randomHex(8) + ':' + randomHex(8) + ':' + randomHex(4), 'dim');
+      printLine(body, '');
+      printLine(body, '<!DOCTYPE html>', 'mono-dim');
+      printLine(body, '<html lang="es">', 'mono-dim');
+      printLine(body, '<head><title>Muncix_Op</title></head>', 'mono-dim');
+      printLine(body, '<body>... [truncado] ...</body>', 'mono-dim');
+      printLine(body, '</html>', 'mono-dim');
+      printLine(body, '');
+      printLine(body, '[OK] Respuesta recibida.', 'ok');
+      unlockAch('curler', 'HTTP Client');
+    }
+  },
+
+  /* ============================================================
+     PS
+     ============================================================ */
+  ps: {
+    desc: 'Procesos en ejecucion',
+    run: (body) => {
+      printLine(body, '  PID  USER      %CPU  %MEM  COMMAND', 'info');
+      printLine(body, '  ' + '-'.repeat(56), 'dim');
+      const procs = [
+        [1,    'root',     0.0, 0.1, '/sbin/init'],
+        [42,   'root',     0.1, 0.2, '/usr/lib/systemd/systemd-journald'],
+        [128,  'muncixop', 2.4, 1.8, 'voidsh --session main'],
+        [256,  'muncixop', 15.3, 8.7, '/usr/bin/phantom-renderer'],
+        [512,  'muncixop', 42.1, 12.4, 'matrix-daemon --intensity high'],
+        [1024, 'root',     0.0, 0.0, '[kworker/0:2]'],
+        [2048, 'muncixop', 8.9, 4.2, 'node /opt/void/server.js'],
+        [4096, 'muncixop', 0.3, 0.8, 'git status --porcelain'],
+        [8192, 'muncixop', 1.2, 2.1, 'cowsay "moo"'],
+      ];
+      procs.forEach(p => {
+        printLine(body, `  ${padStart(p[0], 4)}  ${padEnd(p[1], 9)} ${padStart(p[2].toFixed(1), 5)} ${padStart(p[3].toFixed(1), 5)}  ${p[4]}`, '');
+      });
+    }
+  },
+
+  /* ============================================================
+     TOP
+     ============================================================ */
+  top: {
+    desc: 'Monitor de recursos',
+    run: async (body) => {
+      printLine(body, 'top - ' + new Date().toLocaleTimeString() + ' up 5 days, 3:21, 1 user, load average: 0.42, 0.38, 0.31', 'accent');
+      printLine(body, '');
+      printLine(body, 'Tasks: 142 total,   2 running, 140 sleeping,   0 stopped,   0 zombie', 'dim');
+      printLine(body, '%Cpu(s):  ' + (5 + Math.random() * 15).toFixed(1) + ' us,  ' + (Math.random() * 3).toFixed(1) + ' sy,  0.0 ni, ' + (80 + Math.random() * 10).toFixed(1) + ' id', 'dim');
+      printLine(body, 'MiB Mem : 131072.0 total,  ' + (40000 + Math.random() * 10000).toFixed(1) + ' free,  ' + (45000 + Math.random() * 10000).toFixed(1) + ' used,  ' + (20000 + Math.random() * 5000).toFixed(1) + ' buff/cache', 'dim');
+      printLine(body, '');
+      printLine(body, '  PID USER      PR  NI    VIRT    RES  %CPU  %MEM     TIME+ COMMAND', 'info');
+      const procs = [
+        [512,  'muncixop', 20, 0, '12.4g', '2.1g', 42.1, 1.7, '128:42.11', 'matrix-daemon'],
+        [256,  'muncixop', 20, 0, '4.8g',  '1.2g', 15.3, 0.9, '42:18.02',  'phantom-renderer'],
+        [2048, 'muncixop', 20, 0, '892m',  '342m', 8.9,  0.3, '18:04.55',  'node server.js'],
+        [128,  'muncixop', 20, 0, '124m',  '42m',  2.4,  0.1, '4:22.01',   'voidsh'],
+        [1,    'root',     20, 0, '168m',  '12m',  0.1,  0.0, '0:24.18',   'systemd'],
+      ];
+      procs.forEach((p, i) => {
+        printLine(body, `  ${padStart(p[0], 4)} ${padEnd(p[1], 8)} ${padStart(p[2], 4)} ${padStart(p[3], 3)} ${padStart(p[4], 6)} ${padStart(p[5], 6)} ${padStart(p[6].toFixed(1), 5)} ${padStart(p[7].toFixed(1), 5)} ${padStart(p[8], 10)} ${p[9]}`, i === 0 ? 'ok' : '');
+      });
+      printLine(body, '');
+      printLine(body, 'Monitor en vivo - presiona otra tecla para salir', 'dim');
+    }
+  },
+
+  /* ============================================================
+     TREE
+     ============================================================ */
+  tree: {
+    desc: 'Arbol de directorios',
+    run: (body) => {
+      printLine(body, '.', 'info');
+      const lines = [
+        '├── public/',
+        '│   ├── index.html',
+        '│   ├── style.css',
+        '│   ├── main.js',
+        '│   └── favicon.ico',
+        '├── assets/',
+        '│   ├── eye.ascii',
+        '│   ├── matrix.js',
+        '│   └── sounds/',
+        '│       ├── boot.wav',
+        '│       └── glitch.wav',
+        '├── projects/',
+        '│   ├── jujutsu-shenanigans/',
+        '│   │   ├── combat.lua',
+        '│   │   └── abilities.lua',
+        '│   └── blockbench-pipeline/',
+        '│       ├── models/',
+        '│       └── scripts/',
+        '├── .gitignore',
+        '├── package.json',
+        '└── README.md',
+      ];
+      lines.forEach(l => printLine(body, l, 'mono-dim'));
+      printLine(body, '');
+      printLine(body, '4 directories, 15 files', 'dim');
+    }
+  },
+
+  /* ============================================================
+     LS / PWD
+     ============================================================ */
+  ls: {
+    desc: 'Lista archivos',
+    run: (body) => {
+      printLine(body, '<span class="info">public/</span>   <span class="info">assets/</span>   <span class="info">projects/</span>   README.md   package.json   .gitignore', '');
+    }
+  },
+
+  pwd: {
+    desc: 'Directorio actual',
+    run: (body) => printLine(body, '/home/muncixop/void-systems', 'info')
+  },
+
+  /* ============================================================
      DECRYPT
      ============================================================ */
   decrypt: {
@@ -1109,6 +1544,7 @@ const COMMANDS = {
       printLine(body, '');
       printLine(body, `[OK] Descifrado: <span class="ok">${escapeHTML(target)}</span>`, 'ok');
       playSuccess();
+      effectFlash('rgba(61,220,132,.2)');
       unlockAch('decryptor', 'Descifrador');
     }
   },
@@ -1133,7 +1569,7 @@ const COMMANDS = {
       printLine(body, '            (__)\\       )\\/\\');
       printLine(body, '                ||----w |');
       printLine(body, '                ||     ||');
-      unlockAch('cow', 'Vaca filósofa');
+      unlockAch('cow', 'Vaca filosofa');
     }
   },
 
@@ -1159,6 +1595,10 @@ const COMMANDS = {
         'Si no puedes explicarlo simple, no lo entiendes bien.',
         'Los comentarios mienten. El codigo no.',
         'Piensa. Programa. Repite.',
+        'El unico modo de aprender un lenguaje nuevo es escribir un programa en el.',
+        'La depuracion es el doble de dificil que escribir el codigo. Si escribes el codigo lo mas inteligente que puedes, por definicion no eres lo suficientemente inteligente para depurarlo.',
+        'Antes de que el software sea reutilizable, primero tiene que ser utilizable.',
+        'La perfeccion se alcanza no cuando no hay nada que agregar, sino cuando no hay nada que quitar.',
       ];
       printLine(body, ':: FORTUNE', 'accent');
       printLine(body, '');
@@ -1222,12 +1662,207 @@ const COMMANDS = {
   },
 
   /* ============================================================
+     DICE / 8BALL / RANDOM
+     ============================================================ */
+  dice: {
+    desc: 'Tira los dados',
+    run: (body, win, args) => {
+      const faces = parseInt(args[0]) || 6;
+      const r = Math.floor(Math.random() * faces) + 1;
+      printLine(body, `Tirando dado de ${faces} caras...`, 'dim');
+      const line = printLine(body, '', '');
+      scrambleText(line, `-> ${r}`, 400);
+      setTimeout(() => { line.className = 'out ok'; }, 400);
+    }
+  },
+
+  '8ball': {
+    desc: 'Bola magica',
+    run: (body, win, args) => {
+      const q = args.join(' ') || '(sin pregunta)';
+      const answers = [
+        'Si, definitivamente.', 'No lo creo.', 'Sin duda.', 'Pregunta otra vez.',
+        'No cuentes con eso.', 'Es seguro.', 'Muy dudoso.', 'Las señales apuntan a si.',
+        'Concéntrate y pregunta de nuevo.', 'No.', 'Probablemente.', 'El futuro es incierto.'
+      ];
+      printLine(body, `Pregunta: ${escapeHTML(q)}`, 'dim');
+      const line = printLine(body, '', '');
+      scrambleText(line, randomFrom(answers), 500);
+      setTimeout(() => { line.className = 'out accent'; }, 500);
+    }
+  },
+
+  random: {
+    desc: 'Dato aleatorio',
+    run: (body) => {
+      const facts = [
+        'El primer bug informático real fue una polilla atrapada en un relé en 1947.',
+        'El código más antiguo aún en uso es COBOL, de 1959.',
+        'Un byte son 8 bits, un nibble son 4 bits, un bit es un bit.',
+        'El primer videojuego fue "Tennis for Two" (1958).',
+        'La primera programadora fue Ada Lovelace (1843).',
+        'Linux empezó como un proyecto personal de Linus Torvalds en 1991.',
+        'JavaScript se hizo en 10 días.',
+        'Python se llama así por Monty Python, no por la serpiente.',
+        'El código de la NASA tiene menos de 1 bug por cada 400,000 líneas.',
+        'El 90% del código del mundo es COBOL.',
+      ];
+      printLine(body, ':: DATO ALEATORIO', 'accent');
+      printLine(body, '');
+      printLine(body, `  ${escapeHTML(randomFrom(facts))}`, 'info');
+    }
+  },
+
+  /* ============================================================
+     COUNTDOWN
+     ============================================================ */
+  countdown: {
+    desc: 'Cuenta atras',
+    run: async (body, win, args) => {
+      let n = parseInt(args[0]) || 5;
+      n = Math.min(Math.max(n, 1), 20);
+      for (let i = n; i > 0; i--) {
+        const line = printLine(body, `  ${i}...`, 'accent');
+        playBeep(400 + i * 60, .15);
+        effectFlash('rgba(61,220,132,.05)');
+        await sleep(500);
+      }
+      const line = printLine(body, '  DESPEGUE!', 'ok');
+      line.classList.add('glitch');
+      effectConfetti(30);
+      playPowerUp();
+    }
+  },
+
+  /* ============================================================
+     SPINNER
+     ============================================================ */
+  spinner: {
+    desc: 'Spinner animado',
+    run: async (body) => {
+      const frames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+      const line = printLine(body, '', 'accent');
+      for (let i = 0; i < 40; i++) {
+        line.textContent = `  ${frames[i % frames.length]}  Procesando...`;
+        await sleep(60);
+      }
+      line.innerHTML = `  <span class="ok">[OK]</span> Procesado completo.`;
+    }
+  },
+
+  /* ============================================================
+     TYPE
+     ============================================================ */
+  type: {
+    desc: 'Efecto typewriter',
+    run: async (body, win, args) => {
+      const text = args.join(' ') || 'Hola mundo desde VOID SYSTEMS';
+      const line = printLine(body, '', 'accent');
+      for (let i = 0; i < text.length; i++) {
+        line.textContent += text[i];
+        if (i % 3 === 0) playTick(600 + Math.random() * 300);
+        await sleep(40);
+      }
+    }
+  },
+
+  /* ============================================================
+     RAINBOW
+     ============================================================ */
+  rainbow: {
+    desc: 'Texto arcoiris',
+    run: (body, win, args) => {
+      const text = args.join(' ') || 'MUNCIXOP';
+      const colors = ['#ff0040', '#ff8000', '#ffff00', '#00ff40', '#00aaff', '#8000ff', '#ff00aa'];
+      let html = '';
+      for (let i = 0; i < text.length; i++) {
+        const c = colors[i % colors.length];
+        html += `<span style="color:${c};text-shadow:0 0 8px ${c}80">${escapeHTML(text[i])}</span>`;
+      }
+      printLine(body, html, '');
+      playSuccess();
+    }
+  },
+
+  /* ============================================================
+     SCRAMBLE
+     ============================================================ */
+  scramble: {
+    desc: 'Efecto scramble',
+    run: async (body, win, args) => {
+      const text = args.join(' ') || 'VOID SYSTEMS';
+      const line = printLine(body, '', 'accent');
+      scrambleText(line, text, 800);
+      playGlitch();
+    }
+  },
+
+  /* ============================================================
+     ASCII (banner)
+     ============================================================ */
+  ascii: {
+    desc: 'Banner ASCII simple',
+    run: (body, win, args) => {
+      const text = (args.join(' ') || 'VOID').toUpperCase().slice(0, 12);
+      const font = {
+        'A': ['  ▄▄  ', ' █  █ ', ' ████ ', ' █  █ ', ' █  █ '],
+        'B': [' ███  ', ' █  █ ', ' ███  ', ' █  █ ', ' ███  '],
+        'C': [' ▄▄▄  ', '█     ', '█     ', '█     ', ' ▀▀▀  '],
+        'D': [' ███  ', ' █  █ ', ' █  █ ', ' █  █ ', ' ███  '],
+        'E': [' ████ ', ' █    ', ' ███  ', ' █    ', ' ████ '],
+        'F': [' ████ ', ' █    ', ' ███  ', ' █    ', ' █    '],
+        'G': [' ▄▄▄  ', '█     ', '█  ██ ', '█   █ ', ' ▀▀▀▀ '],
+        'H': [' █  █ ', ' █  █ ', ' ████ ', ' █  █ ', ' █  █ '],
+        'I': [' ███ ', '  █  ', '  █  ', '  █  ', ' ███ '],
+        'J': ['  ███', '   █ ', '   █ ', '█  █ ', ' ▀▀  '],
+        'K': [' █  █ ', ' █ █  ', ' ██   ', ' █ █  ', ' █  █ '],
+        'L': [' █    ', ' █    ', ' █    ', ' █    ', ' ████ '],
+        'M': [' █▄ ▄█ ', ' █ █ █ ', ' █ █ █ ', ' █   █ ', ' █   █ '],
+        'N': [' █▄  █ ', ' █ █ █ ', ' █  ██ ', ' █   █ ', ' █   █ '],
+        'O': [' ▄▄▄  ', '█   █ ', '█   █ ', '█   █ ', ' ▀▀▀  '],
+        'P': [' ███  ', ' █  █ ', ' ███  ', ' █    ', ' █    '],
+        'Q': [' ▄▄▄  ', '█   █ ', '█   █ ', '█  ██ ', ' ▀▀██ '],
+        'R': [' ███  ', ' █  █ ', ' ███  ', ' █ █  ', ' █  █ '],
+        'S': [' ▄▄▄▄ ', '█     ', ' ▀▀▀▄ ', '    █ ', ' ▀▀▀▀ '],
+        'T': [' █████', '   █  ', '   █  ', '   █  ', '   █  '],
+        'U': [' █  █ ', ' █  █ ', ' █  █ ', ' █  █ ', ' ▀▀▀▀ '],
+        'V': [' █   █', ' █   █', ' █   █', '  █ █ ', '   █  '],
+        'W': [' █   █ ', ' █   █ ', ' █ █ █ ', ' █ █ █ ', ' ▀▀ ▀▀ '],
+        'X': [' █   █', '  █ █ ', '   █  ', '  █ █ ', ' █   █'],
+        'Y': [' █   █', '  █ █ ', '   █  ', '   █  ', '   █  '],
+        'Z': [' █████', '   █  ', '  █   ', ' █    ', ' █████'],
+        ' ': ['     ', '     ', '     ', '     ', '     '],
+      };
+      for (let row = 0; row < 5; row++) {
+        let line = '  ';
+        for (const ch of text) {
+          line += (font[ch] ? font[ch][row] : font[' '][row]) + ' ';
+        }
+        printLine(body, line, 'accent');
+      }
+    }
+  },
+
+  /* ============================================================
+     CONFETTI
+     ============================================================ */
+  confetti: {
+    desc: 'Lluvia de confetti',
+    run: (body) => {
+      effectConfetti(60);
+      playSuccess();
+      printLine(body, '[OK] Confetti lanzado!', 'ok');
+      unlockAch('confetti', 'Fiestero');
+    }
+  },
+
+  /* ============================================================
      THEME
      ============================================================ */
   theme: {
     desc: 'Cambia el color de acento',
     run: (body, win, args) => {
-      const valid = ['green', 'red', 'blue', 'purple', 'amber', 'cyan', 'pink', 'mono'];
+      const valid = ['green', 'red', 'blue', 'purple', 'amber', 'cyan', 'pink', 'mono', 'rainbow'];
       const target = (args[0] || '').toLowerCase();
       if (!target) {
         printLine(body, `Uso: theme <${valid.join('|')}>`, 'warn');
@@ -1243,7 +1878,64 @@ const COMMANDS = {
       if (target !== 'green') document.body.classList.add('theme-' + target);
       printLine(body, `[OK] Tema cambiado a: ${target}`, 'ok');
       playSuccess();
+      effectFlash('rgba(61,220,132,.1)');
       unlockAch('themer', 'Estilista');
+      if (target === 'rainbow') unlockAch('rainbow', 'Arcoiris');
+    }
+  },
+
+  /* ============================================================
+     CYBERPUNK
+     ============================================================ */
+  cyberpunk: {
+    desc: 'Modo glitch extremo',
+    run: (body) => {
+      document.body.classList.toggle('cyberpunk');
+      const on = document.body.classList.contains('cyberpunk');
+      printLine(body, on ? '[!] CYBERPUNK MODE ON' : '[OK] Cyberpunk mode off', on ? 'err' : 'ok');
+      playGlitch();
+      effectGlitchSlice();
+      if (on) unlockAch('cyberpunk', 'Cyberpunk');
+    }
+  },
+
+  /* ============================================================
+     HYPNOTIZE
+     ============================================================ */
+  hypnotize: {
+    desc: 'Efecto hipnotico',
+    run: (body) => {
+      document.body.classList.add('hypnotize');
+      printLine(body, '[!] MIRAME A LOS OJOS...', 'warn');
+      playBeep(300, .5);
+      setTimeout(() => {
+        document.body.classList.remove('hypnotize');
+        printLine(body, '[OK] Despierta.', 'ok');
+      }, 4000);
+    }
+  },
+
+  /* ============================================================
+     FLASH
+     ============================================================ */
+  flash: {
+    desc: 'Flash de pantalla',
+    run: (body) => {
+      effectFlash();
+      playBeep(1200, .05);
+      printLine(body, '[!] Flash!', 'warn');
+    }
+  },
+
+  /* ============================================================
+     QUAKE
+     ============================================================ */
+  quake: {
+    desc: 'Terremoto visual',
+    run: (body) => {
+      effectQuake();
+      printLine(body, '[!] TERREMOTO DETECTADO', 'err');
+      unlockAch('quake', 'Terremoto');
     }
   },
 
@@ -1281,6 +1973,8 @@ const COMMANDS = {
       list.forEach(([k, v]) => {
         printLine(body, `  <span class="ok">[+]</span> ${escapeHTML(v.name)}`, '');
       });
+      printLine(body, '');
+      printLine(body, `  Total: ${list.length} logros`, 'dim');
     }
   },
 
@@ -1316,12 +2010,15 @@ const COMMANDS = {
       document.body.classList.add('mx-hit');
       win.el.classList.add('corrupt-shake');
       playGlitch();
+      effectGlitchSlice();
+      effectQuake();
       printLine(body, '[!] SOBRECARGA DE SENAL DETECTADA...', 'err');
       setTimeout(() => {
         document.body.classList.remove('mx-hit');
         win.el.classList.remove('corrupt-shake');
         printLine(body, '[OK] Sistema estabilizado.', 'ok');
-      }, 700);
+      }, 900);
+      unlockAch('glitch', 'Glitch Master');
     }
   },
 
@@ -1361,6 +2058,7 @@ const COMMANDS = {
     run: (body) => {
       printLine(body, '[!] Reiniciando sistema...', 'warn');
       playWhoosh();
+      effectFlash();
       setTimeout(() => {
         body.innerHTML = '';
         bootSequence(true);
@@ -1368,11 +2066,37 @@ const COMMANDS = {
     }
   },
 
+  /* ============================================================
+     VOID / CLOSE — abrir y cerrar terminal
+     ============================================================ */
+  void: {
+    desc: 'Abre una nueva terminal',
+    run: (body) => {
+      printLine(body, '[OK] Abriendo nueva terminal...', 'ok');
+      playSuccess();
+      setTimeout(() => {
+        bootSequence(true);
+      }, 300);
+      unlockAch('void', 'Multi-terminal');
+    }
+  },
+
+  close: {
+    desc: 'Cierra la terminal',
+    run: (body, win) => {
+      printLine(body, 'Cerrando sesion...', 'warn');
+      setTimeout(() => closeWindow(win.id), 400);
+    }
+  },
+
   sudo: {
     desc: 'Intenta escalar privilegios',
     run: (body) => {
       printLine(body, '[sudo] password for muncixop: ', 'warn');
-      setTimeout(() => printLine(body, 'Nice try. Pero no.', 'err'), 800);
+      setTimeout(() => {
+        printLine(body, 'Nice try. Pero no.', 'err');
+        effectQuake();
+      }, 800);
     }
   },
 
@@ -1386,7 +2110,7 @@ const COMMANDS = {
         ['  ╚██╗ ██╔╝██║   ██║██║██║  ██║', 'ok'],
         ['   ╚████╔╝ ╚██████╔╝██║██████╔╝', 'ok'],
         ['    ╚═══╝   ╚═════╝ ╚═╝╚═════╝ ', 'ok'],
-        ['  --- VOID SYSTEMS ---', 'accent'],
+        ['  --- VOID SYSTEMS v5.0 ---', 'accent'],
       ]);
     }
   },
@@ -1406,38 +2130,19 @@ const COMMANDS = {
 };
 
 /* ============================================================
-   BLINK DEL OJO
-   ============================================================ */
-function blinkEye(body) {
-  const eyeLines = body.querySelectorAll('.out.eye');
-  if (!eyeLines.length) return;
-  eyeLines.forEach(l => l.style.opacity = '0');
-  playBeep(180, .04);
-  setTimeout(() => {
-    eyeLines.forEach(l => l.style.opacity = '1');
-  }, 110);
-  // Doble parpadeo ocasional
-  if (Math.random() > .5) {
-    setTimeout(() => {
-      eyeLines.forEach(l => l.style.opacity = '0');
-      setTimeout(() => eyeLines.forEach(l => l.style.opacity = '1'), 70);
-    }, 180);
-  }
-}
-
-/* ============================================================
    BOOT SEQUENCE
    ============================================================ */
 let booted = false;
 async function bootSequence(isReboot = false) {
   if (booted && !isReboot) return;
-  booted = true;
+  if (!isReboot) booted = true;
 
   const term = createWindow('voidsh - ~', { width: 740, height: 580 });
   const body = term.body;
   body.style.minHeight = '100%';
 
   if (!isReboot) playBoot();
+  else playPowerUp();
 
   const bootLines = [
     ['VOID BIOS v6.6.6 - Inicializando...', 'dim', 120],
@@ -1446,8 +2151,10 @@ async function bootSequence(isReboot = false) {
     ['  [OK] GPU Phantom Renderer', 'ok', 80],
     ['  [OK] Dispositivos de entrada', 'ok', 70],
     ['  [OK] Red eth0 192.168.1.42/24', 'ok', 70],
+    ['  [OK] Modulo de audio sintetizado', 'ok', 60],
+    ['  [OK] Motor de glitch cargado', 'ok', 60],
     ['', '', 60],
-    ['Cargando VOID SYSTEMS v3.0...', 'info', 220],
+    ['Cargando VOID SYSTEMS v5.0...', 'info', 220],
     ['', '', 100],
   ];
   for (const [text, cls, delay] of bootLines) {
@@ -1455,18 +2162,27 @@ async function bootSequence(isReboot = false) {
     await sleep(delay);
   }
 
+  // Banner con scramble
+  const banner1 = printLine(body, '  ██████╗ ███████╗███████╗████████╗', 'ok');
+  await sleep(80);
+  const banner2 = printLine(body, '  ██╔══██╗██╔════╝██╔════╝╚══██╔══╝', 'ok');
+  await sleep(80);
+  const banner3 = printLine(body, '  ██████╔╝█████╗  █████╗     ██║   ', 'ok');
+  await sleep(80);
+  const banner4 = printLine(body, '  ██╔══██╗██╔══╝  ██╔══╝     ██║   ', 'ok');
+  await sleep(80);
+  const banner5 = printLine(body, '  ██║  ██║███████╗██║        ██║   ', 'ok');
+  await sleep(80);
+  const banner6 = printLine(body, '  ╚═╝  ╚═╝╚══════╝╚═╝        ╚═╝   ', 'ok');
+  await sleep(80);
+
   printLines(body, [
-    ['  ██████╗ ███████╗███████╗████████╗', 'ok'],
-    ['  ██╔══██╗██╔════╝██╔════╝╚══██╔══╝', 'ok'],
-    ['  ██████╔╝█████╗  █████╗     ██║   ', 'ok'],
-    ['  ██╔══██╗██╔══╝  ██╔══╝     ██║   ', 'ok'],
-    ['  ██║  ██║███████╗██║        ██║   ', 'ok'],
-    ['  ╚═╝  ╚═╝╚══════╝╚═╝        ╚═╝   ', 'ok'],
     ['', ''],
-    ['  Bienvenido a VOID SYSTEMS v3.0, muncixop.', 'accent'],
+    ['  Bienvenido a VOID SYSTEMS v5.0, muncixop.', 'accent'],
     ['  Escribe <span class="ok">help</span> para ver los comandos.', 'dim'],
     ['  Prueba <span class="ok">fastfetch</span> para ver el ojo.', 'dim'],
     ['  Prueba <span class="ok">social</span> para ver paginas bloqueadas.', 'dim'],
+    ['  Prueba <span class="ok">confetti</span>, <span class="ok">rainbow</span>, <span class="ok">cyberpunk</span>...', 'dim'],
     ['', ''],
   ]);
   await sleep(200);
@@ -1488,15 +2204,19 @@ function startInput(term) {
   let suggestBox = null;
   let suggestItems = [];
   let suggestIdx = 0;
+  let idleTimer = null;
+  let lastKeyTime = 0;
+  let typingBurst = 0;
 
   const createInputLine = () => {
     if (currentLine) currentLine.remove();
     currentLine = document.createElement('div');
-    currentLine.className = 'input-line';
+    currentLine.className = 'input-line idle';
     currentLine.style.position = 'relative';
     currentLine.innerHTML = getPromptHTML() + '<span class="typed"></span><span class="cur">_</span>';
     body.appendChild(currentLine);
     body.scrollTop = body.scrollHeight;
+    resetIdleTimer();
     updateSuggest();
   };
 
@@ -1505,6 +2225,17 @@ function startInput(term) {
     currentLine.querySelector('.typed').textContent = typed;
     body.scrollTop = body.scrollHeight;
     updateSuggest();
+    if (currentLine.classList.contains('idle')) currentLine.classList.remove('idle');
+    resetIdleTimer();
+  };
+
+  const resetIdleTimer = () => {
+    if (idleTimer) clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => {
+      if (currentLine && typed === '') {
+        currentLine.classList.add('idle');
+      }
+    }, 3000);
   };
 
   /* --- SUGGESTIONS --- */
@@ -1533,7 +2264,7 @@ function startInput(term) {
       });
       suggestBox.appendChild(item);
     });
-    currentLine.appendChild(suggestBox);
+    if (currentLine) currentLine.appendChild(suggestBox);
     suggestIdx = 0;
   };
 
@@ -1567,6 +2298,23 @@ function startInput(term) {
 
   /* --- TECLADO FÍSICO --- */
   document.addEventListener('keydown', (e) => {
+    // Atajos globales primero
+    if (e.ctrlKey && e.shiftKey && (e.key === 'T' || e.key === 't')) {
+      e.preventDefault();
+      bootSequence(true);
+      return;
+    }
+    if (e.ctrlKey && e.shiftKey && (e.key === 'W' || e.key === 'w')) {
+      e.preventDefault();
+      closeWindow(term.id);
+      return;
+    }
+    if (e.key === 'Escape') {
+      if (document.body.classList.contains('cyberpunk')) {
+        document.body.classList.remove('cyberpunk');
+      }
+    }
+
     if (document.activeElement === ki) return;
     const tag = document.activeElement && document.activeElement.tagName;
     if (tag === 'INPUT' || tag === 'TEXTAREA') return;
@@ -1630,9 +2378,21 @@ function startInput(term) {
       createInputLine();
       return;
     }
-    if (e.key === 'Escape') { e.preventDefault(); typed = ''; renderTyped(); return; }
     if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
       e.preventDefault();
+      const now = performance.now();
+      if (now - lastKeyTime < 90) {
+        typingBurst++;
+        if (typingBurst > 6) {
+          body.classList.add('typing-hard');
+          setTimeout(() => body.classList.remove('typing-hard'), 150);
+          typingBurst = 0;
+        }
+      } else {
+        typingBurst = 0;
+      }
+      lastKeyTime = now;
+
       typed += e.key;
       renderTyped();
       playKey();
@@ -1695,6 +2455,7 @@ function runCommand(input, body, win) {
     printLine(body, `voidsh: comando no encontrado: ${escapeHTML(cmd)}`, 'err');
     printLine(body, `Escribe <span class="ok">help</span> para ver los comandos disponibles.`, 'dim');
     playError();
+    effectGlitchSlice();
     return;
   }
   try {
@@ -1708,14 +2469,70 @@ function runCommand(input, body, win) {
   }
 }
 
-/* ---------- GLOBAL ---------- */
+/* ============================================================
+   GLOBAL EVENTS
+   ============================================================ */
 window.addEventListener('load', () => {
   setTimeout(bootSequence, 300);
 });
 
+// Ripple global en clicks
+document.addEventListener('click', (e) => {
+  if (e.target.closest('.btn') || e.target.closest('.launcher') || e.target.closest('.copy-token') || e.target.closest('.err-btn')) return;
+  effectRipple(e.clientX, e.clientY);
+});
+
+// Launcher → abrir nueva terminal
+launcher.addEventListener('click', () => {
+  playSuccess();
+  effectFlash('rgba(61,220,132,.15)');
+  bootSequence(true);
+});
+
+// Prevenir zoom en doble tap
 let lastTouch = 0;
 document.addEventListener('touchend', (e) => {
   const now = Date.now();
   if (now - lastTouch <= 300) e.preventDefault();
   lastTouch = now;
 }, { passive: false });
+
+// Konami code easter egg
+const konamiSeq = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+let konamiIdx = 0;
+document.addEventListener('keydown', (e) => {
+  if (e.key === konamiSeq[konamiIdx]) {
+    konamiIdx++;
+    if (konamiIdx === konamiSeq.length) {
+      konamiIdx = 0;
+      // Activar efectos extremos
+      document.body.classList.add('cyberpunk');
+      effectConfetti(100);
+      effectFlash('rgba(199,125,255,.4)');
+      effectQuake();
+      playPowerUp();
+      unlockAch('konami', 'Codigo Konami');
+      // Mostrar toast personalizado
+      const toast = document.createElement('div');
+      toast.className = 'ach-toast';
+      toast.innerHTML = `
+        <div class="ach-title">KONAMI CODE</div>
+        <div class="ach-desc">30 vidas desbloqueadas (mentira)</div>
+        <div class="ach-meta">EASTER EGG</div>
+      `;
+      document.body.appendChild(toast);
+      setTimeout(() => {
+        toast.style.animation = 'achIn .4s reverse forwards';
+        setTimeout(() => toast.remove(), 400);
+      }, 4000);
+      // Desactivar cyberpunk después de 8s
+      setTimeout(() => document.body.classList.remove('cyberpunk'), 8000);
+    }
+  } else {
+    konamiIdx = 0;
+  }
+});
+
+console.log('%c VOID SYSTEMS v5.0 ', 'background:#3ddc84;color:#000;font-weight:bold;padding:4px 8px;border-radius:4px;font-size:14px');
+console.log('%c Bienvenido, muncixop. ', 'color:#3ddc84;font-weight:bold;font-size:12px');
+console.log('%c Prueba el codigo Konami: ↑ ↑ ↓ ↓ ← → ← → B A ', 'color:#5eaaff;font-style:italic');
