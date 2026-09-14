@@ -19,7 +19,7 @@ body{
 #wins{position:fixed;inset:0;z-index:2;-webkit-overflow-scrolling:touch}
 
 /* ============================================================
-   CRT / SCANLINES / CHROMATIC ABERRATION
+   CRT / SCANLINES / CHROMATIC
    ============================================================ */
 .crt-overlay{
   position:fixed;inset:0;pointer-events:none;z-index:99996;
@@ -38,8 +38,7 @@ body{
 }
 .chromatic{
   position:fixed;inset:0;pointer-events:none;z-index:99994;
-  background:
-    linear-gradient(90deg,rgba(255,0,255,.015) 0%,transparent 15%,transparent 85%,rgba(0,255,255,.015) 100%);
+  background:linear-gradient(90deg,rgba(255,0,255,.015) 0%,transparent 15%,transparent 85%,rgba(0,255,255,.015) 100%);
   mix-blend-mode:screen;
   animation:chromaticShift 6s ease-in-out infinite;
 }
@@ -47,8 +46,6 @@ body{
   0%,100%{opacity:.5;transform:translateX(0)}
   50%{opacity:1;transform:translateX(1px)}
 }
-
-/* Modo cyberpunk — glitch intenso */
 body.cyberpunk .scanlines{animation-duration:1.5s;opacity:1}
 body.cyberpunk .chromatic{animation:chromaticShift 1.2s ease-in-out infinite}
 body.cyberpunk .crt-overlay{background:radial-gradient(ellipse at center,transparent 30%,rgba(0,0,0,.55) 100%)}
@@ -85,10 +82,7 @@ body.cyberpunk{animation:bodyGlitch 8s steps(30) infinite}
   transform:translateY(20px) scale(.9);
   overflow:visible;
 }
-.launcher.on{
-  opacity:1;pointer-events:auto;
-  transform:translateY(0) scale(1);
-}
+.launcher.on{opacity:1;pointer-events:auto;transform:translateY(0) scale(1)}
 .launcher:hover{
   transform:translateY(-3px) scale(1.05);
   box-shadow:0 14px 40px rgba(0,0,0,.7),0 0 60px rgba(var(--accent-rgb),.35);
@@ -97,8 +91,7 @@ body.cyberpunk{animation:bodyGlitch 8s steps(30) infinite}
 }
 .launcher:active{transform:translateY(0) scale(.97)}
 .launcher-eye{
-  display:inline-block;
-  font-size:1.3em;
+  display:inline-block;font-size:1.3em;
   animation:eyeBob 3s ease-in-out infinite;
   filter:drop-shadow(0 0 6px rgba(var(--accent-rgb),.8));
 }
@@ -147,7 +140,6 @@ body.cyberpunk{animation:bodyGlitch 8s steps(30) infinite}
   transition:box-shadow .4s ease,left .35s cubic-bezier(.22,1,.36,1),top .35s cubic-bezier(.22,1,.36,1),width .35s cubic-bezier(.22,1,.36,1),height .35s cubic-bezier(.22,1,.36,1),transform .2s ease;
 }
 .win.dragging{transform:rotate(.8deg) scale(1.008);cursor:grabbing;transition:transform .1s ease,box-shadow .3s ease}
-.win.dragging .win-bar{cursor:grabbing}
 .win.resizing{transition:box-shadow .4s ease,transform .15s ease}
 .win:hover{box-shadow:0 2px 8px #00000050,0 8px 24px #00000080,0 24px 64px #000000b0,0 0 0 .5px #ffffff10,0 0 100px rgba(var(--accent-rgb),.024)}
 @keyframes winIn{
@@ -159,7 +151,6 @@ body.cyberpunk{animation:bodyGlitch 8s steps(30) infinite}
   85%{transform:scale(.99) translateY(1px)}
   100%{opacity:1;transform:scale(1) translateY(0) translateZ(0) rotate(0);filter:none}
 }
-
 .win.closing{animation:winOut .4s cubic-bezier(.55,.06,.68,.19) forwards}
 @keyframes winOut{
   0%{opacity:1;transform:scale(1);filter:none}
@@ -252,9 +243,7 @@ body.cyberpunk{animation:bodyGlitch 8s steps(30) infinite}
 .win-body::-webkit-scrollbar-thumb{background:#2a2a2e;border-radius:10px;transition:background .2s}
 .win-body::-webkit-scrollbar-thumb:hover{background:#444}
 
-/* ============================================================
-   RIPPLE
-   ============================================================ */
+/* Ripple */
 .ripple{
   position:fixed;pointer-events:none;
   border-radius:50%;
@@ -292,8 +281,6 @@ body.cyberpunk{animation:bodyGlitch 8s steps(30) infinite}
 .out.h1{color:#fff;font-size:clamp(13px,1.5vw,16px);font-weight:700;letter-spacing:.08em}
 .out.spacer{height:.6em}
 .out.mono-dim{color:#5a5a5f;font-size:.95em}
-
-/* Glitch text effect */
 .out.glitch{
   color:#fff;
   animation:outGlitch .8s steps(4) forwards;
@@ -306,8 +293,6 @@ body.cyberpunk{animation:bodyGlitch 8s steps(30) infinite}
   80%{text-shadow:0 0 8px rgba(var(--accent-rgb),.5)}
   100%{text-shadow:none;transform:none}
 }
-
-/* OJO */
 .out.eye{
   color:var(--accent);
   line-height:1.05;
@@ -360,22 +345,12 @@ body.mobile-eye .out.eye{font-size:clamp(5px,1.7vw,7px)}
   0%,100%{text-shadow:0 0 6px rgba(var(--accent-rgb),.4),0 0 12px rgba(var(--accent-rgb),.2)}
   50%{text-shadow:0 0 14px rgba(var(--accent-rgb),.6),0 0 28px rgba(var(--accent-rgb),.3),0 0 40px rgba(var(--accent-rgb),.15)}
 }
-
-/* Idle pulse */
 .input-line.idle .pr{animation:promptBreath 3s ease-in-out infinite}
 @keyframes promptBreath{
   0%,100%{filter:brightness(1);letter-spacing:0}
   50%{filter:brightness(1.4);letter-spacing:.02em}
 }
 .input-line.idle .cur{animation-duration:1.4s,3s}
-
-/* Terminal shaking on fast typing */
-.win-body.typing-hard{animation:termShake .15s ease-in-out}
-@keyframes termShake{
-  0%,100%{transform:translate(0,0)}
-  25%{transform:translate(-1px,.5px)}
-  75%{transform:translate(1px,-.5px)}
-}
 
 /* ============================================================
    SUGGESTIONS
@@ -440,7 +415,6 @@ body.mobile-eye .out.eye{font-size:clamp(5px,1.7vw,7px)}
   content:'';position:absolute;top:0;left:-100%;
   width:60%;height:100%;
   background:linear-gradient(90deg,transparent,rgba(var(--accent-rgb),.15),transparent);
-  transition:none;
   pointer-events:none;
 }
 .lnk a:hover{color:#fff;transform:translateX(6px) scale(1.01);border-left-color:var(--accent);text-shadow:0 0 12px rgba(var(--accent-rgb),.2)}
@@ -473,13 +447,11 @@ body.mobile-eye .out.eye{font-size:clamp(5px,1.7vw,7px)}
 .win.maximized .rz{display:none}
 .win.maximized .win-body{max-height:none!important;flex:1}
 .win.maximized::after{border-radius:0}
-
 .win::after{
   content:'';position:absolute;inset:0;border-radius:12px;pointer-events:none;
   background:repeating-linear-gradient(0deg,transparent,transparent 3px,#00000005 3px,#00000005 4px);
   mix-blend-mode:multiply;z-index:3;
 }
-
 .rz{
   position:absolute;bottom:0;right:0;
   width:clamp(20px,2.5vw,28px);height:clamp(20px,2.5vw,28px);
@@ -532,7 +504,7 @@ body.mobile-eye .out.eye{font-size:clamp(5px,1.7vw,7px)}
 .dock-item:active{transform:translateY(-2px) scale(.98)}
 
 /* ============================================================
-   MATRIX HIT / GLITCH SCREEN
+   MATRIX HIT / GLITCH
    ============================================================ */
 body.mx-hit #c{animation:mxFreeze .2s steps(3) forwards;opacity:.15}
 @keyframes mxFreeze{
@@ -558,11 +530,8 @@ body.mx-hit{animation:bodyHit .45s cubic-bezier(.25,.46,.45,.94)}
   80%{transform:translate(2px,-2px)}
   90%{transform:translate(-1px,1px)}
 }
-
-/* Glitch slice overlay */
 .glitch-slice{
-  position:fixed;left:0;right:0;
-  height:2px;
+  position:fixed;left:0;right:0;height:2px;
   background:rgba(var(--accent-rgb),.6);
   box-shadow:0 0 10px rgba(var(--accent-rgb),.8);
   pointer-events:none;z-index:99993;
@@ -573,8 +542,6 @@ body.mx-hit{animation:bodyHit .45s cubic-bezier(.25,.46,.45,.94)}
   50%{opacity:.8;transform:scaleY(3) translateX(20px)}
   100%{opacity:0;transform:scaleY(1) translateX(-20px)}
 }
-
-/* Screen flash */
 .screen-flash{
   position:fixed;inset:0;pointer-events:none;z-index:99992;
   background:rgba(var(--accent-rgb),.4);
@@ -585,8 +552,6 @@ body.mx-hit{animation:bodyHit .45s cubic-bezier(.25,.46,.45,.94)}
   0%{opacity:1}
   100%{opacity:0}
 }
-
-/* Quake */
 body.quake{animation:quake .6s cubic-bezier(.36,.07,.19,.97) both}
 @keyframes quake{
   10%,90%{transform:translate3d(-2px,0,0)}
@@ -594,8 +559,6 @@ body.quake{animation:quake .6s cubic-bezier(.36,.07,.19,.97) both}
   30%,50%,70%{transform:translate3d(-8px,0,0)}
   40%,60%{transform:translate3d(8px,0,0)}
 }
-
-/* Hypnotize */
 body.hypnotize{animation:hypno 4s linear infinite}
 @keyframes hypno{
   0%{filter:hue-rotate(0deg)}
@@ -648,13 +611,6 @@ body.hypnotize{animation:hypno 4s linear infinite}
   display:flex;align-items:center;gap:8px;
   animation:titleGlitch 2s infinite;
 }
-@keyframes titleGlitch{
-  0%,85%,100%{transform:none;text-shadow:0 0 16px #ff453a25}
-  86%{transform:translate(-4px,3px) skewX(-5deg);text-shadow:5px 0 #f0f,-5px 0 #0ff,0 0 20px #f0f}
-  88%{transform:translate(4px,-2px) skewX(4deg);text-shadow:-5px 0 #f0f,5px 0 #0ff}
-  90%{transform:translate(-2px,2px);text-shadow:3px 0 #ff0,-3px 0 #0ff}
-  92%{transform:none;text-shadow:0 0 16px #ff453a25}
-}
 .err-pop p{position:relative;font-size:clamp(11px,1.2vw,12.5px);color:#888;margin-bottom:18px;line-height:1.7}
 .err-pop .err-btn{
   position:relative;display:inline-block;
@@ -672,9 +628,6 @@ body.hypnotize{animation:hypno 4s linear infinite}
 .err-pop .err-btn:hover{background:#ff453a25;color:#fff;transform:translateY(-3px) scale(1.05);box-shadow:0 8px 24px #ff453a30}
 .err-pop .err-btn:active{transform:translateY(0) scale(.97)}
 
-/* ============================================================
-   CORRUPT ANIM
-   ============================================================ */
 .win.corrupt-shake{animation:winCorrupt .8s cubic-bezier(.25,.46,.45,.94)}
 @keyframes winCorrupt{
   0%,100%{transform:none;filter:none}
@@ -791,7 +744,7 @@ body.theme-pink{--accent:#ff5fa2;--accent-rgb:255,95,162;--accent-2:#ff9ec4;--ac
 body.theme-mono{--accent:#cccccc;--accent-rgb:204,204,204;--accent-2:#888;--accent-2-rgb:136,136,136}
 body.theme-rainbow{animation:rainbowHue 6s linear infinite}
 @keyframes rainbowHue{
-  0%{--accent:#ff0000;--accent-rgb:255,0,0;--accent-2:#00ffff;--accent-2-rgb:0,255,255;filter:hue-rotate(0deg)}
+  0%{filter:hue-rotate(0deg)}
   100%{filter:hue-rotate(360deg)}
 }
 
@@ -969,9 +922,7 @@ body.theme-rainbow{animation:rainbowHue 6s linear infinite}
   100%{transform:translateY(100vh) rotate(720deg);opacity:0}
 }
 
-/* ============================================================
-   CYBERPUNK MODE INDICATOR
-   ============================================================ */
+/* Cyberpunk tag */
 body.cyberpunk::after{
   content:'CYBERPUNK MODE';
   position:fixed;top:12px;left:50%;transform:translateX(-50%);
