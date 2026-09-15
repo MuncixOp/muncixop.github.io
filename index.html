@@ -14,7 +14,6 @@
 
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23060606'/%3E%3Ctext x='32' y='42' text-anchor='middle' font-size='44' fill='%233ddc84' font-family='monospace' font-weight='bold'%3E%E2%97%89%3C/text%3E%3C/svg%3E">
 
-<!-- CSS CRÍTICO INLINE — Grid layout a prueba de balas -->
 <style>
   *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
   html,body{height:100%;overflow:hidden;background:#060606;color:#c8c8cc;
@@ -26,37 +25,13 @@
   #c{opacity:.05;z-index:0}
   #p{opacity:.55;z-index:1}
   #wins{position:fixed;inset:0;z-index:2}
-
-  /* ============================================================
-     WINDOW — GRID layout: fila 1 = bar, fila 2 = body
-     ============================================================ */
-  .win{
-    position:absolute;
-    width:min(720px,92vw);max-height:85vh;
-    height:85vh;
-    background:#141416;border-radius:12px;
-    box-shadow:0 8px 24px #00000070,0 0 0 .5px #ffffff08;
-    display:grid;
-    grid-template-rows:auto 1fr;
-    grid-template-columns:1fr;
-    overflow:hidden;
-  }
+  .win{position:absolute;width:min(720px,92vw);max-height:85vh;height:85vh;background:#141416;
+    border-radius:12px;box-shadow:0 8px 24px #00000070,0 0 0 .5px #ffffff08;
+    display:grid;grid-template-rows:auto 1fr;grid-template-columns:1fr;overflow:hidden;}
   .win.dragging{cursor:grabbing}
-
-  /* ============================================================
-     WIN-BAR — Fila 1 del grid. NUNCA se mueve.
-     ============================================================ */
-  .win-bar{
-    position:relative;
-    grid-row:1;
-    height:42px;
-    padding:0;
-    background:linear-gradient(180deg,#28282c 0%,#1c1c20 100%);
-    border-bottom:1px solid #00000090;
-    cursor:grab;touch-action:none;
-    z-index:5;overflow:hidden;line-height:1;
-    border-radius:12px 12px 0 0;
-  }
+  .win-bar{position:relative;grid-row:1;height:42px;padding:0;
+    background:linear-gradient(180deg,#28282c 0%,#1c1c20 100%);border-bottom:1px solid #00000090;
+    cursor:grab;touch-action:none;z-index:5;overflow:hidden;line-height:1;border-radius:12px 12px 0 0;}
   .btns{position:absolute;left:14px;top:0;bottom:0;display:flex;gap:8px;align-items:center;z-index:6;}
   .btns-r{position:absolute;right:14px;top:50%;transform:translateY(-50%);width:54px;height:1px;pointer-events:none;}
   .btn{width:12px;height:12px;border-radius:50%;border:none;cursor:pointer;font-size:0;line-height:1;padding:0;flex-shrink:0;}
@@ -64,25 +39,13 @@
   .min{background:#febc2e}
   .max{background:#28c840}
   .win-title{position:absolute;left:70px;right:70px;top:50%;transform:translateY(-50%);
-    text-align:center;font-size:12px;color:#666;letter-spacing:.03em;
-    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1;}
-
-  /* ============================================================
-     WIN-BODY — Fila 2 del grid. min-height:0 permite scroll.
-     ============================================================ */
-  .win-body{
-    grid-row:2;
-    min-height:0; /* CRÍTICO: sin esto el grid no permite scroll interno */
-    padding:16px;
-    overflow-y:auto;overflow-x:hidden;
-    background:#141416;
-    cursor:text;
-    scrollbar-width:thin;scrollbar-color:#333 transparent;
-    scrollbar-gutter:stable;
-  }
+    text-align:center;font-size:12px;color:#666;overflow:hidden;text-overflow:ellipsis;
+    white-space:nowrap;line-height:1;}
+  .win-body{grid-row:2;min-height:0;padding:16px;overflow-y:auto;overflow-x:hidden;
+    background:#141416;cursor:text;scrollbar-width:thin;scrollbar-color:#333 transparent;
+    scrollbar-gutter:stable;}
   .win-body::-webkit-scrollbar{width:5px}
   .win-body::-webkit-scrollbar-thumb{background:#2a2a2e;border-radius:10px}
-
   .out{white-space:pre-wrap;word-break:break-word;line-height:1.7;opacity:0;
     animation:lineIn .4s cubic-bezier(.25,.46,.45,.94) forwards}
   @keyframes lineIn{0%{opacity:0;transform:translateY(8px);filter:blur(6px)}
@@ -109,18 +72,21 @@
     opacity:0;pointer-events:none;}
   .launcher.on{opacity:1;pointer-events:auto}
   .dock{position:fixed;bottom:0;left:0;right:0;height:48px;background:#141416dd;
-    display:flex;align-items:center;gap:8px;padding:0 20px;z-index:9999;
-    opacity:0;pointer-events:none;overflow-x:auto;overflow-y:hidden}
-  .dock.on{opacity:1;pointer-events:auto}
+    backdrop-filter:blur(16px);border-top:1px solid #ffffff08;display:flex;align-items:center;
+    gap:8px;padding:0 20px;z-index:9999;opacity:0;pointer-events:none;
+    transform:translateY(100%);transition:all .4s cubic-bezier(.22,1,.36,1);overflow-x:auto;overflow-y:hidden}
+  .dock.on{opacity:1;pointer-events:auto;transform:translateY(0)}
   .dock-item{padding:6px 14px;background:#242428;border-radius:8px;font-size:12px;color:#999;
     cursor:pointer;border:1px solid #ffffff08;font-family:inherit;flex-shrink:0}
+  .dock-item:hover{background:#333338;color:#fff}
   .crt-overlay{position:fixed;inset:0;pointer-events:none;z-index:99996;
-    background:radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,.35) 100%);}
+    background:radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,.35) 100%);mix-blend-mode:multiply}
   .scanlines{position:fixed;inset:0;pointer-events:none;z-index:99995;
     background:repeating-linear-gradient(0deg,transparent 0,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 4px);
     opacity:.6}
   .chromatic{position:fixed;inset:0;pointer-events:none;z-index:99994;
-    background:linear-gradient(90deg,rgba(255,0,255,.015) 0%,transparent 15%,transparent 85%,rgba(0,255,255,.015) 100%);}
+    background:linear-gradient(90deg,rgba(255,0,255,.015) 0%,transparent 15%,transparent 85%,rgba(0,255,255,.015) 100%);
+    mix-blend-mode:screen}
   .quick-chips,.mobile-bar{display:none}
   @media(max-width:700px){
     .win{width:100vw!important;max-width:none;left:0!important;top:0!important;
@@ -146,23 +112,18 @@
 
 <div id="quick-chips" class="quick-chips" aria-label="Comandos rápidos">
   <button class="chip" data-cmd="help">help</button>
+  <button class="chip" data-cmd="pkg list">pkg list</button>
+  <button class="chip" data-cmd="pkg installed">instalados</button>
   <button class="chip" data-cmd="about">about</button>
   <button class="chip" data-cmd="projects">projects</button>
   <button class="chip" data-cmd="skills">skills</button>
   <button class="chip" data-cmd="social">social</button>
-  <button class="chip" data-cmd="links">links</button>
+  <button class="chip" data-cmd="stats">stats</button>
+  <button class="chip" data-cmd="achievements">logros</button>
   <button class="chip" data-cmd="fastfetch">fastfetch</button>
-  <button class="chip" data-cmd="list">list</button>
-  <button class="chip" data-cmd="history">history</button>
-  <button class="chip" data-cmd="achievements">achievements</button>
   <button class="chip" data-cmd="theme">theme</button>
-  <button class="chip" data-cmd="matrix">matrix</button>
   <button class="chip" data-cmd="cyberpunk">cyberpunk</button>
-  <button class="chip" data-cmd="confetti">confetti</button>
-  <button class="chip" data-cmd="glitch">glitch</button>
   <button class="chip" data-cmd="clear">clear</button>
-  <button class="chip" data-cmd="sound">sound</button>
-  <button class="chip" data-cmd="reboot">reboot</button>
 </div>
 
 <div id="mobile-bar" class="mobile-bar" aria-label="Teclas virtuales">
