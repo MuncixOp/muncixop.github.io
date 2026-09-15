@@ -21,12 +21,43 @@
 <div class="chromatic" aria-hidden="true"></div>
 <div id="wins" role="application" aria-label="Terminal workspace"></div>
 <div id="dock" class="dock" aria-label="Ventanas minimizadas"></div>
+
+<!-- ============================================================
+     ASISTENCIAS MÓVILES
+     ============================================================ -->
+<div id="quick-chips" class="quick-chips" aria-label="Comandos rápidos">
+  <button class="chip" data-cmd="help">help</button>
+  <button class="chip" data-cmd="about">about</button>
+  <button class="chip" data-cmd="projects">projects</button>
+  <button class="chip" data-cmd="social">social</button>
+  <button class="chip" data-cmd="links">links</button>
+  <button class="chip" data-cmd="fastfetch">fastfetch</button>
+  <button class="chip" data-cmd="list">list</button>
+  <button class="chip" data-cmd="history">history</button>
+  <button class="chip" data-cmd="achievements">achievements</button>
+  <button class="chip" data-cmd="theme">theme</button>
+  <button class="chip" data-cmd="matrix">matrix</button>
+  <button class="chip" data-cmd="cyberpunk">cyberpunk</button>
+  <button class="chip" data-cmd="confetti">confetti</button>
+  <button class="chip" data-cmd="clear">clear</button>
+  <button class="chip" data-cmd="sound">sound</button>
+  <button class="chip" data-cmd="reboot">reboot</button>
+</div>
+
+<div id="mobile-bar" class="mobile-bar" aria-label="Teclas virtuales">
+  <button class="mb-btn mb-esc" data-action="esc" aria-label="Escape">ESC</button>
+  <button class="mb-btn mb-tab" data-action="tab" aria-label="Tab">TAB</button>
+  <button class="mb-btn mb-up" data-action="up" aria-label="Historial arriba">↑</button>
+  <button class="mb-btn mb-down" data-action="down" aria-label="Historial abajo">↓</button>
+  <button class="mb-btn mb-backspace" data-action="backspace" aria-label="Borrar">⌫</button>
+  <button class="mb-btn mb-enter" data-action="enter" aria-label="Enter">ENTER ⏎</button>
+</div>
+
 <button id="launcher" class="launcher" aria-label="Abrir terminal">
   <span class="launcher-eye">◉</span>
   <span class="launcher-text">VOID</span>
   <span class="launcher-pulse"></span>
 </button>
-<input id="ki" type="text" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" aria-hidden="true" tabindex="-1">
 <script src="main.js"></script>
 </body>
 </html>
