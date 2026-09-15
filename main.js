@@ -1,7 +1,7 @@
 /* ============================================================
-   VOID SYSTEMS v8.1 — Terminal / OS Simulator
+   VOID SYSTEMS v9.0 — Terminal / OS Simulator
    Author: MuncixOp
-   Novedades v8.1: Sistema de Paquetes
+   La versión definitiva
    ============================================================ */
 
 /* ---------- OS DETECTION ---------- */
@@ -19,6 +19,7 @@ const reducedMotion = matchMedia('(prefers-reduced-motion:reduce)').matches;
 document.body.classList.add('os-' + os);
 if (mob) document.body.classList.add('mobile-eye');
 
+/* Haptic */
 function haptic(pattern = 10) {
   if (!mob) return;
   if ('vibrate' in navigator) {
@@ -113,9 +114,11 @@ const EYE_ASCII_SMALL = [
 function getEye() { return mob ? EYE_ASCII_SMALL : EYE_ASCII; }
 
 /* ============================================================
-   SISTEMA DE GUARDADO COMPLETO
+   STORAGE CON MIGRACIÓN
    ============================================================ */
+const STORAGE_VERSION = '9.0';
 const STORAGE_KEYS = {
+  version: 'void_storage_version',
   history: 'void_history',
   achievements: 'void_achievements',
   unlocked: 'void_unlocked_links',
@@ -126,81 +129,101 @@ const STORAGE_KEYS = {
   packages: 'void_packages'
 };
 
+// Migración de versiones viejas
+(function migrateStorage() {
+  try {
+    const oldVer = localStorage.getItem(STORAGE_KEYS.version);
+    if (oldVer !== STORAGE_VERSION) {
+      // Asegurar que existan todas las keys
+      localStorage.setItem(STORAGE_KEYS.version, STORAGE_VERSION);
+    }
+  } catch (e) {}
+})();
+
 /* ============================================================
-   SISTEMA DE PAQUETES — Definición
+   SISTEMA DE PAQUETES v2 — Mejorado
    ============================================================ */
 const PACKAGES = {
   games: {
     name: 'games',
     desc: 'Minijuegos de terminal',
-    version: '1.0.0',
+    version: '1.2.0',
     size: '2.1 MB',
     commands: ['coin', 'rps', 'guess', 'dice', '8ball'],
-    deps: []
+    deps: [],
+    icon: '🎮'
   },
   gambling: {
     name: 'gambling',
     desc: 'Sistema de apuestas',
-    version: '1.0.0',
+    version: '1.1.0',
     size: '1.8 MB',
     commands: ['gamble'],
-    deps: ['games']
+    deps: ['games'],
+    icon: '💰'
   },
   'crypto-utils': {
     name: 'crypto-utils',
     desc: 'Herramientas criptográficas',
-    version: '1.2.0',
+    version: '1.3.0',
     size: '3.4 MB',
     commands: ['base64', 'rot13', 'hash', 'password', 'uuid', 'pick'],
-    deps: []
+    deps: [],
+    icon: '🔐'
   },
   fun: {
     name: 'fun',
     desc: 'Comandos de entretenimiento',
-    version: '1.5.0',
+    version: '1.6.0',
     size: '2.7 MB',
     commands: ['quote', 'joke', 'fact', 'meme', 'cowsay', 'fortune', 'random'],
-    deps: []
+    deps: [],
+    icon: '🎭'
   },
   'net-tools': {
     name: 'net-tools',
     desc: 'Diagnóstico de red',
-    version: '2.0.1',
+    version: '2.1.0',
     size: '5.6 MB',
     commands: ['ping', 'trace', 'nmap', 'whois', 'scan', 'curl'],
-    deps: []
+    deps: [],
+    icon: '🌐'
   },
   'sys-tools': {
     name: 'sys-tools',
     desc: 'Información del sistema',
-    version: '1.3.0',
+    version: '1.4.0',
     size: '1.2 MB',
     commands: ['ps', 'top', 'tree', 'ls', 'pwd'],
-    deps: []
+    deps: [],
+    icon: '⚙️'
   },
   effects: {
     name: 'effects',
     desc: 'Efectos visuales',
-    version: '1.4.0',
+    version: '1.5.0',
     size: '4.1 MB',
     commands: ['confetti', 'glitch', 'hypnotize', 'flash', 'quake', 'rainbow', 'scramble', 'type', 'spinner', 'countdown'],
-    deps: []
+    deps: [],
+    icon: '✨'
   },
   'ascii-art': {
     name: 'ascii-art',
     desc: 'Arte ASCII y banners',
-    version: '1.0.0',
+    version: '1.1.0',
     size: '1.5 MB',
     commands: ['ascii'],
-    deps: []
+    deps: [],
+    icon: '🎨'
   },
   security: {
     name: 'security',
     desc: 'Herramientas de seguridad',
-    version: '3.0.0',
+    version: '3.1.0',
     size: '6.8 MB',
     commands: ['decrypt'],
-    deps: []
+    deps: [],
+    icon: '🛡️'
   }
 };
 
@@ -219,14 +242,10 @@ function findPackageForCommand(cmd) {
   }
   return null;
 }
-function isCommandAvailable(cmd) {
-  if (COMMANDS[cmd]) return true;
-  const pkg = findPackageForCommand(cmd);
-  if (!pkg) return false;
-  return installedPackages.includes(pkg.name);
-}
 
-/* --- STORAGE: HISTORY --- */
+/* ============================================================
+   STORAGE: History
+   ============================================================ */
 let cmdHistory = (() => {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEYS.history) || '[]'); }
   catch { return []; }
@@ -235,7 +254,9 @@ function saveHistory() {
   try { localStorage.setItem(STORAGE_KEYS.history, JSON.stringify(cmdHistory.slice(-200))); } catch {}
 }
 
-/* --- STORAGE: ACHIEVEMENTS --- */
+/* ============================================================
+   STORAGE: Achievements
+   ============================================================ */
 let achievements = (() => {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEYS.achievements) || '{}'); }
   catch { return {}; }
@@ -266,7 +287,9 @@ function showAchToast(name) {
   }, 3400);
 }
 
-/* --- STORAGE: UNLOCKED LINKS --- */
+/* ============================================================
+   STORAGE: Unlocked Links
+   ============================================================ */
 let unlockedLinks = (() => {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEYS.unlocked) || '{}'); }
   catch { return {}; }
@@ -275,7 +298,9 @@ function saveUnlocked() {
   try { localStorage.setItem(STORAGE_KEYS.unlocked, JSON.stringify(unlockedLinks)); } catch {}
 }
 
-/* --- STORAGE: NOTES --- */
+/* ============================================================
+   STORAGE: Notes
+   ============================================================ */
 let userNotes = (() => {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEYS.notes) || '[]'); }
   catch { return []; }
@@ -284,7 +309,9 @@ function saveNotes() {
   try { localStorage.setItem(STORAGE_KEYS.notes, JSON.stringify(userNotes)); } catch {}
 }
 
-/* --- STORAGE: BALANCE --- */
+/* ============================================================
+   STORAGE: Balance
+   ============================================================ */
 let userBalance = (() => {
   try { return parseInt(localStorage.getItem(STORAGE_KEYS.balance) || '100', 10); }
   catch { return 100; }
@@ -293,14 +320,16 @@ function saveBalance() {
   try { localStorage.setItem(STORAGE_KEYS.balance, String(userBalance)); } catch {}
 }
 
-/* --- STORAGE: STATS --- */
+/* ============================================================
+   STORAGE: Stats
+   ============================================================ */
 let userStats = (() => {
   try {
     const s = JSON.parse(localStorage.getItem(STORAGE_KEYS.stats) || '{}');
     return {
       commandsUsed: s.commandsUsed || 0,
       uniqueCommands: s.uniqueCommands || [],
-      sessionStart: s.sessionStart || Date.now(),
+      sessionStart: Date.now(),
       totalTime: s.totalTime || 0,
       gamesWon: s.gamesWon || 0,
       gamesLost: s.gamesLost || 0,
@@ -321,10 +350,16 @@ let userStats = (() => {
   }
 })();
 function saveStats() {
-  try { localStorage.setItem(STORAGE_KEYS.stats, JSON.stringify(userStats)); } catch {}
+  try {
+    const s = { ...userStats, sessionStart: undefined };
+    delete s.sessionStart;
+    localStorage.setItem(STORAGE_KEYS.stats, JSON.stringify(s));
+  } catch {}
 }
 
-/* --- STORAGE: SETTINGS --- */
+/* ============================================================
+   STORAGE: Settings
+   ============================================================ */
 let userSettings = (() => {
   try {
     const s = JSON.parse(localStorage.getItem(STORAGE_KEYS.settings) || '{}');
@@ -343,7 +378,7 @@ function saveSettings() {
 }
 
 /* ============================================================
-   AUDIO
+   AUDIO ENGINE
    ============================================================ */
 let actx = null;
 let audioEnabled = userSettings.audioEnabled;
@@ -366,10 +401,10 @@ function playKey() {
     const o1 = a.createOscillator(), o2 = a.createOscillator(), g = a.createGain();
     o1.type = 'square'; o1.frequency.value = 600 + Math.random() * 600;
     o2.type = 'sawtooth'; o2.frequency.value = 1200 + Math.random() * 1200;
-    g.gain.setValueAtTime(.02, t);
-    g.gain.exponentialRampToValueAtTime(.001, t + .03);
+    g.gain.setValueAtTime(.018, t);
+    g.gain.exponentialRampToValueAtTime(.001, t + .028);
     o1.connect(g); o2.connect(g); g.connect(a.destination);
-    o1.start(t); o1.stop(t + .03); o2.start(t); o2.stop(t + .03);
+    o1.start(t); o1.stop(t + .028); o2.start(t); o2.stop(t + .028);
   } catch (e) {}
 }
 function playEnter() {
@@ -446,10 +481,10 @@ function playTick(freq) {
     const o = a.createOscillator(), g = a.createGain();
     o.type = 'square';
     o.frequency.value = freq || (600 + Math.random() * 400);
-    g.gain.setValueAtTime(.015, t);
-    g.gain.exponentialRampToValueAtTime(.001, t + .02);
+    g.gain.setValueAtTime(.012, t);
+    g.gain.exponentialRampToValueAtTime(.001, t + .018);
     o.connect(g); g.connect(a.destination);
-    o.start(t); o.stop(t + .02);
+    o.start(t); o.stop(t + .018);
   } catch (e) {}
 }
 function playBeep(freq, dur) {
@@ -575,7 +610,12 @@ resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
 
 let matrixActive = userSettings.matrixActive;
-function drawMatrix() {
+let lastMatrixFrame = 0;
+function drawMatrix(now) {
+  if (!now) now = performance.now();
+  if (now - lastMatrixFrame < 55) { requestAnimationFrame(drawMatrix); return; }
+  lastMatrixFrame = now;
+
   if (matrixActive && !reducedMotion) {
     ctx.fillStyle = 'rgba(6,6,6,0.06)';
     ctx.fillRect(0, 0, W, H);
@@ -592,7 +632,7 @@ function drawMatrix() {
   }
   requestAnimationFrame(drawMatrix);
 }
-if (!reducedMotion) drawMatrix();
+if (!reducedMotion) requestAnimationFrame(drawMatrix);
 
 /* ============================================================
    PARTICLES
@@ -620,11 +660,12 @@ for (let i = 0; i < PARTICLE_COUNT; i++) {
     char: Math.random() > .5 ? '·' : '˙',
   });
 }
-let lastParticleTime = 0;
+let lastParticleFrame = 0;
 function drawParticles(now) {
+  if (!now) now = performance.now();
   if (reducedMotion) { requestAnimationFrame(drawParticles); return; }
-  if (now - lastParticleTime < 40) { requestAnimationFrame(drawParticles); return; }
-  lastParticleTime = now;
+  if (now - lastParticleFrame < 40) { requestAnimationFrame(drawParticles); return; }
+  lastParticleFrame = now;
   pctx.clearRect(0, 0, pW, pH);
   const accent = getComputedStyle(document.body).getPropertyValue('--accent').trim() || '#3ddc84';
   particles.forEach(p => {
@@ -758,7 +799,7 @@ function updateLauncher() {
 }
 
 function makeDraggable(win, handle) {
-  let sx, sy, ox, oy, dragging = false;
+  let sx, sy, ox, oy, dragging = false, rafId = null, nx = 0, ny = 0;
   const start = (e) => {
     if (win.classList.contains('maximized')) return;
     if (e.target.closest('.btn')) return;
@@ -768,7 +809,7 @@ function makeDraggable(win, handle) {
     dragging = true;
     win.classList.add('dragging');
     win.style.zIndex = ++zIndex;
-    document.addEventListener('mousemove', move);
+    document.addEventListener('mousemove', move, { passive: false });
     document.addEventListener('touchmove', move, { passive: false });
     document.addEventListener('mouseup', end);
     document.addEventListener('touchend', end);
@@ -777,15 +818,23 @@ function makeDraggable(win, handle) {
     if (!dragging) return;
     if (e.cancelable) e.preventDefault();
     const p = e.touches ? e.touches[0] : e;
-    let nx = ox + (p.clientX - sx);
-    let ny = oy + (p.clientY - sy);
+    nx = ox + (p.clientX - sx);
+    ny = oy + (p.clientY - sy);
     nx = Math.max(-win.offsetWidth + 80, Math.min(nx, window.innerWidth - 80));
     ny = Math.max(0, Math.min(ny, window.innerHeight - 40));
-    win.style.left = nx + 'px';
-    win.style.top = ny + 'px';
+    if (!rafId) {
+      rafId = requestAnimationFrame(() => {
+        win.style.left = nx + 'px';
+        win.style.top = ny + 'px';
+        rafId = null;
+      });
+    }
   };
   const end = () => {
     dragging = false;
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    win.style.left = nx + 'px';
+    win.style.top = ny + 'px';
     win.classList.remove('dragging');
     document.removeEventListener('mousemove', move);
     document.removeEventListener('touchmove', move);
@@ -828,13 +877,13 @@ function makeSwipeGestures(win, handle, id) {
 }
 
 function makeResizable(win, handle) {
-  let sx, sy, ow, oh, resizing = false;
+  let sx, sy, ow, oh, resizing = false, rafId = null, nw = 0, nh = 0;
   const start = (e) => {
     if (win.classList.contains('maximized')) return;
     const p = e.touches ? e.touches[0] : e;
     sx = p.clientX; sy = p.clientY; ow = win.offsetWidth; oh = win.offsetHeight;
     resizing = true; win.classList.add('resizing');
-    document.addEventListener('mousemove', move);
+    document.addEventListener('mousemove', move, { passive: false });
     document.addEventListener('touchmove', move, { passive: false });
     document.addEventListener('mouseup', end);
     document.addEventListener('touchend', end);
@@ -843,13 +892,22 @@ function makeResizable(win, handle) {
     if (!resizing) return;
     if (e.cancelable) e.preventDefault();
     const p = e.touches ? e.touches[0] : e;
-    const nw = Math.max(280, ow + (p.clientX - sx));
-    const nh = Math.max(180, oh + (p.clientY - sy));
-    win.style.width = nw + 'px';
-    win.style.height = nh + 'px';
+    nw = Math.max(280, ow + (p.clientX - sx));
+    nh = Math.max(180, oh + (p.clientY - sy));
+    if (!rafId) {
+      rafId = requestAnimationFrame(() => {
+        win.style.width = nw + 'px';
+        win.style.height = nh + 'px';
+        rafId = null;
+      });
+    }
   };
   const end = () => {
-    resizing = false; win.classList.remove('resizing');
+    resizing = false;
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    win.style.width = nw + 'px';
+    win.style.height = nh + 'px';
+    win.classList.remove('resizing');
     document.removeEventListener('mousemove', move);
     document.removeEventListener('touchmove', move);
     document.removeEventListener('mouseup', end);
@@ -937,6 +995,7 @@ function scrambleText(el, target, duration = 500) {
   }
   frame();
 }
+
 async function animateProgress(body, label = 'Procesando', duration = 2000, onComplete = null) {
   const container = document.createElement('div');
   container.className = 'out progress-container';
@@ -974,7 +1033,7 @@ function getPromptHTML() {
   return `<span class="pr">${PROMPT_USER}@${PROMPT_HOST}:<span class="path">${PROMPT_PATH}</span>$&nbsp;</span>`;
 }
 
-// printLine con FIX: mueve el input al fondo siempre
+// printLine con FIX: SIEMPRE mueve el input al fondo
 function printLine(body, text, cls = '') {
   const line = document.createElement('div');
   line.className = 'out ' + cls;
@@ -1024,10 +1083,11 @@ async function installPackage(name, body) {
   }
   if (installedPackages.includes(name)) {
     printLine(body, `[!] "${name}" ya está instalado.`, 'warn');
+    printLine(body, `    Versión: v${pkg.version}`, 'dim');
     return false;
   }
 
-  // Dependencias
+  // Dependencias primero
   for (const dep of pkg.deps) {
     if (!installedPackages.includes(dep)) {
       printLine(body, `[!] Requiere dependencia: "${dep}"`, 'warn');
@@ -1036,25 +1096,43 @@ async function installPackage(name, body) {
     }
   }
 
+  // Header
   printLine(body, '');
   printLine(body, `:: Instalando paquete "${name}"...`, 'accent');
-  printLine(body, `   ${pkg.desc}`, 'dim');
+  printLine(body, `   ${pkg.icon} ${pkg.desc}`, 'dim');
   printLine(body, `   v${pkg.version} · ${pkg.size}`, 'dim');
   printLine(body, '');
   await sleep(200);
 
-  const duration = 1800 + Math.random() * 900;
-  await animateProgress(body, `Descargando ${name}`, duration);
-  await sleep(120);
-  printLine(body, `  <span class="ok">✓</span> Descarga completa`, '');
-  await sleep(160);
-  printLine(body, `  <span class="ok">✓</span> Checksum verificado <span class="dim">(SHA-256)</span>`, '');
-  await sleep(160);
-  printLine(body, `  <span class="ok">✓</span> Archivos extraídos <span class="dim">(${pkg.commands.length} módulos)</span>`, '');
-  await sleep(160);
-  printLine(body, `  <span class="ok">✓</span> Comandos registrados`, '');
-  await sleep(200);
+  // Panel visual
+  const log = document.createElement('div');
+  log.className = 'pkg-install-log';
+  log.innerHTML = `
+    <div class="step" data-step="1">Resolviendo dependencias...</div>
+    <div class="step" data-step="2">Descargando paquete...</div>
+    <div class="step" data-step="3">Verificando checksum SHA-256...</div>
+    <div class="step" data-step="4">Extrayendo archivos...</div>
+    <div class="step" data-step="5">Registrando comandos...</div>
+    <div class="step" data-step="6">Actualizando índices...</div>
+  `;
+  body.appendChild(log);
+  if (currentInputLineRef && currentInputLineRef.parentNode === body) body.appendChild(currentInputLineRef);
+  body.scrollTop = body.scrollHeight;
 
+  const steps = log.querySelectorAll('.step');
+  for (let i = 0; i < steps.length; i++) {
+    await sleep(240 + Math.random() * 180);
+    steps[i].classList.add('done');
+    playTick(500 + i * 80);
+    body.scrollTop = body.scrollHeight;
+  }
+
+  // Download progress
+  await sleep(120);
+  const duration = 1400 + Math.random() * 800;
+  await animateProgress(body, `Descargando ${name}`, duration);
+
+  // Registrar
   installedPackages.push(name);
   savePackages();
   userStats.packagesInstalled = installedPackages.length;
@@ -1063,7 +1141,7 @@ async function installPackage(name, body) {
 
   printLine(body, '');
   printLine(body, `[OK] Paquete "${name}" instalado correctamente.`, 'ok glow-pulse');
-  printLine(body, `     Comandos disponibles: <span class="info">${pkg.commands.join(', ')}</span>`, '');
+  printLine(body, `     Comandos: <span class="info">${pkg.commands.join(', ')}</span>`, '');
   printLine(body, '');
 
   playSuccess();
@@ -1098,6 +1176,7 @@ function removePackage(name, body) {
     printLine(body, `  Paquetes que dependen: <span class="warn">${dependents.map(p => p.name).join(', ')}</span>`, 'dim');
     printLine(body, `  Desinstálalos primero.`, 'dim');
     playError();
+    effectGlitchSlice();
     return;
   }
 
@@ -1143,20 +1222,15 @@ const ACHIEVEMENTS_LIST = {
   gamer: 'Gamer',
   winner: 'Ganador',
   loser: 'Mala suerte',
-  time_lord: 'Señor del tiempo',
   explorer: 'Explorador',
-  social_butterfly: 'Mariposa social',
   all_links: 'Coleccionista de links',
   night_owl: 'Búho nocturno',
   early_bird: 'Madrugador',
   combo_king: 'Combo King',
   perfectionist: 'Perfeccionista',
   hacker_elite: 'Hacker Élite',
-  poet: 'Poeta',
-  musician: 'Músico',
   philosopher: 'Filósofo',
   mathematician: 'Matemático',
-  // PAQUETES
   first_pkg: 'Instalador',
   pkg_master: 'Package Master',
   all_pkgs: 'Completo'
@@ -1281,6 +1355,7 @@ function launchBruteforce(win, linkKey) {
     clearInterval(termInterval);
     barEl.style.width = '100%';
     etaEl.textContent = '0s';
+    barEl.style.background = 'linear-gradient(90deg, #3ddc84, #5eaaff)';
 
     const l1 = document.createElement('div');
     l1.className = 'brute-line';
@@ -1372,7 +1447,7 @@ function blinkEye(body) {
   }
 }
 
-// ⚠️ CONTINÚA EN EL SIGUIENTE MENSAJE
+// ⚠️ Continúa en PARTE 2
 /* ============================================================
    COMANDOS
    ============================================================ */
@@ -1664,16 +1739,15 @@ const COMMANDS = {
     const sub = (args[0] || 'list').toLowerCase();
     const name = (args[1] || '').toLowerCase();
 
-    // --- LIST ---
     if (sub === 'list' || sub === 'ls' || sub === '') {
       printLine(body, ':: PAQUETES DISPONIBLES', 'accent');
       printLine(body, '');
       printLine(body, `  <span class="info">${padEnd('PAQUETE', 16)}${padEnd('VERSIÓN', 10)}${padEnd('TAMAÑO', 10)}ESTADO</span>`, 'dim');
-      printLine(body, '  ' + '-'.repeat(56), 'dim');
+      printLine(body, '  ' + '-'.repeat(58), 'dim');
       Object.values(PACKAGES).forEach(p => {
         const inst = installedPackages.includes(p.name);
         const status = inst ? '<span class="ok">[INSTALADO]</span>' : '<span class="dim">[ ]</span>';
-        printLine(body, `  <span class="ok">${padEnd(p.name, 16)}</span>${padEnd(p.version, 10)}${padEnd(p.size, 10)}${status}`);
+        printLine(body, `  <span class="ok">${padEnd(p.name, 16)}</span>${padEnd('v' + p.version, 10)}${padEnd(p.size, 10)}${status}`);
       });
       printLine(body, '');
       printLine(body, `  ${installedPackages.length}/${Object.keys(PACKAGES).length} instalados`, 'dim');
@@ -1682,7 +1756,6 @@ const COMMANDS = {
       return;
     }
 
-    // --- INSTALLED ---
     if (sub === 'installed' || sub === 'i-ls') {
       if (!installedPackages.length) {
         printLine(body, 'No tienes paquetes instalados.', 'warn');
@@ -1700,21 +1773,18 @@ const COMMANDS = {
       return;
     }
 
-    // --- INSTALL ---
     if (sub === 'install' || sub === 'add' || sub === 'i') {
       if (!name) { printLine(body, 'Uso: pkg install <nombre>', 'warn'); return; }
       await installPackage(name, body);
       return;
     }
 
-    // --- REMOVE ---
     if (sub === 'remove' || sub === 'rm' || sub === 'uninstall' || sub === 'del') {
       if (!name) { printLine(body, 'Uso: pkg remove <nombre>', 'warn'); return; }
       removePackage(name, body);
       return;
     }
 
-    // --- INFO ---
     if (sub === 'info' || sub === 'show') {
       if (!name) { printLine(body, 'Uso: pkg info <nombre>', 'warn'); return; }
       const p = PACKAGES[name];
@@ -1723,7 +1793,7 @@ const COMMANDS = {
       printLine(body, `:: ${p.name}`, 'accent');
       printLine(body, '');
       printLine(body, `  Descripción:  ${escapeHTML(p.desc)}`, '');
-      printLine(body, `  Versión:      ${p.version}`, '');
+      printLine(body, `  Versión:      v${p.version}`, '');
       printLine(body, `  Tamaño:       ${p.size}`, '');
       printLine(body, `  Estado:       ${inst ? '<span class="ok">INSTALADO</span>' : '<span class="dim">no instalado</span>'}`, '');
       printLine(body, `  Dependencias: ${p.deps.length ? escapeHTML(p.deps.join(', ')) : 'ninguna'}`, '');
@@ -1735,7 +1805,6 @@ const COMMANDS = {
       return;
     }
 
-    // --- SEARCH ---
     if (sub === 'search' || sub === 'find') {
       const q = name || '';
       if (!q) { printLine(body, 'Uso: pkg search <query>', 'warn'); return; }
@@ -1754,7 +1823,6 @@ const COMMANDS = {
       return;
     }
 
-    // --- UPDATE ---
     if (sub === 'update' || sub === 'upgrade') {
       if (!installedPackages.length) { printLine(body, 'No hay paquetes que actualizar.', 'warn'); return; }
       printLine(body, ':: Actualizando paquetes...', 'accent');
@@ -1769,7 +1837,6 @@ const COMMANDS = {
       return;
     }
 
-    // --- HELP ---
     if (sub === 'help' || sub === '--help' || sub === '-h') {
       printLine(body, ':: GESTOR DE PAQUETES', 'accent');
       printLine(body, '');
@@ -2380,7 +2447,7 @@ const COMMANDS = {
   }},
 
   /* ============================================================
-     COMANDOS DEL SISTEMA (siempre disponibles)
+     SISTEMA — Siempre disponibles
      ============================================================ */
 
   fastfetch: { desc: 'Sistema', run: (body) => {
@@ -2391,10 +2458,10 @@ const COMMANDS = {
     printLine(body, `  <span class="ok">muncixop</span><span class="dim">@</span><span class="ok">void</span>`, '');
     printLine(body, '  ' + '-'.repeat(30), 'dim');
     const info = [
-      ['OS', 'VOID SYSTEMS v8.1'],
+      ['OS', 'VOID SYSTEMS v9.0'],
       ['Host', 'muncixop.github.io'],
       ['Kernel', 'glitch-6.6.6'],
-      ['Shell', 'voidsh 8.1'],
+      ['Shell', 'voidsh 9.0'],
       ['Uptime', uptime + 's'],
       ['CPU', 'Void Core (64)'],
       ['GPU', 'Phantom Renderer'],
@@ -2567,16 +2634,16 @@ async function bootSequence(isReboot = false) {
   else playPowerUp();
 
   const bootLines = [
-    ['VOID BIOS v8.1 - Inicializando...', 'dim', 100],
+    ['VOID BIOS v9.0 - Inicializando...', 'dim', 100],
     ['  [OK] CPU Void Core x64 @ 3.20GHz', 'ok', 80],
     ['  [OK] Memoria ECC 128GB', 'ok', 80],
     ['  [OK] GPU Phantom Renderer', 'ok', 70],
     ['  [OK] Red local activa', 'ok', 70],
     ['  [OK] Asistencias moviles cargadas', 'ok', 60],
     ['  [OK] Sistema de guardado listo', 'ok', 60],
-    ['  [OK] Gestor de paquetes v1.0', 'ok', 60],
+    ['  [OK] Gestor de paquetes v2.0', 'ok', 60],
     ['', '', 60],
-    ['Cargando VOID SYSTEMS v8.1...', 'info', 200],
+    ['Cargando VOID SYSTEMS v9.0...', 'info', 200],
     ['', '', 100],
   ];
   for (const [text, cls, delay] of bootLines) {
@@ -2592,7 +2659,7 @@ async function bootSequence(isReboot = false) {
     ['  ██║  ██║███████╗██║        ██║   ', 'ok'],
     ['  ╚═╝  ╚═╝╚══════╝╚═╝        ╚═╝   ', 'ok'],
     ['', ''],
-    ['  Bienvenido a VOID SYSTEMS v8.1, muncixop.', 'accent'],
+    ['  Bienvenido a VOID SYSTEMS v9.0, muncixop.', 'accent'],
     ['  Escribe <span class="ok">help</span> para ver los comandos.', 'dim'],
     ['  Prueba <span class="ok">pkg list</span> para ver los paquetes.', 'dim'],
     ['', ''],
@@ -2603,7 +2670,7 @@ async function bootSequence(isReboot = false) {
 }
 
 /* ============================================================
-   INPUT LOOP v8.1
+   INPUT LOOP
    ============================================================ */
 let currentTerm = null;
 let currentInputLineRef = null;
@@ -3129,6 +3196,6 @@ document.addEventListener('touchmove', () => {
   if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
 }, { passive: true });
 
-console.log('%c VOID SYSTEMS v8.1 ', 'background:#3ddc84;color:#000;font-weight:bold;padding:4px 8px;border-radius:4px;font-size:14px');
+console.log('%c VOID SYSTEMS v9.0 ', 'background:#3ddc84;color:#000;font-weight:bold;padding:4px 8px;border-radius:4px;font-size:14px');
 console.log('%c Bienvenido, muncixop. ', 'color:#3ddc84;font-weight:bold;font-size:12px');
-console.log('%c v8.1: Sistema de paquetes instalables ', 'color:#5eaaff;font-style:italic');
+console.log('%c v9.0: RAF drag, storage migrado, packages v2, todo mejorado ', 'color:#5eaaff;font-style:italic');
