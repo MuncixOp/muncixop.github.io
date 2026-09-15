@@ -1,8 +1,8 @@
 /* ============================================================
-   VOID SYSTEMS v7.3 — Terminal / OS Simulator
+   VOID SYSTEMS v7.4 — Terminal / OS Simulator
    Author: MuncixOp
    Fixes: barra title absoluta, help escapado, bruteforce 15s,
-          enter en línea vacía sin crear línea nueva
+          enter vacío sin crear línea, OS Windows/Linux sin overlap
    ============================================================ */
 
 /* ---------- OS DETECTION ---------- */
@@ -1103,10 +1103,10 @@ const COMMANDS = {
     printLine(body, `  <span class="ok">muncixop</span><span class="dim">@</span><span class="ok">void</span>`, '');
     printLine(body, '  ' + '-'.repeat(30), 'dim');
     const info = [
-      ['OS', 'VOID SYSTEMS v7.3'],
+      ['OS', 'VOID SYSTEMS v7.4'],
       ['Host', 'muncixop.github.io'],
       ['Kernel', 'glitch-6.6.6'],
-      ['Shell', 'voidsh 7.3'],
+      ['Shell', 'voidsh 7.4'],
       ['Uptime', uptime + 's'],
       ['CPU', 'Void Core (64)'],
       ['GPU', 'Phantom Renderer'],
@@ -1457,14 +1457,14 @@ async function bootSequence(isReboot = false) {
   else playPowerUp();
 
   const bootLines = [
-    ['VOID BIOS v7.3 - Inicializando...', 'dim', 100],
+    ['VOID BIOS v7.4 - Inicializando...', 'dim', 100],
     ['  [OK] CPU Void Core x64 @ 3.20GHz', 'ok', 80],
     ['  [OK] Memoria ECC 128GB', 'ok', 80],
     ['  [OK] GPU Phantom Renderer', 'ok', 70],
     ['  [OK] Red local activa', 'ok', 70],
     ['  [OK] Asistencias moviles cargadas', 'ok', 60],
     ['', '', 60],
-    ['Cargando VOID SYSTEMS v7.3...', 'info', 200],
+    ['Cargando VOID SYSTEMS v7.4...', 'info', 200],
     ['', '', 100],
   ];
   for (const [text, cls, delay] of bootLines) {
@@ -1480,7 +1480,7 @@ async function bootSequence(isReboot = false) {
     ['  ██║  ██║███████╗██║        ██║   ', 'ok'],
     ['  ╚═╝  ╚═╝╚══════╝╚═╝        ╚═╝   ', 'ok'],
     ['', ''],
-    ['  Bienvenido a VOID SYSTEMS v7.3, muncixop.', 'accent'],
+    ['  Bienvenido a VOID SYSTEMS v7.4, muncixop.', 'accent'],
     ['  Escribe <span class="ok">help</span> para ver los comandos.', 'dim'],
     ['  Prueba <span class="ok">fastfetch</span> para ver el ojo.', 'dim'],
     ['', ''],
@@ -1491,7 +1491,7 @@ async function bootSequence(isReboot = false) {
 }
 
 /* ============================================================
-   INPUT LOOP v7.3 — Input real + asistencias
+   INPUT LOOP v7.4 — Input real + asistencias
    ============================================================ */
 let currentTerm = null;
 let currentInputLineRef = null;
@@ -1648,7 +1648,7 @@ function startInput(term) {
     typed = '';
     hideSuggest();
 
-    // ✅ FIX: Enter en línea vacía = solo limpia el input, NO crea línea nueva
+    // FIX: Enter en línea vacía = solo limpia el input, NO crea línea nueva
     if (!cmd) {
       input.value = '';
       body.scrollTop = body.scrollHeight;
@@ -1878,6 +1878,6 @@ document.addEventListener('touchmove', () => {
   if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
 }, { passive: true });
 
-console.log('%c VOID SYSTEMS v7.3 ', 'background:#3ddc84;color:#000;font-weight:bold;padding:4px 8px;border-radius:4px;font-size:14px');
+console.log('%c VOID SYSTEMS v7.4 ', 'background:#3ddc84;color:#000;font-weight:bold;padding:4px 8px;border-radius:4px;font-size:14px');
 console.log('%c Bienvenido, muncixop. ', 'color:#3ddc84;font-weight:bold;font-size:12px');
-console.log('%c Fix: barra title fija, enter vacío, help escapado ', 'color:#5eaaff;font-style:italic');
+console.log('%c Fix OS Windows/Linux: botones a la derecha, sin overlap ', 'color:#5eaaff;font-style:italic');
