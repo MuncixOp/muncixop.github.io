@@ -1,7 +1,8 @@
 /* ============================================================
-   VOID SYSTEMS v7.2 — Terminal / OS Simulator
+   VOID SYSTEMS v7.3 — Terminal / OS Simulator
    Author: MuncixOp
-   Fixes: alineación win-bar, escapeHTML en help, bruteforce 15s
+   Fixes: barra title absoluta, help escapado, bruteforce 15s,
+          enter en línea vacía sin crear línea nueva
    ============================================================ */
 
 /* ---------- OS DETECTION ---------- */
@@ -526,7 +527,7 @@ function updateLauncher() {
   launcher.classList.toggle('on', shouldShow);
 }
 
-/* DRAG — Simple, sin wobbly */
+/* DRAG — Simple */
 function makeDraggable(win, handle) {
   let sx, sy, ox, oy, dragging = false;
   const start = (e) => {
@@ -740,7 +741,7 @@ function padEnd(s, n, c = ' ') { s = String(s); while (s.length < n) s += c; ret
 function padStart(s, n, c = ' ') { s = String(s); while (s.length < n) s = c + s; return s; }
 
 /* ============================================================
-   BRUTEFORCE v7.2 — Timeout de 15s + auto-unlock
+   BRUTEFORCE — 15s con auto-unlock
    ============================================================ */
 function launchBruteforce(win, linkKey) {
   const link = LINKS_DB[linkKey];
@@ -1102,10 +1103,10 @@ const COMMANDS = {
     printLine(body, `  <span class="ok">muncixop</span><span class="dim">@</span><span class="ok">void</span>`, '');
     printLine(body, '  ' + '-'.repeat(30), 'dim');
     const info = [
-      ['OS', 'VOID SYSTEMS v7.2'],
+      ['OS', 'VOID SYSTEMS v7.3'],
       ['Host', 'muncixop.github.io'],
       ['Kernel', 'glitch-6.6.6'],
-      ['Shell', 'voidsh 7.2'],
+      ['Shell', 'voidsh 7.3'],
       ['Uptime', uptime + 's'],
       ['CPU', 'Void Core (64)'],
       ['GPU', 'Phantom Renderer'],
@@ -1456,14 +1457,14 @@ async function bootSequence(isReboot = false) {
   else playPowerUp();
 
   const bootLines = [
-    ['VOID BIOS v7.2 - Inicializando...', 'dim', 100],
+    ['VOID BIOS v7.3 - Inicializando...', 'dim', 100],
     ['  [OK] CPU Void Core x64 @ 3.20GHz', 'ok', 80],
     ['  [OK] Memoria ECC 128GB', 'ok', 80],
     ['  [OK] GPU Phantom Renderer', 'ok', 70],
     ['  [OK] Red local activa', 'ok', 70],
     ['  [OK] Asistencias moviles cargadas', 'ok', 60],
     ['', '', 60],
-    ['Cargando VOID SYSTEMS v7.2...', 'info', 200],
+    ['Cargando VOID SYSTEMS v7.3...', 'info', 200],
     ['', '', 100],
   ];
   for (const [text, cls, delay] of bootLines) {
@@ -1479,7 +1480,7 @@ async function bootSequence(isReboot = false) {
     ['  ██║  ██║███████╗██║        ██║   ', 'ok'],
     ['  ╚═╝  ╚═╝╚══════╝╚═╝        ╚═╝   ', 'ok'],
     ['', ''],
-    ['  Bienvenido a VOID SYSTEMS v7.2, muncixop.', 'accent'],
+    ['  Bienvenido a VOID SYSTEMS v7.3, muncixop.', 'accent'],
     ['  Escribe <span class="ok">help</span> para ver los comandos.', 'dim'],
     ['  Prueba <span class="ok">fastfetch</span> para ver el ojo.', 'dim'],
     ['', ''],
@@ -1490,7 +1491,7 @@ async function bootSequence(isReboot = false) {
 }
 
 /* ============================================================
-   INPUT LOOP v7.2 — Input real + asistencias
+   INPUT LOOP v7.3 — Input real + asistencias
    ============================================================ */
 let currentTerm = null;
 let currentInputLineRef = null;
@@ -1647,6 +1648,13 @@ function startInput(term) {
     typed = '';
     hideSuggest();
 
+    // ✅ FIX: Enter en línea vacía = solo limpia el input, NO crea línea nueva
+    if (!cmd) {
+      input.value = '';
+      body.scrollTop = body.scrollHeight;
+      return;
+    }
+
     const cmdLine = document.createElement('div');
     cmdLine.className = 'out cmd';
     cmdLine.innerHTML = getPromptHTML() + escapeHTML(cmd);
@@ -1654,14 +1662,12 @@ function startInput(term) {
     currentLine = null;
     currentInputLineRef = null;
 
-    if (cmd) {
-      cmdHistory.push(cmd);
-      saveHistory();
-      histIdx = cmdHistory.length;
-      playEnter();
-      haptic(10);
-      runCommand(cmd, body, term);
-    }
+    cmdHistory.push(cmd);
+    saveHistory();
+    histIdx = cmdHistory.length;
+    playEnter();
+    haptic(10);
+    runCommand(cmd, body, term);
 
     createInputLine();
     body.scrollTop = body.scrollHeight;
@@ -1872,6 +1878,6 @@ document.addEventListener('touchmove', () => {
   if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
 }, { passive: true });
 
-console.log('%c VOID SYSTEMS v7.2 ', 'background:#3ddc84;color:#000;font-weight:bold;padding:4px 8px;border-radius:4px;font-size:14px');
+console.log('%c VOID SYSTEMS v7.3 ', 'background:#3ddc84;color:#000;font-weight:bold;padding:4px 8px;border-radius:4px;font-size:14px');
 console.log('%c Bienvenido, muncixop. ', 'color:#3ddc84;font-weight:bold;font-size:12px');
-console.log('%c Fix: win-bar alineado, help sin romper, bruteforce 15s ', 'color:#5eaaff;font-style:italic');
+console.log('%c Fix: barra title fija, enter vacío, help escapado ', 'color:#5eaaff;font-style:italic');
