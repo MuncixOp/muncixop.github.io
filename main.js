@@ -1,9 +1,7 @@
 /* ============================================================
-   VOID SYSTEMS v7.6 — Terminal / OS Simulator
+   VOID SYSTEMS v8.1 — Terminal / OS Simulator
    Author: MuncixOp
-   Novedades v7.6:
-   - Layout con CSS GRID (bar + body como filas independientes)
-   - La barra YA NO se mueve nunca
+   Novedades v8.1: Sistema de Paquetes
    ============================================================ */
 
 /* ---------- OS DETECTION ---------- */
@@ -28,7 +26,9 @@ function haptic(pattern = 10) {
   }
 }
 
-/* LINKS */
+/* ============================================================
+   LINKS PROTEGIDOS
+   ============================================================ */
 const LINKS_DB = {
   curseforge: {
     name: 'CurseForge Projects',
@@ -53,7 +53,9 @@ const LINKS_DB = {
   }
 };
 
-/* OJO ASCII */
+/* ============================================================
+   OJO ASCII
+   ============================================================ */
 const EYE_ASCII = [
   '@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@',
   '@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@',
@@ -110,26 +112,144 @@ const EYE_ASCII_SMALL = [
 
 function getEye() { return mob ? EYE_ASCII_SMALL : EYE_ASCII; }
 
-/* STORAGE */
-const HIST_KEY = 'void_history';
+/* ============================================================
+   SISTEMA DE GUARDADO COMPLETO
+   ============================================================ */
+const STORAGE_KEYS = {
+  history: 'void_history',
+  achievements: 'void_achievements',
+  unlocked: 'void_unlocked_links',
+  notes: 'void_notes',
+  balance: 'void_balance',
+  stats: 'void_stats',
+  settings: 'void_settings',
+  packages: 'void_packages'
+};
+
+/* ============================================================
+   SISTEMA DE PAQUETES — Definición
+   ============================================================ */
+const PACKAGES = {
+  games: {
+    name: 'games',
+    desc: 'Minijuegos de terminal',
+    version: '1.0.0',
+    size: '2.1 MB',
+    commands: ['coin', 'rps', 'guess', 'dice', '8ball'],
+    deps: []
+  },
+  gambling: {
+    name: 'gambling',
+    desc: 'Sistema de apuestas',
+    version: '1.0.0',
+    size: '1.8 MB',
+    commands: ['gamble'],
+    deps: ['games']
+  },
+  'crypto-utils': {
+    name: 'crypto-utils',
+    desc: 'Herramientas criptográficas',
+    version: '1.2.0',
+    size: '3.4 MB',
+    commands: ['base64', 'rot13', 'hash', 'password', 'uuid', 'pick'],
+    deps: []
+  },
+  fun: {
+    name: 'fun',
+    desc: 'Comandos de entretenimiento',
+    version: '1.5.0',
+    size: '2.7 MB',
+    commands: ['quote', 'joke', 'fact', 'meme', 'cowsay', 'fortune', 'random'],
+    deps: []
+  },
+  'net-tools': {
+    name: 'net-tools',
+    desc: 'Diagnóstico de red',
+    version: '2.0.1',
+    size: '5.6 MB',
+    commands: ['ping', 'trace', 'nmap', 'whois', 'scan', 'curl'],
+    deps: []
+  },
+  'sys-tools': {
+    name: 'sys-tools',
+    desc: 'Información del sistema',
+    version: '1.3.0',
+    size: '1.2 MB',
+    commands: ['ps', 'top', 'tree', 'ls', 'pwd'],
+    deps: []
+  },
+  effects: {
+    name: 'effects',
+    desc: 'Efectos visuales',
+    version: '1.4.0',
+    size: '4.1 MB',
+    commands: ['confetti', 'glitch', 'hypnotize', 'flash', 'quake', 'rainbow', 'scramble', 'type', 'spinner', 'countdown'],
+    deps: []
+  },
+  'ascii-art': {
+    name: 'ascii-art',
+    desc: 'Arte ASCII y banners',
+    version: '1.0.0',
+    size: '1.5 MB',
+    commands: ['ascii'],
+    deps: []
+  },
+  security: {
+    name: 'security',
+    desc: 'Herramientas de seguridad',
+    version: '3.0.0',
+    size: '6.8 MB',
+    commands: ['decrypt'],
+    deps: []
+  }
+};
+
+let installedPackages = (() => {
+  try {
+    const raw = JSON.parse(localStorage.getItem(STORAGE_KEYS.packages) || '[]');
+    return raw.filter(n => PACKAGES[n]);
+  } catch { return []; }
+})();
+function savePackages() {
+  try { localStorage.setItem(STORAGE_KEYS.packages, JSON.stringify(installedPackages)); } catch {}
+}
+function findPackageForCommand(cmd) {
+  for (const p of Object.values(PACKAGES)) {
+    if (p.commands.includes(cmd)) return p;
+  }
+  return null;
+}
+function isCommandAvailable(cmd) {
+  if (COMMANDS[cmd]) return true;
+  const pkg = findPackageForCommand(cmd);
+  if (!pkg) return false;
+  return installedPackages.includes(pkg.name);
+}
+
+/* --- STORAGE: HISTORY --- */
 let cmdHistory = (() => {
-  try { return JSON.parse(localStorage.getItem(HIST_KEY) || '[]'); }
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEYS.history) || '[]'); }
   catch { return []; }
 })();
 function saveHistory() {
-  try { localStorage.setItem(HIST_KEY, JSON.stringify(cmdHistory.slice(-200))); } catch {}
+  try { localStorage.setItem(STORAGE_KEYS.history, JSON.stringify(cmdHistory.slice(-200))); } catch {}
 }
 
-const ACH_KEY = 'void_achievements';
+/* --- STORAGE: ACHIEVEMENTS --- */
 let achievements = (() => {
-  try { return JSON.parse(localStorage.getItem(ACH_KEY) || '{}'); }
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEYS.achievements) || '{}'); }
   catch { return {}; }
 })();
+function saveAchievements() {
+  try { localStorage.setItem(STORAGE_KEYS.achievements, JSON.stringify(achievements)); } catch {}
+}
 function unlockAch(key, name) {
   if (achievements[key]) return;
   achievements[key] = { name, at: Date.now() };
-  try { localStorage.setItem(ACH_KEY, JSON.stringify(achievements)); } catch {}
+  saveAchievements();
   showAchToast(name);
+  playSuccess();
+  haptic([30, 30, 30]);
 }
 function showAchToast(name) {
   const toast = document.createElement('div');
@@ -140,26 +260,93 @@ function showAchToast(name) {
     <div class="ach-meta">${new Date().toLocaleTimeString()}</div>
   `;
   document.body.appendChild(toast);
-  playSuccess();
-  haptic([20, 40, 20]);
   setTimeout(() => {
     toast.style.animation = 'achIn .4s reverse forwards';
     setTimeout(() => toast.remove(), 400);
   }, 3400);
 }
 
-const UNLOCKED_KEY = 'void_unlocked_links';
+/* --- STORAGE: UNLOCKED LINKS --- */
 let unlockedLinks = (() => {
-  try { return JSON.parse(localStorage.getItem(UNLOCKED_KEY) || '{}'); }
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEYS.unlocked) || '{}'); }
   catch { return {}; }
 })();
 function saveUnlocked() {
-  try { localStorage.setItem(UNLOCKED_KEY, JSON.stringify(unlockedLinks)); } catch {}
+  try { localStorage.setItem(STORAGE_KEYS.unlocked, JSON.stringify(unlockedLinks)); } catch {}
 }
 
-/* AUDIO */
+/* --- STORAGE: NOTES --- */
+let userNotes = (() => {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEYS.notes) || '[]'); }
+  catch { return []; }
+})();
+function saveNotes() {
+  try { localStorage.setItem(STORAGE_KEYS.notes, JSON.stringify(userNotes)); } catch {}
+}
+
+/* --- STORAGE: BALANCE --- */
+let userBalance = (() => {
+  try { return parseInt(localStorage.getItem(STORAGE_KEYS.balance) || '100', 10); }
+  catch { return 100; }
+})();
+function saveBalance() {
+  try { localStorage.setItem(STORAGE_KEYS.balance, String(userBalance)); } catch {}
+}
+
+/* --- STORAGE: STATS --- */
+let userStats = (() => {
+  try {
+    const s = JSON.parse(localStorage.getItem(STORAGE_KEYS.stats) || '{}');
+    return {
+      commandsUsed: s.commandsUsed || 0,
+      uniqueCommands: s.uniqueCommands || [],
+      sessionStart: s.sessionStart || Date.now(),
+      totalTime: s.totalTime || 0,
+      gamesWon: s.gamesWon || 0,
+      gamesLost: s.gamesLost || 0,
+      gamblesWon: s.gamblesWon || 0,
+      gamblesLost: s.gamblesLost || 0,
+      linksUnlocked: s.linksUnlocked || 0,
+      notesCreated: s.notesCreated || 0,
+      packagesInstalled: s.packagesInstalled || 0,
+      lastCommand: s.lastCommand || ''
+    };
+  } catch {
+    return {
+      commandsUsed: 0, uniqueCommands: [], sessionStart: Date.now(),
+      totalTime: 0, gamesWon: 0, gamesLost: 0, gamblesWon: 0,
+      gamblesLost: 0, linksUnlocked: 0, notesCreated: 0,
+      packagesInstalled: 0, lastCommand: ''
+    };
+  }
+})();
+function saveStats() {
+  try { localStorage.setItem(STORAGE_KEYS.stats, JSON.stringify(userStats)); } catch {}
+}
+
+/* --- STORAGE: SETTINGS --- */
+let userSettings = (() => {
+  try {
+    const s = JSON.parse(localStorage.getItem(STORAGE_KEYS.settings) || '{}');
+    return {
+      audioEnabled: s.audioEnabled !== false,
+      matrixActive: s.matrixActive !== false,
+      glitchesAuto: s.glitchesAuto !== false,
+      notifications: s.notifications !== false
+    };
+  } catch {
+    return { audioEnabled: true, matrixActive: true, glitchesAuto: true, notifications: true };
+  }
+})();
+function saveSettings() {
+  try { localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(userSettings)); } catch {}
+}
+
+/* ============================================================
+   AUDIO
+   ============================================================ */
 let actx = null;
-let audioEnabled = true;
+let audioEnabled = userSettings.audioEnabled;
 
 function audio() {
   if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
@@ -322,8 +509,57 @@ function playPowerUp() {
     }
   } catch (e) {}
 }
+function playCoin() {
+  if (!audioEnabled) return;
+  try {
+    const a = audio(), t = a.currentTime;
+    const o1 = a.createOscillator(), o2 = a.createOscillator(), g = a.createGain();
+    o1.type = 'square'; o1.frequency.value = 1800;
+    o2.type = 'square'; o2.frequency.value = 2400;
+    g.gain.setValueAtTime(.06, t);
+    g.gain.exponentialRampToValueAtTime(.001, t + .15);
+    o1.connect(g); o2.connect(g); g.connect(a.destination);
+    o1.start(t); o1.stop(t + .15); o2.start(t); o2.stop(t + .15);
+    const o3 = a.createOscillator(), g2 = a.createGain();
+    o3.type = 'square'; o3.frequency.value = 1400;
+    g2.gain.setValueAtTime(.04, t + .12);
+    g2.gain.exponentialRampToValueAtTime(.001, t + .35);
+    o3.connect(g2); g2.connect(a.destination);
+    o3.start(t + .12); o3.stop(t + .35);
+  } catch (e) {}
+}
+function playWin() {
+  if (!audioEnabled) return;
+  try {
+    const a = audio(), t = a.currentTime;
+    [523, 659, 784, 1047].forEach((f, i) => {
+      const o = a.createOscillator(), g = a.createGain();
+      o.type = 'triangle'; o.frequency.value = f;
+      g.gain.setValueAtTime(.05, t + i * .1);
+      g.gain.exponentialRampToValueAtTime(.001, t + i * .1 + .2);
+      o.connect(g); g.connect(a.destination);
+      o.start(t + i * .1); o.stop(t + i * .1 + .2);
+    });
+  } catch (e) {}
+}
+function playLose() {
+  if (!audioEnabled) return;
+  try {
+    const a = audio(), t = a.currentTime;
+    const o = a.createOscillator(), g = a.createGain();
+    o.type = 'sawtooth';
+    o.frequency.setValueAtTime(400, t);
+    o.frequency.exponentialRampToValueAtTime(80, t + .5);
+    g.gain.setValueAtTime(.07, t);
+    g.gain.exponentialRampToValueAtTime(.001, t + .5);
+    o.connect(g); g.connect(a.destination);
+    o.start(t); o.stop(t + .5);
+  } catch (e) {}
+}
 
-/* MATRIX */
+/* ============================================================
+   MATRIX CANVAS
+   ============================================================ */
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
 let W, H, cols, drops, fontSize = 14;
@@ -338,7 +574,7 @@ function resizeCanvas() {
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
 
-let matrixActive = true;
+let matrixActive = userSettings.matrixActive;
 function drawMatrix() {
   if (matrixActive && !reducedMotion) {
     ctx.fillStyle = 'rgba(6,6,6,0.06)';
@@ -358,7 +594,9 @@ function drawMatrix() {
 }
 if (!reducedMotion) drawMatrix();
 
-/* PARTICLES */
+/* ============================================================
+   PARTICLES
+   ============================================================ */
 const pcanvas = document.getElementById('p');
 const pctx = pcanvas.getContext('2d');
 let pW, pH;
@@ -370,7 +608,7 @@ resizeParticles();
 window.addEventListener('resize', resizeParticles);
 
 const particles = [];
-const PARTICLE_COUNT = mob ? 20 : 50;
+const PARTICLE_COUNT = mob ? 20 : 60;
 for (let i = 0; i < PARTICLE_COUNT; i++) {
   particles.push({
     x: Math.random() * window.innerWidth,
@@ -382,8 +620,11 @@ for (let i = 0; i < PARTICLE_COUNT; i++) {
     char: Math.random() > .5 ? '·' : '˙',
   });
 }
-function drawParticles() {
+let lastParticleTime = 0;
+function drawParticles(now) {
   if (reducedMotion) { requestAnimationFrame(drawParticles); return; }
+  if (now - lastParticleTime < 40) { requestAnimationFrame(drawParticles); return; }
+  lastParticleTime = now;
   pctx.clearRect(0, 0, pW, pH);
   const accent = getComputedStyle(document.body).getPropertyValue('--accent').trim() || '#3ddc84';
   particles.forEach(p => {
@@ -398,9 +639,11 @@ function drawParticles() {
   pctx.globalAlpha = 1;
   requestAnimationFrame(drawParticles);
 }
-drawParticles();
+requestAnimationFrame(drawParticles);
 
-/* WINDOW SYSTEM */
+/* ============================================================
+   WINDOW SYSTEM
+   ============================================================ */
 const winsContainer = document.getElementById('wins');
 const dock = document.getElementById('dock');
 const launcher = document.getElementById('launcher');
@@ -616,7 +859,9 @@ function makeResizable(win, handle) {
   handle.addEventListener('touchstart', start, { passive: false });
 }
 
-/* EFFECTS */
+/* ============================================================
+   EFFECTS
+   ============================================================ */
 function effectRipple(x, y) {
   const r = document.createElement('div');
   r.className = 'ripple';
@@ -653,7 +898,7 @@ function effectGlitchSlice() {
     }, i * 60);
   }
 }
-function effectConfetti(count = 30) {
+function effectConfetti(count = 40) {
   const colors = ['#3ddc84', '#5eaaff', '#c77dff', '#ffcc00', '#ff5fa2', '#00ffff'];
   const glyphs = ['*', '+', '·', '×', '◆', '□', '■', '◇', '○', '●'];
   for (let i = 0; i < count; i++) {
@@ -669,6 +914,10 @@ function effectConfetti(count = 30) {
       setTimeout(() => c.remove(), 4200);
     }, i * 30);
   }
+}
+function effectIntrusion() {
+  document.body.classList.add('intrusion');
+  setTimeout(() => document.body.classList.remove('intrusion'), 1100);
 }
 function scrambleText(el, target, duration = 500) {
   const chars = '!@#$%^&*()_+-=[]{}|;:<>?/\\`~0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -688,8 +937,35 @@ function scrambleText(el, target, duration = 500) {
   }
   frame();
 }
+async function animateProgress(body, label = 'Procesando', duration = 2000, onComplete = null) {
+  const container = document.createElement('div');
+  container.className = 'out progress-container';
+  container.innerHTML = `
+    <span class="dim" style="min-width:140px">${escapeHTML(label)}</span>
+    <div class="progress-bar"><div class="progress-fill"></div></div>
+    <span class="accent" style="min-width:50px;text-align:right">0%</span>
+  `;
+  body.appendChild(container);
+  if (typeof currentInputLineRef !== 'undefined' && currentInputLineRef && currentInputLineRef.parentNode === body) body.appendChild(currentInputLineRef);
+  body.scrollTop = body.scrollHeight;
+  const fill = container.querySelector('.progress-fill');
+  const pctLabel = container.querySelector('.accent');
+  const startTime = performance.now();
+  while (true) {
+    const elapsed = performance.now() - startTime;
+    const pct = Math.min(elapsed / duration, 1);
+    fill.style.width = (pct * 100).toFixed(1) + '%';
+    pctLabel.textContent = Math.round(pct * 100) + '%';
+    if (pct >= 1) break;
+    if (Math.random() > .7) playTick(500 + Math.random() * 400);
+    await sleep(40);
+  }
+  if (onComplete) onComplete();
+}
 
-/* HELPERS */
+/* ============================================================
+   HELPERS
+   ============================================================ */
 const PROMPT_USER = 'muncixop';
 const PROMPT_HOST = 'void';
 const PROMPT_PATH = '~';
@@ -697,11 +973,23 @@ const PROMPT_PATH = '~';
 function getPromptHTML() {
   return `<span class="pr">${PROMPT_USER}@${PROMPT_HOST}:<span class="path">${PROMPT_PATH}</span>$&nbsp;</span>`;
 }
+
+// printLine con FIX: mueve el input al fondo siempre
 function printLine(body, text, cls = '') {
   const line = document.createElement('div');
   line.className = 'out ' + cls;
   line.innerHTML = text;
   body.appendChild(line);
+
+  if (typeof currentInputLineRef !== 'undefined' && currentInputLineRef && currentInputLineRef.parentNode === body) {
+    const inputEl = currentInputLineRef.querySelector('.ki');
+    const hadFocus = inputEl && document.activeElement === inputEl;
+    body.appendChild(currentInputLineRef);
+    if (hadFocus && inputEl) {
+      setTimeout(() => { try { inputEl.focus({ preventScroll: true }); } catch (e) {} }, 0);
+    }
+  }
+
   body.scrollTop = body.scrollHeight;
   return line;
 }
@@ -721,8 +1009,162 @@ function randomHex(len) {
 function randomFrom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 function padEnd(s, n, c = ' ') { s = String(s); while (s.length < n) s += c; return s; }
 function padStart(s, n, c = ' ') { s = String(s); while (s.length < n) s = c + s; return s; }
+function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
-/* BRUTEFORCE */
+/* ============================================================
+   GESTOR DE PAQUETES — funciones
+   ============================================================ */
+async function installPackage(name, body) {
+  const pkg = PACKAGES[name];
+  if (!pkg) {
+    printLine(body, `x Paquete no encontrado: ${escapeHTML(name)}`, 'err');
+    printLine(body, `  Usa <span class="ok">pkg list</span> para ver los disponibles.`, 'dim');
+    playError();
+    return false;
+  }
+  if (installedPackages.includes(name)) {
+    printLine(body, `[!] "${name}" ya está instalado.`, 'warn');
+    return false;
+  }
+
+  // Dependencias
+  for (const dep of pkg.deps) {
+    if (!installedPackages.includes(dep)) {
+      printLine(body, `[!] Requiere dependencia: "${dep}"`, 'warn');
+      await sleep(300);
+      await installPackage(dep, body);
+    }
+  }
+
+  printLine(body, '');
+  printLine(body, `:: Instalando paquete "${name}"...`, 'accent');
+  printLine(body, `   ${pkg.desc}`, 'dim');
+  printLine(body, `   v${pkg.version} · ${pkg.size}`, 'dim');
+  printLine(body, '');
+  await sleep(200);
+
+  const duration = 1800 + Math.random() * 900;
+  await animateProgress(body, `Descargando ${name}`, duration);
+  await sleep(120);
+  printLine(body, `  <span class="ok">✓</span> Descarga completa`, '');
+  await sleep(160);
+  printLine(body, `  <span class="ok">✓</span> Checksum verificado <span class="dim">(SHA-256)</span>`, '');
+  await sleep(160);
+  printLine(body, `  <span class="ok">✓</span> Archivos extraídos <span class="dim">(${pkg.commands.length} módulos)</span>`, '');
+  await sleep(160);
+  printLine(body, `  <span class="ok">✓</span> Comandos registrados`, '');
+  await sleep(200);
+
+  installedPackages.push(name);
+  savePackages();
+  userStats.packagesInstalled = installedPackages.length;
+  saveStats();
+  effectFlash('rgba(61,220,132,.25)');
+
+  printLine(body, '');
+  printLine(body, `[OK] Paquete "${name}" instalado correctamente.`, 'ok glow-pulse');
+  printLine(body, `     Comandos disponibles: <span class="info">${pkg.commands.join(', ')}</span>`, '');
+  printLine(body, '');
+
+  playSuccess();
+  effectConfetti(30);
+  haptic([50, 30, 50, 30, 100]);
+
+  unlockAch('first_pkg', 'Instalador');
+  if (installedPackages.length >= 5) unlockAch('pkg_master', 'Package Master');
+  if (installedPackages.length === Object.keys(PACKAGES).length) unlockAch('all_pkgs', 'Completo');
+
+  return true;
+}
+
+function removePackage(name, body) {
+  const pkg = PACKAGES[name];
+  if (!pkg) {
+    printLine(body, `x Paquete no encontrado: ${escapeHTML(name)}`, 'err');
+    return;
+  }
+  if (!installedPackages.includes(name)) {
+    printLine(body, `[!] "${name}" no está instalado.`, 'warn');
+    return;
+  }
+
+  const dependents = Object.values(PACKAGES).filter(p =>
+    installedPackages.includes(p.name) &&
+    p.deps.includes(name) &&
+    p.name !== name
+  );
+  if (dependents.length > 0) {
+    printLine(body, `x No se puede desinstalar "${name}"`, 'err');
+    printLine(body, `  Paquetes que dependen: <span class="warn">${dependents.map(p => p.name).join(', ')}</span>`, 'dim');
+    printLine(body, `  Desinstálalos primero.`, 'dim');
+    playError();
+    return;
+  }
+
+  installedPackages = installedPackages.filter(n => n !== name);
+  savePackages();
+  userStats.packagesInstalled = installedPackages.length;
+  saveStats();
+  playWhoosh();
+  printLine(body, `[OK] Paquete "${name}" eliminado.`, 'ok');
+  printLine(body, `     Comandos deshabilitados: <span class="dim">${pkg.commands.join(', ')}</span>`, 'dim');
+}
+
+/* ============================================================
+   ACHIEVEMENTS LIST
+   ============================================================ */
+const ACHIEVEMENTS_LIST = {
+  first_fetch: 'El ojo te vio',
+  first_unlock: 'Primer desbloqueo',
+  hacker: 'Hacker',
+  scanner: 'Escaneo completo',
+  tracer: 'Rastreador',
+  pinger: 'Ping Master',
+  nmap: 'Puertos Abiertos',
+  curler: 'HTTP Client',
+  decryptor: 'Descifrador',
+  cow: 'Vaca filósofa',
+  fortune: 'Sabio',
+  themer: 'Estilista',
+  rainbow: 'Arcoíris',
+  confetti: 'Fiestero',
+  void: 'Multi-terminal',
+  glitch: 'Glitch Master',
+  quake: 'Terremoto',
+  konami: 'Código Konami',
+  sudo_fail: 'Intento de sudo',
+  ascii_artist: 'ASCII Artist',
+  notes_master: 'Escritor',
+  note_collector: 'Coleccionista',
+  gambler: 'Apostador',
+  rich: 'Millonario',
+  poor: 'En bancarrota',
+  cryptographer: 'Criptógrafo',
+  gamer: 'Gamer',
+  winner: 'Ganador',
+  loser: 'Mala suerte',
+  time_lord: 'Señor del tiempo',
+  explorer: 'Explorador',
+  social_butterfly: 'Mariposa social',
+  all_links: 'Coleccionista de links',
+  night_owl: 'Búho nocturno',
+  early_bird: 'Madrugador',
+  combo_king: 'Combo King',
+  perfectionist: 'Perfeccionista',
+  hacker_elite: 'Hacker Élite',
+  poet: 'Poeta',
+  musician: 'Músico',
+  philosopher: 'Filósofo',
+  mathematician: 'Matemático',
+  // PAQUETES
+  first_pkg: 'Instalador',
+  pkg_master: 'Package Master',
+  all_pkgs: 'Completo'
+};
+
+/* ============================================================
+   BRUTEFORCE
+   ============================================================ */
 function launchBruteforce(win, linkKey) {
   const link = LINKS_DB[linkKey];
   if (!link) return;
@@ -753,6 +1195,7 @@ function launchBruteforce(win, linkKey) {
     <div class="brute-terminal" id="brute-term-${linkKey}"></div>
   `;
   body.appendChild(panel);
+  if (currentInputLineRef && currentInputLineRef.parentNode === body) body.appendChild(currentInputLineRef);
   body.scrollTop = body.scrollHeight;
 
   const displayEl = panel.querySelector(`#brute-display-${linkKey}`);
@@ -838,7 +1281,6 @@ function launchBruteforce(win, linkKey) {
     clearInterval(termInterval);
     barEl.style.width = '100%';
     etaEl.textContent = '0s';
-    barEl.style.background = 'linear-gradient(90deg, #3ddc84, #5eaaff)';
 
     const l1 = document.createElement('div');
     l1.className = 'brute-line';
@@ -848,21 +1290,11 @@ function launchBruteforce(win, linkKey) {
     l2.className = 'brute-line';
     l2.innerHTML = `<span class="success">[+] TOKEN VALIDADO: ${escapeHTML(link.token)}</span>`;
     displayEl.appendChild(l2);
-    const l3 = document.createElement('div');
-    l3.className = 'brute-line';
-    l3.innerHTML = `<span class="success">[+] ACCESO CONCEDIDO.</span>`;
-    displayEl.appendChild(l3);
     displayEl.scrollTop = displayEl.scrollHeight;
 
     effectFlash('rgba(61,220,132,.45)');
-    effectGlitchSlice();
     playSuccess();
     haptic([50, 30, 50, 30, 100]);
-
-    const termLine = document.createElement('div');
-    termLine.textContent = `[${new Date().toLocaleTimeString()}] [OK] Token validado tras ${attempts.toLocaleString()} intentos.`;
-    termEl.appendChild(termLine);
-    termEl.scrollTop = termEl.scrollHeight;
 
     setTimeout(() => showUnlockResult(win, linkKey), 900);
   }
@@ -881,11 +1313,17 @@ function showUnlockResult(win, linkKey) {
   }
   unlockedLinks[linkKey] = true;
   saveUnlocked();
+  userStats.linksUnlocked = Object.keys(unlockedLinks).length;
+  saveStats();
   playSuccess();
   effectConfetti(40);
   effectFlash('rgba(61,220,132,.3)');
   haptic([30, 40, 30, 40, 60]);
   unlockAch('first_unlock', 'Primer desbloqueo');
+
+  if (Object.keys(unlockedLinks).length === Object.keys(LINKS_DB).length) {
+    unlockAch('all_links', 'Coleccionista de links');
+  }
 
   printLine(body, '');
   printLine(body, '=========================================', 'ok');
@@ -934,951 +1372,4 @@ function blinkEye(body) {
   }
 }
 
-/* COMANDOS */
-const COMMANDS = {
-  help: { desc: 'Ayuda', run: (body) => {
-    printLine(body, '+-- COMANDOS DISPONIBLES --------------------------+', 'accent');
-    const cmds = [
-      ['help', 'esta ayuda'], ['about', 'info'], ['projects', 'proyectos'],
-      ['skills', 'habilidades'], ['contact', 'contacto'], ['social', 'redes'],
-      ['links', 'paginas bloqueadas'], ['unlock <key> <token>', 'desbloquea'],
-      ['hack <key>', 'bruteforce'], ['scan', 'escanear'], ['trace <host>', 'traceroute'],
-      ['whois <host>', 'whois'], ['ping <host>', 'ping'], ['nmap <target>', 'puertos'],
-      ['curl <url>', 'HTTP'], ['ps', 'procesos'], ['top', 'monitor'], ['tree', 'arbol'],
-      ['ls', 'archivos'], ['pwd', 'ruta'], ['decrypt', 'minijuego'], ['cowsay <txt>', 'vaca'],
-      ['fortune', 'frase'], ['weather [ciudad]', 'clima'], ['crypto [sym]', 'cripto'],
-      ['dice', 'dados'], ['8ball <q>', 'bola'], ['random', 'dato'], ['countdown <n>', 'cuenta'],
-      ['spinner', 'spinner'], ['type <txt>', 'typewriter'], ['rainbow <txt>', 'arcoiris'],
-      ['scramble <txt>', 'scramble'], ['ascii <txt>', 'banner'], ['confetti', 'confetti'],
-      ['theme <color>', 'tema'], ['cyberpunk', 'glitch'], ['hypnotize', 'hypno'],
-      ['flash', 'flash'], ['quake', 'terremoto'], ['history', 'historial'],
-      ['achievements', 'logros'], ['fastfetch', 'sistema'], ['neofetch', 'alias'],
-      ['list', 'tokens'], ['whoami', 'quien'], ['date', 'fecha'], ['clear', 'limpiar'],
-      ['matrix', 'toggle matrix'], ['glitch', 'glitch'], ['os <mac|win|linux>', 'tema SO'],
-      ['sound', 'audio'], ['reset', 'borrar tokens'], ['reboot', 'reiniciar'],
-      ['void', 'nueva terminal'], ['close', 'cerrar'], ['sudo', 'escalar permisos'],
-      ['banner', 'banner'], ['exit', 'salir'],
-    ];
-    cmds.forEach(([c, d]) => {
-      printLine(body, `  <span class="ok">${escapeHTML(padEnd(c, 32))}</span><span class="dim">${escapeHTML(d)}</span>`);
-    });
-    printLine(body, '+--------------------------------------------------+', 'accent');
-  }},
-  about: { desc: 'Sobre mi', run: (body) => {
-    printLines(body, [
-      ['',''],
-      ['  ███╗   ███╗ ██████╗ ','accent'],
-      ['  ████╗ ████║██╔═══██╗','accent'],
-      ['  ██╔████╔██║██║   ██║','accent'],
-      ['  ██║╚██╔╝██║██║   ██║','accent'],
-      ['  ██║ ╚═╝ ██║╚██████╔╝','accent'],
-      ['  ╚═╝     ╚═╝ ╚═════╝ ','accent'],
-      ['',''],
-      ['  Muncix_Op','h1'],
-      ['  Creative Developer & UI Engineer','info'],
-      ['',''],
-      ['  Especialista en Roblox Studio (Jujutsu Shenanigans),',''],
-      ['  Modelado 3D en Blockbench y Sistemas Web de Alto Rendimiento.',''],
-    ]);
-  }},
-  projects: { desc: 'Proyectos', run: (body) => {
-    printLine(body, ':: PROYECTOS DESTACADOS', 'accent');
-    printLine(body, '');
-    printLine(body, '  >> <span class="h1">Jujutsu Shenanigans Scripting</span>', 'ok');
-    printLine(body, '     Sistemas avanzados de combate y mecanicas personalizadas en Roblox.', 'dim');
-    printLine(body, '');
-    printLine(body, '  >> <span class="h1">Blockbench 3D Asset Pipeline</span>', 'ok');
-    printLine(body, '     Modelado y rigging de alta fidelidad optimizado para motores graficos.', 'dim');
-  }},
-  skills: { desc: 'Skills', run: (body) => {
-    printLine(body, ':: HABILIDADES TECNICAS', 'accent');
-    const skills = [
-      ['Roblox Studio / Luau', 95], ['Blockbench / 3D Modeling', 90],
-      ['JavaScript / TypeScript', 88], ['HTML / CSS / UI Design', 92],
-      ['Node.js / Backend', 80], ['Python', 75], ['Blender / 3D Art', 70],
-    ];
-    skills.forEach(([name, pct]) => {
-      const bar = '█'.repeat(Math.round(pct / 5)) + '░'.repeat(20 - Math.round(pct / 5));
-      printLine(body, `  ${padEnd(name, 28)} <span class="ok">${bar}</span> ${pct}%`);
-    });
-  }},
-  contact: { desc: 'Contacto', run: (body) => {
-    printLine(body, ':: CONTACTO', 'accent');
-    printLine(body, '  Usa <span class="ok">social</span> para ver los links.', 'info');
-  }},
-  social: { desc: 'Redes', run: (body) => {
-    printLine(body, ':: REDES SOCIALES - ACCESO PROTEGIDO', 'accent');
-    printLine(body, '');
-    Object.entries(LINKS_DB).forEach(([key, link]) => {
-      const isUnlocked = unlockedLinks[key];
-      const status = isUnlocked ? '<span class="ok">[ABIERTO]</span>' : '<span class="err">[BLOQUEADO]</span>';
-      printLine(body, `  <span class="h1">${escapeHTML(link.name)}</span>  ${status}`, '');
-      if (isUnlocked) {
-        const lnk = document.createElement('div');
-        lnk.className = 'lnk';
-        lnk.innerHTML = `<a href="${escapeHTML(link.url)}" target="_blank" rel="noopener"><span class="n">-></span>${escapeHTML(link.url)}</a>`;
-        body.appendChild(lnk);
-      } else {
-        printLine(body, `     <span class="ok">hack ${key}</span>  o  <span class="ok">unlock ${key} TOKEN</span>`, 'dim');
-      }
-    });
-  }},
-  links: { desc: 'Links', run: (body) => {
-    printLine(body, ':: PAGINAS PROTEGIDAS', 'accent');
-    Object.entries(LINKS_DB).forEach(([key, link]) => {
-      const u = unlockedLinks[key];
-      printLine(body, `  <span class="ok">${padEnd(key, 12)}</span><span class="${u ? 'ok' : 'err'}">${u ? '[ABIERTO]' : '[LOCK]'}</span> ${link.name}`);
-    });
-  }},
-  hack: { desc: 'Bruteforce', run: (body, win, args) => {
-    const key = (args[0] || '').toLowerCase();
-    if (!LINKS_DB[key]) { printLine(body, `Uso: hack <${Object.keys(LINKS_DB).join('|')}>`, 'warn'); return; }
-    if (unlockedLinks[key]) { printLine(body, `[OK] Ya desbloqueado.`, 'ok'); return; }
-    unlockAch('hacker', 'Hacker');
-    launchBruteforce(win, key);
-  }},
-  unlock: { desc: 'Unlock', run: (body, win, args) => {
-    const key = (args[0] || '').toLowerCase();
-    const token = args.slice(1).join(' ').trim().toUpperCase();
-    if (!LINKS_DB[key]) { printLine(body, `Uso: unlock <key> <TOKEN>`, 'warn'); return; }
-    if (!token) { printLine(body, `Falta el token.`, 'warn'); return; }
-    if (token === LINKS_DB[key].token) showUnlockResult(win, key);
-    else {
-      printLine(body, `x TOKEN INVALIDO`, 'err');
-      playError();
-      effectQuake();
-    }
-  }},
-  list: { desc: 'Tokens', run: (body) => {
-    const keys = Object.keys(LINKS_DB).filter(k => unlockedLinks[k]);
-    if (!keys.length) { printLine(body, 'Nada desbloqueado.', 'warn'); return; }
-    keys.forEach(k => printLine(body, `  <span class="ok">${padEnd(k, 12)}</span>${escapeHTML(LINKS_DB[k].token)}`));
-  }},
-  fastfetch: { desc: 'Sistema', run: (body) => {
-    const eye = getEye();
-    const uptime = Math.floor(performance.now() / 1000);
-    eye.forEach(line => printLine(body, `<span class="eye">${escapeHTML(line)}</span>`, 'eye'));
-    printLine(body, '', '');
-    printLine(body, `  <span class="ok">muncixop</span><span class="dim">@</span><span class="ok">void</span>`, '');
-    printLine(body, '  ' + '-'.repeat(30), 'dim');
-    const info = [
-      ['OS', 'VOID SYSTEMS v7.6'],
-      ['Host', 'muncixop.github.io'],
-      ['Kernel', 'glitch-6.6.6'],
-      ['Shell', 'voidsh 7.6'],
-      ['Uptime', uptime + 's'],
-      ['CPU', 'Void Core (64)'],
-      ['GPU', 'Phantom Renderer'],
-      ['RAM', (40 + Math.random() * 10).toFixed(1) + 'GB / 128GB'],
-    ];
-    info.forEach(([k, v]) => printLine(body, `  <span class="ok">${padEnd(k, 10)}</span><span class="info">${escapeHTML(v)}</span>`, ''));
-    setTimeout(() => blinkEye(body), 1200);
-    unlockAch('first_fetch', 'El ojo te vio');
-  }},
-  neofetch: { desc: 'Alias', run: (body, w, a) => COMMANDS.fastfetch.run(body, w, a) },
-  scan: { desc: 'Scan', run: async (body) => {
-    printLine(body, ':: ESCANEO DE RED', 'accent');
-    const hosts = [
-      { ip: '192.168.1.1', mac: 'A4:2B:B0:' + randomHex(2) + ':' + randomHex(2) + ':' + randomHex(2), name: 'router', port: '80,443' },
-      { ip: '192.168.1.14', mac: 'F0:18:98:' + randomHex(2) + ':' + randomHex(2) + ':' + randomHex(2), name: 'macbook', port: '22,5900' },
-      { ip: '192.168.1.31', mac: 'D8:BB:C1:' + randomHex(2) + ':' + randomHex(2) + ':' + randomHex(2), name: 'iphone', port: '62078' },
-    ];
-    for (const h of hosts) {
-      await sleep(250);
-      printLine(body, `  ${padEnd(h.ip, 16)}${padEnd(h.mac, 20)}${padEnd(h.name, 12)}${h.port}`);
-      playTick(700);
-    }
-    printLine(body, '[OK] ' + hosts.length + ' hosts detectados.', 'ok');
-    unlockAch('scanner', 'Escaneo');
-  }},
-  ping: { desc: 'Ping', run: async (body, w, args) => {
-    const host = (args[0] || 'muncixop.github.io').toLowerCase();
-    printLine(body, `PING ${escapeHTML(host)}`, 'accent');
-    for (let i = 0; i < 4; i++) {
-      await sleep(700);
-      printLine(body, `64 bytes: icmp_seq=${i + 1} time=${(Math.random() * 30 + 8).toFixed(1)} ms`, 'ok');
-    }
-    unlockAch('pinger', 'Ping');
-  }},
-  trace: { desc: 'Trace', run: async (body, w, args) => {
-    const host = (args[0] || 'void.systems').toLowerCase();
-    printLine(body, `traceroute a ${escapeHTML(host)}`, 'accent');
-    const hops = ['192.168.1.1','10.0.0.1','172.16.0.1','209.85.252.1','142.250.185.14','185.199.108.153'];
-    for (let i = 0; i < hops.length; i++) {
-      await sleep(250);
-      printLine(body, `  ${padStart(i + 1, 2)}  ${padEnd(hops[i], 18)}${(Math.random() * 40 + 5).toFixed(2)} ms`, 'mono-dim');
-    }
-  }},
-  whois: { desc: 'Whois', run: async (body, w, args) => {
-    const host = (args[0] || 'muncixop.github.io').toLowerCase();
-    printLine(body, `whois ${escapeHTML(host)}`, 'accent');
-    await sleep(300);
-    [['Registrar','GITHUB, INC.'],['Status','clientTransferProhibited'],['DNSSEC','unsigned']].forEach(([k,v]) => {
-      printLine(body, `  <span class="ok">${padEnd(k, 14)}</span>${escapeHTML(v)}`);
-    });
-  }},
-  nmap: { desc: 'Nmap', run: async (body, w, args) => {
-    const target = (args[0] || '192.168.1.1').toLowerCase();
-    printLine(body, `Nmap scan for ${escapeHTML(target)}`, 'accent');
-    const ports = [['22/tcp','open','ssh'],['80/tcp','open','http'],['443/tcp','open','https'],['3306/tcp','closed','mysql']];
-    for (const [p, s, svc] of ports) {
-      await sleep(250);
-      printLine(body, `${padEnd(p, 9)}<span class="${s === 'open' ? 'ok' : 'dim'}">${padEnd(s, 9)}</span>${svc}`);
-    }
-  }},
-  curl: { desc: 'Curl', run: async (body, w, args) => {
-    const url = args[0] || 'https://muncixop.github.io';
-    printLine(body, `curl ${escapeHTML(url)}`, 'accent');
-    await sleep(400);
-    printLine(body, 'HTTP/2 200', 'ok');
-    printLine(body, 'server: GitHub.com', '');
-    printLine(body, '<!DOCTYPE html>...', 'mono-dim');
-  }},
-  ps: { desc: 'PS', run: (body) => {
-    printLine(body, '  PID  USER      %CPU  COMMAND', 'info');
-    [[1,'root',0.0,'/sbin/init'],[128,'muncixop',2.4,'voidsh'],[512,'muncixop',42.1,'matrix-daemon'],[2048,'muncixop',8.9,'node server.js']].forEach(p => {
-      printLine(body, `  ${padStart(p[0],4)}  ${padEnd(p[1],9)} ${padStart(p[2].toFixed(1),5)}  ${p[3]}`);
-    });
-  }},
-  top: { desc: 'Top', run: (body) => {
-    printLine(body, 'top - ' + new Date().toLocaleTimeString(), 'accent');
-    printLine(body, 'Tasks: 142 total, 2 running', 'dim');
-    printLine(body, '%Cpu(s): ' + (5 + Math.random() * 15).toFixed(1) + ' us', 'dim');
-  }},
-  tree: { desc: 'Tree', run: (body) => {
-    ['├── public/', '│   ├── index.html', '│   ├── style.css', '│   └── main.js', '├── projects/', '└── README.md'].forEach(l => printLine(body, l, 'mono-dim'));
-  }},
-  ls: { desc: 'LS', run: (body) => printLine(body, '<span class="info">public/</span>  <span class="info">assets/</span>  README.md  package.json', '') },
-  pwd: { desc: 'PWD', run: (body) => printLine(body, '/home/muncixop/void-systems', 'info') },
-  decrypt: { desc: 'Decrypt', run: async (body) => {
-    printLine(body, ':: DESCIFRADO', 'accent');
-    const target = randomFrom(['VOID','MUNCIXOP','GLITCH','MATRIX']);
-    const cipher = '!@#$%^&*()_+-=[]{}|0123456789';
-    const line = printLine(body, '', 'ok');
-    for (let f = 0; f < 20; f++) {
-      let s = '';
-      for (let i = 0; i < target.length; i++) {
-        s += (i < (f / 20) * target.length) ? target[i] : cipher[Math.floor(Math.random() * cipher.length)];
-      }
-      line.innerHTML = `  <span class="ok">${escapeHTML(s)}</span>`;
-      playTick(300 + f * 30);
-      await sleep(80);
-    }
-    printLine(body, `[OK] ${target}`, 'ok');
-    playSuccess();
-    unlockAch('decryptor', 'Descifrador');
-  }},
-  cowsay: { desc: 'Vaca', run: (body, w, args) => {
-    const text = args.join(' ') || 'MuncixOp es el mejor';
-    const maxLen = text.length;
-    printLine(body, ' ' + '_'.repeat(maxLen + 2), 'dim');
-    printLine(body, ` <span class="dim">&lt;</span> ${escapeHTML(text)} <span class="dim">&gt;</span>`, '');
-    printLine(body, ' ' + '-'.repeat(maxLen + 2), 'dim');
-    printLine(body, '        \\   ^__^');
-    printLine(body, '         \\  (oo)\\_______');
-    printLine(body, '            (__)\\       )\\/\\');
-    printLine(body, '                ||----w |');
-    unlockAch('cow', 'Vaca');
-  }},
-  fortune: { desc: 'Frase', run: (body) => {
-    const f = ['El que madruga, encuentra todo cerrado.', 'No es un bug, es una feature.', 'Si funciona, no lo toques.', 'La simplicidad es la maxima sofisticacion.'];
-    printLine(body, `"${escapeHTML(randomFrom(f))}"`, 'info');
-    unlockAch('fortune', 'Sabio');
-  }},
-  weather: { desc: 'Clima', run: async (body, w, args) => {
-    const city = args.join(' ') || 'Bogotá';
-    printLine(body, `Clima para ${escapeHTML(city)}`, 'accent');
-    await sleep(400);
-    printLine(body, `  Temperatura    <span class="ok">${(15 + Math.random() * 20).toFixed(1)}°C</span>`);
-    printLine(body, `  Humedad        ${(40 + Math.random() * 40).toFixed(0)}%`);
-  }},
-  crypto: { desc: 'Cripto', run: async (body, w, args) => {
-    const sym = (args[0] || 'BTC').toUpperCase();
-    printLine(body, `Consultando ${escapeHTML(sym)}`, 'accent');
-    await sleep(400);
-    printLine(body, `  Precio       <span class="ok">$${(Math.random() * 60000 + 10000).toLocaleString()}</span>`);
-  }},
-  dice: { desc: 'Dado', run: (body, w, args) => {
-    const faces = parseInt(args[0]) || 6;
-    const r = Math.floor(Math.random() * faces) + 1;
-    printLine(body, `Tirando dado de ${faces} caras...`, 'dim');
-    const line = printLine(body, '', '');
-    scrambleText(line, `-> ${r}`, 400);
-  }},
-  '8ball': { desc: '8ball', run: (body, w, args) => {
-    const q = args.join(' ') || '(sin pregunta)';
-    const a = ['Si, definitivamente.', 'No lo creo.', 'Sin duda.', 'Pregunta otra vez.', 'No cuentes con eso.'];
-    printLine(body, `Pregunta: ${escapeHTML(q)}`, 'dim');
-    const line = printLine(body, '', '');
-    scrambleText(line, randomFrom(a), 500);
-  }},
-  random: { desc: 'Random', run: (body) => {
-    const f = ['El primer bug fue una polilla en 1947.', 'JavaScript se hizo en 10 dias.', 'Python se llama por Monty Python.', 'Linux empezo como hobby de Linus en 1991.'];
-    printLine(body, `  ${escapeHTML(randomFrom(f))}`, 'info');
-  }},
-  countdown: { desc: 'Countdown', run: async (body, w, args) => {
-    let n = Math.min(Math.max(parseInt(args[0]) || 5, 1), 20);
-    for (let i = n; i > 0; i--) {
-      printLine(body, `  ${i}...`, 'accent');
-      playBeep(400 + i * 60, .15);
-      haptic(20);
-      await sleep(500);
-    }
-    printLine(body, '  DESPEGUE!', 'ok');
-    effectConfetti(30);
-    playPowerUp();
-  }},
-  spinner: { desc: 'Spinner', run: async (body) => {
-    const fr = ['⠋','⠙','⠹','⠸','⠼','⠴','⠦','⠧','⠇','⠏'];
-    const line = printLine(body, '', 'accent');
-    for (let i = 0; i < 40; i++) {
-      line.textContent = `  ${fr[i % fr.length]}  Procesando...`;
-      await sleep(60);
-    }
-    line.innerHTML = `  <span class="ok">[OK]</span> Listo.`;
-  }},
-  type: { desc: 'Type', run: async (body, w, args) => {
-    const text = args.join(' ') || 'Hola mundo desde VOID SYSTEMS';
-    const line = printLine(body, '', 'accent');
-    for (let i = 0; i < text.length; i++) {
-      line.textContent += text[i];
-      if (i % 3 === 0) playTick(600 + Math.random() * 300);
-      await sleep(40);
-    }
-  }},
-  rainbow: { desc: 'Rainbow', run: (body, w, args) => {
-    const text = args.join(' ') || 'MUNCIXOP';
-    const colors = ['#ff0040','#ff8000','#ffff00','#00ff40','#00aaff','#8000ff','#ff00aa'];
-    let html = '';
-    for (let i = 0; i < text.length; i++) {
-      const c = colors[i % colors.length];
-      html += `<span style="color:${c};text-shadow:0 0 8px ${c}80">${escapeHTML(text[i])}</span>`;
-    }
-    printLine(body, html, '');
-  }},
-  scramble: { desc: 'Scramble', run: async (body, w, args) => {
-    const text = args.join(' ') || 'VOID SYSTEMS';
-    const line = printLine(body, '', 'accent');
-    scrambleText(line, text, 800);
-    playGlitch();
-  }},
-  ascii: { desc: 'ASCII', run: (body, w, args) => {
-    const text = (args.join(' ') || 'VOID').toUpperCase().slice(0, 12);
-    const font = {
-      'A':['  ▄▄  ',' █  █ ',' ████ ',' █  █ ',' █  █ '],
-      'V':[' █   █',' █   █',' █   █','  █ █ ','   █  '],
-      'O':[' ▄▄▄  ','█   █ ','█   █ ','█   █ ',' ▀▀▀  '],
-      'I':[' ███ ','  █  ','  █  ','  █  ',' ███ '],
-      'D':[' ███  ',' █  █ ',' █  █ ',' █  █ ',' ███  '],
-      'M':[' █▄ ▄█ ',' █ █ █ ',' █ █ █ ',' █   █ ',' █   █ '],
-      'U':[' █  █ ',' █  █ ',' █  █ ',' █  █ ',' ▀▀▀▀ '],
-      'C':[' ▄▄▄  ','█     ','█     ','█     ',' ▀▀▀  '],
-      'X':[' █   █','  █ █ ','   █  ','  █ █ ',' █   █'],
-      ' ':['     ','     ','     ','     ','     '],
-    };
-    for (let row = 0; row < 5; row++) {
-      let l = '  ';
-      for (const ch of text) l += (font[ch] ? font[ch][row] : font[' '][row]) + ' ';
-      printLine(body, l, 'accent');
-    }
-  }},
-  confetti: { desc: 'Confetti', run: (body) => {
-    effectConfetti(60);
-    playSuccess();
-    haptic([20, 30, 20, 30, 60]);
-    printLine(body, '[OK] Confetti!', 'ok');
-    unlockAch('confetti', 'Fiestero');
-  }},
-  theme: { desc: 'Tema', run: (body, w, args) => {
-    const valid = ['green','red','blue','purple','amber','cyan','pink','mono','rainbow'];
-    const t = (args[0] || '').toLowerCase();
-    if (!valid.includes(t)) { printLine(body, `Uso: theme <${valid.join('|')}>`, 'warn'); return; }
-    document.body.className = document.body.className.replace(/\btheme-\w+/g, '').trim();
-    if (t !== 'green') document.body.classList.add('theme-' + t);
-    printLine(body, `[OK] Tema: ${t}`, 'ok');
-    playSuccess();
-    unlockAch('themer', 'Estilista');
-  }},
-  cyberpunk: { desc: 'Cyberpunk', run: (body) => {
-    document.body.classList.toggle('cyberpunk');
-    const on = document.body.classList.contains('cyberpunk');
-    printLine(body, on ? '[!] CYBERPUNK ON' : '[OK] OFF', on ? 'err' : 'ok');
-    playGlitch();
-    effectGlitchSlice();
-  }},
-  hypnotize: { desc: 'Hypno', run: (body) => {
-    document.body.classList.add('hypnotize');
-    printLine(body, '[!] MIRAME...', 'warn');
-    playBeep(300, .5);
-    setTimeout(() => { document.body.classList.remove('hypnotize'); printLine(body, '[OK] Despierta.', 'ok'); }, 4000);
-  }},
-  flash: { desc: 'Flash', run: (body) => { effectFlash(); playBeep(1200, .05); printLine(body, '[!] Flash!', 'warn'); }},
-  quake: { desc: 'Quake', run: (body) => { effectQuake(); printLine(body, '[!] TERREMOTO', 'err'); unlockAch('quake', 'Terremoto'); }},
-  history: { desc: 'History', run: (body) => {
-    if (!cmdHistory.length) { printLine(body, 'Vacio.', 'dim'); return; }
-    printLine(body, ':: HISTORIAL', 'accent');
-    cmdHistory.slice(-30).forEach((c, i) => printLine(body, `  ${padStart(i + 1, 4)}  ${escapeHTML(c)}`, 'mono-dim'));
-  }},
-  achievements: { desc: 'Logros', run: (body) => {
-    const list = Object.entries(achievements);
-    printLine(body, ':: LOGROS', 'accent');
-    if (!list.length) { printLine(body, '  Ninguno.', 'dim'); return; }
-    list.forEach(([k, v]) => printLine(body, `  <span class="ok">[+]</span> ${escapeHTML(v.name)}`, ''));
-  }},
-  whoami: { desc: 'Whoami', run: (body) => { printLine(body, 'muncixop', 'ok'); printLine(body, 'Creative Developer & UI Engineer.', 'dim'); }},
-  date: { desc: 'Date', run: (body) => printLine(body, new Date().toString(), 'info') },
-  clear: { desc: 'Clear', run: (body) => { body.innerHTML = ''; }},
-  matrix: { desc: 'Matrix', run: (body) => {
-    matrixActive = !matrixActive;
-    printLine(body, matrixActive ? '[OK] Matrix ON' : '[!] OFF', matrixActive ? 'ok' : 'warn');
-  }},
-  glitch: { desc: 'Glitch', run: (body, win) => {
-    document.body.classList.add('mx-hit');
-    win.el.classList.add('corrupt-shake');
-    playGlitch();
-    effectGlitchSlice();
-    effectQuake();
-    printLine(body, '[!] SOBRECARGA...', 'err');
-    setTimeout(() => {
-      document.body.classList.remove('mx-hit');
-      win.el.classList.remove('corrupt-shake');
-      printLine(body, '[OK] Estabilizado.', 'ok');
-    }, 900);
-    unlockAch('glitch', 'Glitch Master');
-  }},
-  os: { desc: 'OS', run: (body, w, args) => {
-    const t = (args[0] || '').toLowerCase();
-    const valid = ['mac','win','linux','android','ios'];
-    if (!valid.includes(t)) { printLine(body, `Uso: os <${valid.join('|')}>`, 'warn'); return; }
-    document.body.className = document.body.className.replace(/\bos-\w+/g, '').trim();
-    document.body.classList.add('os-' + t);
-    printLine(body, `[OK] SO: ${t}`, 'ok');
-    playSuccess();
-  }},
-  sound: { desc: 'Sound', run: (body) => {
-    audioEnabled = !audioEnabled;
-    printLine(body, audioEnabled ? '[ON]' : '[OFF]', audioEnabled ? 'ok' : 'warn');
-  }},
-  reset: { desc: 'Reset', run: (body) => {
-    unlockedLinks = {}; saveUnlocked();
-    printLine(body, '[OK] Tokens borrados.', 'ok');
-  }},
-  reboot: { desc: 'Reboot', run: (body) => {
-    printLine(body, '[!] Reiniciando...', 'warn');
-    playWhoosh();
-    effectFlash();
-    setTimeout(() => { body.innerHTML = ''; bootSequence(true); }, 800);
-  }},
-  void: { desc: 'Void', run: (body) => {
-    printLine(body, '[OK] Nueva terminal...', 'ok');
-    playSuccess();
-    setTimeout(() => bootSequence(true), 300);
-    unlockAch('void', 'Multi-terminal');
-  }},
-  close: { desc: 'Close', run: (body, win) => {
-    printLine(body, 'Cerrando...', 'warn');
-    setTimeout(() => closeWindow(win.id), 400);
-  }},
-  sudo: { desc: 'Intenta escalar privilegios', run: (body, win, args) => {
-    if (args.length > 0) {
-      printLine(body, '[sudo] no puedes pasar la password como argumento. Intenta solo "sudo".', 'warn');
-      return;
-    }
-    printLine(body, '[sudo] password for muncixop:', 'warn');
-    if (window._enterPasswordMode) {
-      window._enterPasswordMode((password) => {
-        const checkLine = printLine(body, '', 'dim');
-        checkLine.textContent = 'Verificando credenciales...';
-        setTimeout(() => {
-          checkLine.remove();
-          if (!password || password.length < 1) {
-            printLine(body, 'sudo: se requiere una contraseña', 'err');
-            playError();
-            return;
-          }
-          printLine(body, `sudo: 3 intentos fallidos. Cuenta bloqueada temporalmente.`, 'err');
-          printLine(body, 'Nice try. Pero no.', 'err');
-          playError();
-          effectQuake();
-          unlockAch('sudo_fail', 'Intento de sudo');
-        }, 900);
-      });
-    } else {
-      setTimeout(() => {
-        printLine(body, 'Nice try. Pero no.', 'err');
-        effectQuake();
-      }, 800);
-    }
-  }},
-  banner: { desc: 'Banner', run: (body) => {
-    printLines(body, [
-      ['  ██╗   ██╗ ██████╗ ██╗██████╗ ', 'ok'],
-      ['  ██║   ██║██╔═══██╗██║██╔══██╗', 'ok'],
-      ['  ██║   ██║██║   ██║██║██║  ██║', 'ok'],
-      ['  ╚██╗ ██╔╝██║   ██║██║██║  ██║', 'ok'],
-      ['   ╚████╔╝ ╚██████╔╝██║██████╔╝', 'ok'],
-      ['    ╚═══╝   ╚═════╝ ╚═╝╚═════╝ ', 'ok'],
-    ]);
-  }},
-  exit: { desc: 'Exit', run: (body, win) => {
-    printLine(body, 'Cerrando...', 'warn');
-    setTimeout(() => closeWindow(win.id), 400);
-  }},
-  echo: { desc: 'Echo', run: (body, w, args) => printLine(body, escapeHTML(args.join(' ') || '')) }
-};
-
-/* BOOT */
-let booted = false;
-async function bootSequence(isReboot = false) {
-  if (booted && !isReboot) return;
-  if (!isReboot) booted = true;
-
-  const term = createWindow('voidsh - ~', { width: 740, height: 580 });
-  const body = term.body;
-
-  if (!isReboot) playBoot();
-  else playPowerUp();
-
-  const bootLines = [
-    ['VOID BIOS v7.6 - Inicializando...', 'dim', 100],
-    ['  [OK] CPU Void Core x64 @ 3.20GHz', 'ok', 80],
-    ['  [OK] Memoria ECC 128GB', 'ok', 80],
-    ['  [OK] GPU Phantom Renderer', 'ok', 70],
-    ['  [OK] Red local activa', 'ok', 70],
-    ['  [OK] Asistencias moviles cargadas', 'ok', 60],
-    ['', '', 60],
-    ['Cargando VOID SYSTEMS v7.6...', 'info', 200],
-    ['', '', 100],
-  ];
-  for (const [text, cls, delay] of bootLines) {
-    printLine(body, text, cls);
-    await sleep(delay);
-  }
-
-  printLines(body, [
-    ['  ██████╗ ███████╗███████╗████████╗', 'ok'],
-    ['  ██╔══██╗██╔════╝██╔════╝╚══██╔══╝', 'ok'],
-    ['  ██████╔╝█████╗  █████╗     ██║   ', 'ok'],
-    ['  ██╔══██╗██╔══╝  ██╔══╝     ██║   ', 'ok'],
-    ['  ██║  ██║███████╗██║        ██║   ', 'ok'],
-    ['  ╚═╝  ╚═╝╚══════╝╚═╝        ╚═╝   ', 'ok'],
-    ['', ''],
-    ['  Bienvenido a VOID SYSTEMS v7.6, muncixop.', 'accent'],
-    ['  Escribe <span class="ok">help</span> para ver los comandos.', 'dim'],
-    ['  Prueba <span class="ok">fastfetch</span> para ver el ojo.', 'dim'],
-    ['', ''],
-  ]);
-  await sleep(200);
-
-  startInput(term);
-}
-
-/* INPUT LOOP */
-let currentTerm = null;
-let currentInputLineRef = null;
-let globalKeydownInstalled = false;
-
-function startInput(term) {
-  currentTerm = term;
-  const body = term.body;
-
-  let currentLine = null;
-  let typed = '';
-  let histIdx = cmdHistory.length;
-  let suggestBox = null;
-  let suggestItems = [];
-  let suggestIdx = 0;
-  let idleTimer = null;
-  let passwordMode = false;
-
-  const createInputLine = () => {
-    if (currentLine && currentLine.parentNode) currentLine.remove();
-    currentLine = document.createElement('div');
-    currentLine.className = 'input-line idle';
-    currentLine.style.position = 'relative';
-    currentLine.innerHTML = getPromptHTML() + '<input class="ki" type="text" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" aria-label="Terminal input">';
-    body.appendChild(currentLine);
-    body.scrollTop = body.scrollHeight;
-    currentInputLineRef = currentLine;
-
-    const input = currentLine.querySelector('.ki');
-
-    if (!mob) {
-      setTimeout(() => {
-        try { input.focus({ preventScroll: true }); } catch (e) {}
-      }, 50);
-    }
-
-    input.addEventListener('input', () => {
-      typed = input.value;
-      if (!passwordMode) updateSuggest();
-      if (currentLine.classList.contains('idle')) currentLine.classList.remove('idle');
-      resetIdleTimer();
-      body.scrollTop = body.scrollHeight;
-    });
-
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        if (passwordMode) {
-          const val = input.value;
-          passwordMode = false;
-          input.type = 'text';
-          input.value = '';
-          const pr = currentLine.querySelector('.pr');
-          if (pr) pr.innerHTML = `${PROMPT_USER}@${PROMPT_HOST}:<span class="path">${PROMPT_PATH}</span>$&nbsp;`;
-          typed = '';
-          if (typeof window._currentPasswordCallback === 'function') {
-            const cb = window._currentPasswordCallback;
-            window._currentPasswordCallback = null;
-            cb(val);
-          }
-          return;
-        }
-        submit();
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        if (passwordMode) return;
-        if (suggestItems.length && suggestBox) {
-          suggestIdx = Math.max(0, suggestIdx - 1);
-          Array.from(suggestBox.children).forEach((el, i) => el.classList.toggle('active', i === suggestIdx));
-          return;
-        }
-        if (cmdHistory.length) {
-          histIdx = Math.max(0, histIdx - 1);
-          input.value = cmdHistory[histIdx] || '';
-          typed = input.value;
-        }
-      } else if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        if (passwordMode) return;
-        if (suggestItems.length && suggestBox) {
-          suggestIdx = Math.min(suggestItems.length - 1, suggestIdx + 1);
-          Array.from(suggestBox.children).forEach((el, i) => el.classList.toggle('active', i === suggestIdx));
-          return;
-        }
-        if (histIdx < cmdHistory.length - 1) {
-          histIdx++;
-          input.value = cmdHistory[histIdx] || '';
-        } else {
-          histIdx = cmdHistory.length;
-          input.value = '';
-        }
-        typed = input.value;
-      } else if (e.key === 'Tab') {
-        e.preventDefault();
-        if (passwordMode) return;
-        if (suggestItems.length && suggestBox) {
-          typed = suggestItems[suggestIdx] + ' ';
-          input.value = typed;
-          updateSuggest();
-          return;
-        }
-        const partial = typed.trim();
-        if (!partial) return;
-        const matches = Object.keys(COMMANDS).filter(c => c.startsWith(partial));
-        if (matches.length === 1) { typed = matches[0] + ' '; input.value = typed; updateSuggest(); }
-        else if (matches.length > 1) printLine(body, matches.join('  '), 'dim');
-      } else if (e.key === 'l' && e.ctrlKey) {
-        e.preventDefault();
-        body.innerHTML = '';
-        createInputLine();
-      } else if (e.key.length === 1) {
-        playKey();
-        if (Math.random() > 0.85) {
-          input.classList.add('glitch-flash');
-          setTimeout(() => input.classList.remove('glitch-flash'), 80);
-        }
-      }
-    });
-
-    input.addEventListener('focus', () => {
-      if (currentLine) currentLine.classList.remove('idle');
-      if (mob) setTimeout(() => document.body.classList.add('kb-open'), 100);
-    });
-    input.addEventListener('blur', () => {
-      if (mob) setTimeout(() => document.body.classList.remove('kb-open'), 100);
-    });
-  };
-
-  const resetIdleTimer = () => {
-    if (idleTimer) clearTimeout(idleTimer);
-    idleTimer = setTimeout(() => {
-      if (currentLine && typed === '' && !passwordMode) currentLine.classList.add('idle');
-    }, 3000);
-  };
-
-  const hideSuggest = () => {
-    if (suggestBox && suggestBox.parentNode) suggestBox.remove();
-    suggestBox = null;
-    suggestItems = [];
-    suggestIdx = 0;
-  };
-  const updateSuggest = () => {
-    hideSuggest();
-    const partial = typed.split(/\s+/)[0].trim();
-    if (!partial || typed.includes(' ')) return;
-    const matches = Object.keys(COMMANDS).filter(c => c.startsWith(partial));
-    if (matches.length < 2) return;
-    suggestBox = document.createElement('div');
-    suggestBox.className = 'suggest on';
-    suggestItems = matches;
-    matches.forEach((m, i) => {
-      const item = document.createElement('div');
-      item.className = 'suggest-item' + (i === 0 ? ' active' : '');
-      item.innerHTML = `<span class="key">${escapeHTML(m)}</span><span class="desc">${escapeHTML(COMMANDS[m].desc)}</span>`;
-      item.addEventListener('click', () => {
-        if (!currentLine) return;
-        const input = currentLine.querySelector('.ki');
-        typed = m + ' ';
-        input.value = typed;
-        input.focus();
-        updateSuggest();
-      });
-      suggestBox.appendChild(item);
-    });
-    if (currentLine) currentLine.appendChild(suggestBox);
-    suggestIdx = 0;
-  };
-
-  const submit = () => {
-    if (!currentLine) return;
-    const input = currentLine.querySelector('.ki');
-    const cmd = (input.value || typed).trim();
-    typed = '';
-    hideSuggest();
-
-    if (!cmd) {
-      input.value = '';
-      body.scrollTop = body.scrollHeight;
-      return;
-    }
-
-    const cmdLine = document.createElement('div');
-    cmdLine.className = 'out cmd';
-    cmdLine.innerHTML = getPromptHTML() + escapeHTML(cmd);
-    currentLine.replaceWith(cmdLine);
-    currentLine = null;
-    currentInputLineRef = null;
-
-    cmdHistory.push(cmd);
-    saveHistory();
-    histIdx = cmdHistory.length;
-    playEnter();
-    haptic(10);
-    runCommand(cmd, body, term);
-
-    createInputLine();
-    body.scrollTop = body.scrollHeight;
-  };
-
-  window._submitCurrent = submit;
-  window._getCurrentInput = () => {
-    if (!currentInputLineRef) return null;
-    return currentInputLineRef.querySelector('.ki');
-  };
-
-  window._enterPasswordMode = (cb) => {
-    if (!currentLine) createInputLine();
-    const input = currentLine.querySelector('.ki');
-    const pr = currentLine.querySelector('.pr');
-    passwordMode = true;
-    window._currentPasswordCallback = cb;
-    input.value = '';
-    input.type = 'password';
-    input.focus();
-    if (pr) pr.innerHTML = `<span style="color:#ffcc00;font-weight:700">[sudo] password:</span>&nbsp;`;
-    currentLine.classList.remove('idle');
-  };
-
-  createInputLine();
-
-  body.addEventListener('click', (e) => {
-    if (e.target.closest('a') || e.target.closest('button') || e.target.closest('input')) return;
-    if (currentInputLineRef) {
-      const input = currentInputLineRef.querySelector('.ki');
-      if (input) {
-        try { input.focus({ preventScroll: true }); } catch (err) {}
-      }
-    }
-  });
-
-  if (!globalKeydownInstalled) {
-    globalKeydownInstalled = true;
-    window.addEventListener('keydown', (e) => {
-      const tag = document.activeElement && document.activeElement.tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
-      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 't') {
-        e.preventDefault();
-        bootSequence(true);
-      } else if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'w') {
-        e.preventDefault();
-        if (currentTerm) closeWindow(currentTerm.id);
-      } else if (e.key === 'Escape' && document.body.classList.contains('cyberpunk')) {
-        document.body.classList.remove('cyberpunk');
-      }
-    });
-  }
-}
-
-/* MOBILE ASSISTS */
-function initMobileAssists() {
-  document.querySelectorAll('.chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      const cmd = chip.dataset.cmd;
-      if (!cmd) return;
-      haptic(12);
-      const input = window._getCurrentInput ? window._getCurrentInput() : null;
-      if (input) {
-        input.value = cmd;
-        input.focus();
-        setTimeout(() => {
-          if (window._submitCurrent) window._submitCurrent();
-        }, 60);
-      }
-    });
-  });
-
-  document.querySelectorAll('.mb-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      const action = btn.dataset.action;
-      haptic(10);
-      const input = window._getCurrentInput ? window._getCurrentInput() : null;
-      if (!input) return;
-      if (action === 'enter') {
-        if (window._submitCurrent) window._submitCurrent();
-      } else if (action === 'backspace') {
-        input.value = input.value.slice(0, -1);
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-        playKey();
-      } else if (action === 'tab') {
-        input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true }));
-      } else if (action === 'up') {
-        input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true, cancelable: true }));
-      } else if (action === 'down') {
-        input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }));
-      } else if (action === 'esc') {
-        input.blur();
-        document.body.classList.remove('kb-open');
-      }
-      input.focus();
-    });
-  });
-
-  if (window.visualViewport) {
-    let baseHeight = window.visualViewport.height;
-    window.visualViewport.addEventListener('resize', () => {
-      const h = window.visualViewport.height;
-      const isKeyboardOpen = h < baseHeight - 150;
-      document.body.classList.toggle('kb-open', isKeyboardOpen);
-    });
-  }
-
-  const observer = new MutationObserver(() => {
-    const hasInput = document.querySelector('.input-line');
-    const chips = document.getElementById('quick-chips');
-    if (chips) {
-      if (!hasInput) chips.classList.add('hidden');
-      else chips.classList.remove('hidden');
-    }
-  });
-  observer.observe(document.body, { childList: true, subtree: true });
-}
-
-/* RUN COMMAND */
-function runCommand(input, body, win) {
-  const parts = input.split(/\s+/);
-  const cmd = parts[0].toLowerCase();
-  const args = parts.slice(1);
-
-  const command = COMMANDS[cmd];
-  if (!command) {
-    printLine(body, `voidsh: comando no encontrado: ${escapeHTML(cmd)}`, 'err');
-    printLine(body, `Escribe <span class="ok">help</span> para ver los comandos.`, 'dim');
-    playError();
-    effectGlitchSlice();
-    return;
-  }
-  try {
-    const r = command.run(body, win, args);
-    if (r && typeof r.catch === 'function') r.catch(e => {
-      printLine(body, `Error: ${escapeHTML(e.message)}`, 'err');
-    });
-  } catch (e) {
-    printLine(body, `Error al ejecutar "${cmd}": ${escapeHTML(e.message)}`, 'err');
-    playError();
-  }
-}
-
-/* GLOBAL */
-window.addEventListener('load', () => {
-  setTimeout(bootSequence, 300);
-  setTimeout(initMobileAssists, 200);
-});
-
-document.addEventListener('click', (e) => {
-  if (e.target.closest('.btn') || e.target.closest('.launcher') || e.target.closest('.copy-token') || e.target.closest('.err-btn') || e.target.closest('.chip') || e.target.closest('.mb-btn')) return;
-  effectRipple(e.clientX, e.clientY);
-});
-
-launcher.addEventListener('click', () => {
-  playSuccess();
-  effectFlash('rgba(61,220,132,.15)');
-  haptic(20);
-  bootSequence(true);
-});
-
-let lastTouch = 0;
-document.addEventListener('touchend', (e) => {
-  const now = Date.now();
-  if (now - lastTouch <= 300) e.preventDefault();
-  lastTouch = now;
-}, { passive: false });
-
-const konamiSeq = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
-let konamiIdx = 0;
-window.addEventListener('keydown', (e) => {
-  if (e.key === konamiSeq[konamiIdx]) {
-    konamiIdx++;
-    if (konamiIdx === konamiSeq.length) {
-      konamiIdx = 0;
-      document.body.classList.add('cyberpunk');
-      effectConfetti(100);
-      effectFlash('rgba(199,125,255,.4)');
-      effectQuake();
-      playPowerUp();
-      unlockAch('konami', 'Codigo Konami');
-      setTimeout(() => document.body.classList.remove('cyberpunk'), 8000);
-    }
-  } else {
-    konamiIdx = 0;
-  }
-});
-
-let longPressTimer = null;
-document.addEventListener('touchstart', (e) => {
-  const bar = e.target.closest('.win-bar');
-  if (!bar) return;
-  if (e.target.closest('.btn')) return;
-  const win = bar.closest('.win');
-  if (!win) return;
-  longPressTimer = setTimeout(() => {
-    haptic([30, 20, 30]);
-    const id = win.dataset.id;
-    const action = confirm('Acciones de ventana:\n\nAceptar = Maximizar/Restaurar\nCancelar = Cerrar ventana');
-    if (action) toggleMaximize(id);
-    else closeWindow(id);
-  }, 700);
-}, { passive: true });
-
-document.addEventListener('touchend', () => {
-  if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
-}, { passive: true });
-document.addEventListener('touchmove', () => {
-  if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
-}, { passive: true });
-
-console.log('%c VOID SYSTEMS v7.6 ', 'background:#3ddc84;color:#000;font-weight:bold;padding:4px 8px;border-radius:4px;font-size:14px');
-console.log('%c Bienvenido, muncixop. ', 'color:#3ddc84;font-weight:bold;font-size:12px');
-console.log('%c GRID layout: bar y body como filas independientes ', 'color:#5eaaff;font-style:italic');
+// ⚠️ CONTINÚA EN EL SIGUIENTE MENSAJE
