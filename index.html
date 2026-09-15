@@ -12,7 +12,10 @@
 <meta name="format-detection" content="telephone=no">
 <title>~/muncixop — VOID SYSTEMS</title>
 
-<!-- CSS CRÍTICO INLINE — nunca fondo blanco -->
+<!-- FAVICON INLINE — elimina el error 404 -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23060606'/%3E%3Ctext x='32' y='42' text-anchor='middle' font-size='44' fill='%233ddc84' font-family='monospace' font-weight='bold'%3E%E2%97%89%3C/text%3E%3C/svg%3E">
+
+<!-- CSS CRÍTICO INLINE -->
 <style>
   *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
   html,body{height:100%;overflow:hidden;background:#060606;color:#c8c8cc;
@@ -26,42 +29,32 @@
   #wins{position:fixed;inset:0;z-index:2}
   .win{position:absolute;width:min(720px,92vw);max-height:85vh;background:#141416;
     border-radius:12px;box-shadow:0 8px 24px #00000070,0 0 0 .5px #ffffff08;
-    display:flex;flex-direction:column;overflow:hidden;
-    transition:box-shadow .4s ease,left .35s ease,top .35s ease,width .35s ease,height .35s ease;}
-  .win.dragging{transition:box-shadow .3s ease !important;cursor:grabbing}
-  .win-bar{display:flex;align-items:center;height:42px;padding:0 14px;
-    background:linear-gradient(180deg,#28282c 0%,#1c1c20 100%);border-bottom:1px solid #00000090;
-    cursor:grab;flex-shrink:0;touch-action:none;position:relative;z-index:5;overflow:hidden;
-    line-height:1;}
-  .win-title{flex:1;text-align:center;font-size:12px;color:#666;letter-spacing:.03em;
-    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-    line-height:1;display:flex;align-items:center;justify-content:center;
-    height:100%;padding:0 8px;}
-  .btns{display:flex;gap:8px;align-items:center;position:relative;z-index:6;height:100%;}
-  .btns-r{width:54px;height:100%;}
+    display:flex;flex-direction:column;overflow:hidden;}
+  .win.dragging{cursor:grabbing}
+  .win-bar{position:relative;flex:0 0 42px;height:42px;min-height:42px;max-height:42px;
+    padding:0;background:linear-gradient(180deg,#28282c 0%,#1c1c20 100%);border-bottom:1px solid #00000090;
+    cursor:grab;touch-action:none;z-index:5;overflow:hidden;line-height:1;}
+  .btns{position:absolute;left:14px;top:0;bottom:0;display:flex;gap:8px;align-items:center;z-index:6;}
+  .btns-r{position:absolute;right:14px;top:50%;transform:translateY(-50%);width:54px;height:1px;pointer-events:none;}
   .btn{width:12px;height:12px;border-radius:50%;border:none;cursor:pointer;
-    transition:all .25s cubic-bezier(.34,1.56,.64,1);font-size:0;line-height:1;
-    align-self:center;}
-  .btn:hover{filter:brightness(1.5);transform:scale(1.35)}
-  .btn:active{transform:scale(.7)}
+    font-size:0;line-height:1;padding:0;flex-shrink:0;}
   .close{background:#ff5f57}
   .min{background:#febc2e}
   .max{background:#28c840}
-  .win-body{padding:16px;flex:1;overflow-y:auto;overflow-x:hidden;background:#141416;
-    cursor:text;min-height:80px;scrollbar-width:thin;scrollbar-color:#333 transparent;
-    caret-color:transparent;position:relative}
+  .win-title{position:absolute;left:70px;right:70px;top:50%;transform:translateY(-50%);
+    text-align:center;font-size:12px;color:#666;letter-spacing:.03em;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1;}
+  .win-body{flex:1 1 0;min-height:0;padding:16px;overflow-y:auto;overflow-x:hidden;background:#141416;
+    cursor:text;scrollbar-width:thin;scrollbar-color:#333 transparent;position:relative;
+    scrollbar-gutter:stable;}
   .win-body::-webkit-scrollbar{width:5px}
   .win-body::-webkit-scrollbar-thumb{background:#2a2a2e;border-radius:10px}
   .out{white-space:pre-wrap;word-break:break-word;line-height:1.7;opacity:0;
     animation:lineIn .4s cubic-bezier(.25,.46,.45,.94) forwards}
   @keyframes lineIn{0%{opacity:0;transform:translateY(8px);filter:blur(6px)}
     70%{opacity:.9;transform:translateY(-1px);filter:blur(0)}100%{opacity:1;transform:translateY(0);filter:none}}
-  .out.dim{color:#48484c}
-  .out.ok{color:var(--accent)}
-  .out.warn{color:#ffcc00}
-  .out.err{color:#ff453a}
-  .out.info{color:var(--accent-2)}
-  .out.cmd{color:#e8e8ec;font-weight:500}
+  .out.dim{color:#48484c}.out.ok{color:var(--accent)}.out.warn{color:#ffcc00}
+  .out.err{color:#ff453a}.out.info{color:var(--accent-2)}.out.cmd{color:#e8e8ec;font-weight:500}
   .out.accent{color:var(--accent);font-weight:600;letter-spacing:.05em}
   .out.h1{color:#fff;font-size:16px;font-weight:700;letter-spacing:.08em}
   .out.mono-dim{color:#5a5a5f;font-size:.95em}
@@ -84,44 +77,34 @@
     font-family:inherit;font-size:13px;font-weight:700;letter-spacing:.15em;cursor:pointer;
     box-shadow:0 8px 24px rgba(0,0,0,.6);backdrop-filter:blur(12px);
     opacity:0;pointer-events:none;transform:translateY(20px) scale(.9);
-    transition:all .3s cubic-bezier(.34,1.56,.64,1);animation:launcherPulse 2.4s ease-in-out infinite}
+    transition:all .3s cubic-bezier(.34,1.56,.64,1);}
   .launcher.on{opacity:1;pointer-events:auto;transform:translateY(0) scale(1)}
-  @keyframes launcherPulse{0%,100%{box-shadow:0 8px 24px rgba(0,0,0,.6),0 0 40px rgba(var(--accent-rgb),.15)}
-    50%{box-shadow:0 8px 24px rgba(0,0,0,.6),0 0 60px rgba(var(--accent-rgb),.35)}}
   .launcher:hover{transform:translateY(-3px) scale(1.05);color:#fff}
   .launcher:active{transform:translateY(0) scale(.97)}
-  .launcher-eye{font-size:1.3em;animation:eyeBob 3s ease-in-out infinite;
-    filter:drop-shadow(0 0 6px rgba(var(--accent-rgb),.8))}
-  @keyframes eyeBob{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-2px) rotate(4deg)}}
+  .launcher-eye{font-size:1.3em;filter:drop-shadow(0 0 6px rgba(var(--accent-rgb),.8))}
   .launcher-pulse{position:absolute;inset:-6px;border-radius:18px;
-    border:1px solid rgba(var(--accent-rgb),.5);animation:launcherRing 2s ease-out infinite;
-    pointer-events:none}
-  @keyframes launcherRing{0%{transform:scale(1);opacity:.8}100%{transform:scale(1.25);opacity:0}}
+    border:1px solid rgba(var(--accent-rgb),.5);pointer-events:none}
   .dock{position:fixed;bottom:0;left:0;right:0;height:48px;background:#141416dd;
     backdrop-filter:blur(16px);border-top:1px solid #ffffff08;display:flex;align-items:center;
     gap:8px;padding:0 20px;z-index:9999;opacity:0;pointer-events:none;
-    transform:translateY(100%);transition:all .4s cubic-bezier(.22,1,.36,1);
-    overflow-x:auto;overflow-y:hidden}
+    transform:translateY(100%);transition:all .4s cubic-bezier(.22,1,.36,1);overflow-x:auto;overflow-y:hidden}
   .dock.on{opacity:1;pointer-events:auto;transform:translateY(0)}
   .dock-item{padding:6px 14px;background:#242428;border-radius:8px;font-size:12px;color:#999;
     cursor:pointer;border:1px solid #ffffff08;font-family:inherit;flex-shrink:0}
   .dock-item:hover{background:#333338;color:#fff}
   .crt-overlay{position:fixed;inset:0;pointer-events:none;z-index:99996;
-    background:radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,.35) 100%);
-    mix-blend-mode:multiply}
+    background:radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,.35) 100%);mix-blend-mode:multiply}
   .scanlines{position:fixed;inset:0;pointer-events:none;z-index:99995;
     background:repeating-linear-gradient(0deg,transparent 0,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 4px);
-    animation:scanMove 8s linear infinite;opacity:.6}
-  @keyframes scanMove{0%{background-position:0 0}100%{background-position:0 100px}}
+    opacity:.6}
   .chromatic{position:fixed;inset:0;pointer-events:none;z-index:99994;
     background:linear-gradient(90deg,rgba(255,0,255,.015) 0%,transparent 15%,transparent 85%,rgba(0,255,255,.015) 100%);
-    mix-blend-mode:screen;animation:chromaticShift 6s ease-in-out infinite}
-  @keyframes chromaticShift{0%,100%{opacity:.5}50%{opacity:1}}
+    mix-blend-mode:screen}
   .quick-chips,.mobile-bar{display:none}
   @media(max-width:700px){
     .win{width:100vw!important;max-width:none;left:0!important;top:0!important;
       border-radius:0;height:100vh;height:100dvh;max-height:100vh;max-height:100dvh;box-shadow:none}
-    .win-bar{border-radius:0;height:48px}
+    .win-bar{flex:0 0 48px;height:48px;min-height:48px;max-height:48px;border-radius:0}
     .win-body{padding:12px 14px}
     .out.eye{font-size:7px}
   }
