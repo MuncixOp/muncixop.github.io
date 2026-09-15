@@ -1,7 +1,7 @@
 /* ============================================================
-   VOID SYSTEMS v7.1 — Terminal / OS Simulator
+   VOID SYSTEMS v7.2 — Terminal / OS Simulator
    Author: MuncixOp
-   Sin wobbly windows. Input real. Asistencias móviles.
+   Fixes: alineación win-bar, escapeHTML en help, bruteforce 15s
    ============================================================ */
 
 /* ---------- OS DETECTION ---------- */
@@ -526,9 +526,7 @@ function updateLauncher() {
   launcher.classList.toggle('on', shouldShow);
 }
 
-/* ============================================================
-   DRAG — Simple, sin wobbly
-   ============================================================ */
+/* DRAG — Simple, sin wobbly */
 function makeDraggable(win, handle) {
   let sx, sy, ox, oy, dragging = false;
   const start = (e) => {
@@ -568,9 +566,7 @@ function makeDraggable(win, handle) {
   handle.addEventListener('touchstart', start, { passive: false });
 }
 
-/* ============================================================
-   SWIPE GESTURES (móvil)
-   ============================================================ */
+/* SWIPE GESTURES (móvil) */
 function makeSwipeGestures(win, handle, id) {
   if (!mob) return;
   let startX = 0, startY = 0, startTime = 0;
@@ -637,9 +633,7 @@ function makeResizable(win, handle) {
   handle.addEventListener('touchstart', start, { passive: false });
 }
 
-/* ============================================================
-   EFFECTS
-   ============================================================ */
+/* EFFECTS */
 function effectRipple(x, y) {
   const r = document.createElement('div');
   r.className = 'ripple';
@@ -712,9 +706,7 @@ function scrambleText(el, target, duration = 500) {
   frame();
 }
 
-/* ============================================================
-   HELPERS
-   ============================================================ */
+/* HELPERS */
 const PROMPT_USER = 'muncixop';
 const PROMPT_HOST = 'void';
 const PROMPT_PATH = '~';
@@ -748,17 +740,17 @@ function padEnd(s, n, c = ' ') { s = String(s); while (s.length < n) s += c; ret
 function padStart(s, n, c = ' ') { s = String(s); while (s.length < n) s = c + s; return s; }
 
 /* ============================================================
-   BRUTEFORCE
+   BRUTEFORCE v7.2 — Timeout de 15s + auto-unlock
    ============================================================ */
 function launchBruteforce(win, linkKey) {
   const link = LINKS_DB[linkKey];
   if (!link) return;
   const body = win.body;
+
   printLine(body, '');
   printLine(body, `:: INICIANDO PROTOCOLO DE FUERZA BRUTA sobre ${escapeHTML(link.name)}`, 'accent');
   printLine(body, `:: Objetivo: ${escapeHTML(link.url)}`, 'dim');
-  printLine(body, `:: Pista: ${escapeHTML(link.hint)}`, 'warn');
-  printLine(body, `:: Escribe: unlock ${linkKey} TOKEN`, 'dim');
+  printLine(body, `:: Tiempo estimado: ~15s`, 'dim');
   printLine(body, '');
   effectGlitchSlice();
 
@@ -775,7 +767,7 @@ function launchBruteforce(win, linkKey) {
     <div class="brute-stats">
       <span>INTENTOS: <span class="stat-val" id="brute-attempts-${linkKey}">0</span></span>
       <span>VELOCIDAD: <span class="stat-val" id="brute-speed-${linkKey}">0</span> H/s</span>
-      <span>ETA: <span class="stat-val" id="brute-eta-${linkKey}">--</span></span>
+      <span>ETA: <span class="stat-val" id="brute-eta-${linkKey}">15s</span></span>
     </div>
     <div class="brute-terminal" id="brute-term-${linkKey}"></div>
   `;
@@ -790,9 +782,12 @@ function launchBruteforce(win, linkKey) {
   const termEl = panel.querySelector(`#brute-term-${linkKey}`);
   const hashEl = panel.querySelector(`#brute-hash-${linkKey}`);
 
+  const TOTAL_TIME = 15000;
+  const startTime = performance.now();
   let attempts = 0;
   let running = true;
-  const maxAttempts = 99999;
+  let unlocked = false;
+
   const termPhrases = [
     '[+] Estableciendo conexion con el objetivo...',
     '[+] Evadiendo firewall perimetral...',
@@ -802,21 +797,25 @@ function launchBruteforce(win, linkKey) {
     '[+] Fuerza bruta paralela iniciada (64 hilos)...',
     '[!] Bloqueo temporal detectado, rotando proxy...',
     '[+] Consultando rainbow tables...',
+    '[!] Reduciendo espacio de busqueda...',
+    '[+] Atacando vector secundario...',
+    '[+] Cruzando datos con leaks conocidos...',
+    '[!] Detectada defensa por rate-limiting...',
+    '[+] Ajustando heuristica de fuerza bruta...',
   ];
+
   const termInterval = setInterval(() => {
-    if (!running) return;
-    if (Math.random() > .55) {
+    if (!running || unlocked) return;
+    if (Math.random() > .5) {
       const line = document.createElement('div');
       line.textContent = `[${new Date().toLocaleTimeString()}] ${randomFrom(termPhrases)}`;
       termEl.appendChild(line);
       termEl.scrollTop = termEl.scrollHeight;
       if (termEl.children.length > 30) termEl.removeChild(termEl.firstChild);
     }
-  }, 900);
+  }, 700);
 
-  function attempt() {
-    if (!running) return;
-    attempts += Math.floor(Math.random() * 800) + 200;
+  function addAttemptLines() {
     for (let i = 0; i < 2; i++) {
       const fakeHash = randomHex(12);
       const line = document.createElement('div');
@@ -829,19 +828,81 @@ function launchBruteforce(win, linkKey) {
     }
     while (displayEl.children.length > 25) displayEl.removeChild(displayEl.firstChild);
     displayEl.scrollTop = displayEl.scrollHeight;
+  }
+
+  function tick() {
+    if (!running || unlocked) return;
+
+    const elapsed = performance.now() - startTime;
+    const progress = Math.min(elapsed / TOTAL_TIME, 1);
+    const remaining = Math.max(0, TOTAL_TIME - elapsed);
+
+    if (Math.random() > progress * 0.4) {
+      addAttemptLines();
+      attempts += Math.floor(Math.random() * 800) + 200;
+    }
 
     const speed = Math.floor(Math.random() * 50000) + 20000;
-    const progress = Math.min(attempts / maxAttempts * 100, 99.4);
     attEl.textContent = attempts.toLocaleString();
     speedEl.textContent = speed.toLocaleString();
-    barEl.style.width = progress + '%';
-    etaEl.textContent = Math.max(1, Math.floor((maxAttempts - attempts) / speed)) + 's';
+    barEl.style.width = (progress * 100).toFixed(1) + '%';
+    etaEl.textContent = Math.ceil(remaining / 1000) + 's';
     hashEl.textContent = randomHex(32);
 
     if (Math.random() > .7) playTick(600 + Math.random() * 400);
-    setTimeout(attempt, 250 + Math.random() * 400);
+
+    if (progress >= 1) {
+      finishSuccess();
+      return;
+    }
+
+    const interval = progress > 0.85 ? 80 : 180;
+    setTimeout(tick, interval);
   }
-  attempt();
+
+  function finishSuccess() {
+    unlocked = true;
+    running = false;
+    clearInterval(termInterval);
+
+    barEl.style.width = '100%';
+    etaEl.textContent = '0s';
+    barEl.style.background = 'linear-gradient(90deg, #3ddc84, #5eaaff)';
+    barEl.style.boxShadow = '0 0 20px #3ddc84';
+
+    const finalLine1 = document.createElement('div');
+    finalLine1.className = 'brute-line';
+    finalLine1.innerHTML = `<span class="success">[+] >>> MATCH ENCONTRADO <<<</span>`;
+    displayEl.appendChild(finalLine1);
+
+    const finalLine2 = document.createElement('div');
+    finalLine2.className = 'brute-line';
+    finalLine2.innerHTML = `<span class="success">[+] TOKEN VALIDADO: ${escapeHTML(link.token)}</span>`;
+    displayEl.appendChild(finalLine2);
+
+    const finalLine3 = document.createElement('div');
+    finalLine3.className = 'brute-line';
+    finalLine3.innerHTML = `<span class="success">[+] ACCESO CONCEDIDO.</span>`;
+    displayEl.appendChild(finalLine3);
+
+    displayEl.scrollTop = displayEl.scrollHeight;
+
+    effectFlash('rgba(61,220,132,.45)');
+    effectGlitchSlice();
+    playSuccess();
+    haptic([50, 30, 50, 30, 100]);
+
+    const termLine = document.createElement('div');
+    termLine.textContent = `[${new Date().toLocaleTimeString()}] [OK] Token validado tras ${attempts.toLocaleString()} intentos.`;
+    termEl.appendChild(termLine);
+    termEl.scrollTop = termEl.scrollHeight;
+
+    setTimeout(() => {
+      showUnlockResult(win, linkKey);
+    }, 900);
+  }
+
+  tick();
 
   body._bruteforce = body._bruteforce || {};
   body._bruteforce[linkKey] = {
@@ -939,7 +1000,7 @@ const COMMANDS = {
       ['banner', 'banner'], ['exit', 'salir'],
     ];
     cmds.forEach(([c, d]) => {
-      printLine(body, `  <span class="ok">${padEnd(c, 32)}</span><span class="dim">${d}</span>`);
+      printLine(body, `  <span class="ok">${escapeHTML(padEnd(c, 32))}</span><span class="dim">${escapeHTML(d)}</span>`);
     });
     printLine(body, '+--------------------------------------------------+', 'accent');
   }},
@@ -1041,10 +1102,10 @@ const COMMANDS = {
     printLine(body, `  <span class="ok">muncixop</span><span class="dim">@</span><span class="ok">void</span>`, '');
     printLine(body, '  ' + '-'.repeat(30), 'dim');
     const info = [
-      ['OS', 'VOID SYSTEMS v7.1'],
+      ['OS', 'VOID SYSTEMS v7.2'],
       ['Host', 'muncixop.github.io'],
       ['Kernel', 'glitch-6.6.6'],
-      ['Shell', 'voidsh 7.1'],
+      ['Shell', 'voidsh 7.2'],
       ['Uptime', uptime + 's'],
       ['CPU', 'Void Core (64)'],
       ['GPU', 'Phantom Renderer'],
@@ -1395,14 +1456,14 @@ async function bootSequence(isReboot = false) {
   else playPowerUp();
 
   const bootLines = [
-    ['VOID BIOS v7.1 - Inicializando...', 'dim', 100],
+    ['VOID BIOS v7.2 - Inicializando...', 'dim', 100],
     ['  [OK] CPU Void Core x64 @ 3.20GHz', 'ok', 80],
     ['  [OK] Memoria ECC 128GB', 'ok', 80],
     ['  [OK] GPU Phantom Renderer', 'ok', 70],
     ['  [OK] Red local activa', 'ok', 70],
     ['  [OK] Asistencias moviles cargadas', 'ok', 60],
     ['', '', 60],
-    ['Cargando VOID SYSTEMS v7.1...', 'info', 200],
+    ['Cargando VOID SYSTEMS v7.2...', 'info', 200],
     ['', '', 100],
   ];
   for (const [text, cls, delay] of bootLines) {
@@ -1418,7 +1479,7 @@ async function bootSequence(isReboot = false) {
     ['  ██║  ██║███████╗██║        ██║   ', 'ok'],
     ['  ╚═╝  ╚═╝╚══════╝╚═╝        ╚═╝   ', 'ok'],
     ['', ''],
-    ['  Bienvenido a VOID SYSTEMS v7.1, muncixop.', 'accent'],
+    ['  Bienvenido a VOID SYSTEMS v7.2, muncixop.', 'accent'],
     ['  Escribe <span class="ok">help</span> para ver los comandos.', 'dim'],
     ['  Prueba <span class="ok">fastfetch</span> para ver el ojo.', 'dim'],
     ['', ''],
@@ -1429,7 +1490,7 @@ async function bootSequence(isReboot = false) {
 }
 
 /* ============================================================
-   INPUT LOOP v7.1 — Input real + asistencias
+   INPUT LOOP v7.2 — Input real + asistencias
    ============================================================ */
 let currentTerm = null;
 let currentInputLineRef = null;
@@ -1811,6 +1872,6 @@ document.addEventListener('touchmove', () => {
   if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
 }, { passive: true });
 
-console.log('%c VOID SYSTEMS v7.1 ', 'background:#3ddc84;color:#000;font-weight:bold;padding:4px 8px;border-radius:4px;font-size:14px');
+console.log('%c VOID SYSTEMS v7.2 ', 'background:#3ddc84;color:#000;font-weight:bold;padding:4px 8px;border-radius:4px;font-size:14px');
 console.log('%c Bienvenido, muncixop. ', 'color:#3ddc84;font-weight:bold;font-size:12px');
-console.log('%c Sin wobbly. Input real. Estilo intacto. ', 'color:#5eaaff;font-style:italic');
+console.log('%c Fix: win-bar alineado, help sin romper, bruteforce 15s ', 'color:#5eaaff;font-style:italic');
