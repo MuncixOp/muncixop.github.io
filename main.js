@@ -1,10 +1,9 @@
 /* ============================================================
-   VOID SYSTEMS v7.5 — Terminal / OS Simulator
+   VOID SYSTEMS v7.6 — Terminal / OS Simulator
    Author: MuncixOp
-   Novedades v7.5:
-   - Sudo funcional con modo password (input enmascarado)
-   - Barra win totalmente anclada con flex:0 0 auto
-   - Favicon inline (sin 404)
+   Novedades v7.6:
+   - Layout con CSS GRID (bar + body como filas independientes)
+   - La barra YA NO se mueve nunca
    ============================================================ */
 
 /* ---------- OS DETECTION ---------- */
@@ -29,9 +28,7 @@ function haptic(pattern = 10) {
   }
 }
 
-/* ============================================================
-   LINKS PROTEGIDOS
-   ============================================================ */
+/* LINKS */
 const LINKS_DB = {
   curseforge: {
     name: 'CurseForge Projects',
@@ -56,9 +53,7 @@ const LINKS_DB = {
   }
 };
 
-/* ============================================================
-   OJO ASCII
-   ============================================================ */
+/* OJO ASCII */
 const EYE_ASCII = [
   '@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@',
   '@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@',
@@ -115,9 +110,7 @@ const EYE_ASCII_SMALL = [
 
 function getEye() { return mob ? EYE_ASCII_SMALL : EYE_ASCII; }
 
-/* ============================================================
-   STORAGE
-   ============================================================ */
+/* STORAGE */
 const HIST_KEY = 'void_history';
 let cmdHistory = (() => {
   try { return JSON.parse(localStorage.getItem(HIST_KEY) || '[]'); }
@@ -164,9 +157,7 @@ function saveUnlocked() {
   try { localStorage.setItem(UNLOCKED_KEY, JSON.stringify(unlockedLinks)); } catch {}
 }
 
-/* ============================================================
-   AUDIO
-   ============================================================ */
+/* AUDIO */
 let actx = null;
 let audioEnabled = true;
 
@@ -332,9 +323,7 @@ function playPowerUp() {
   } catch (e) {}
 }
 
-/* ============================================================
-   MATRIX CANVAS
-   ============================================================ */
+/* MATRIX */
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
 let W, H, cols, drops, fontSize = 14;
@@ -369,9 +358,7 @@ function drawMatrix() {
 }
 if (!reducedMotion) drawMatrix();
 
-/* ============================================================
-   PARTICLES
-   ============================================================ */
+/* PARTICLES */
 const pcanvas = document.getElementById('p');
 const pctx = pcanvas.getContext('2d');
 let pW, pH;
@@ -413,9 +400,7 @@ function drawParticles() {
 }
 drawParticles();
 
-/* ============================================================
-   WINDOW SYSTEM
-   ============================================================ */
+/* WINDOW SYSTEM */
 const winsContainer = document.getElementById('wins');
 const dock = document.getElementById('dock');
 const launcher = document.getElementById('launcher');
@@ -737,9 +722,7 @@ function randomFrom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 function padEnd(s, n, c = ' ') { s = String(s); while (s.length < n) s += c; return s; }
 function padStart(s, n, c = ' ') { s = String(s); while (s.length < n) s = c + s; return s; }
 
-/* ============================================================
-   BRUTEFORCE
-   ============================================================ */
+/* BRUTEFORCE */
 function launchBruteforce(win, linkKey) {
   const link = LINKS_DB[linkKey];
   if (!link) return;
@@ -856,7 +839,6 @@ function launchBruteforce(win, linkKey) {
     barEl.style.width = '100%';
     etaEl.textContent = '0s';
     barEl.style.background = 'linear-gradient(90deg, #3ddc84, #5eaaff)';
-    barEl.style.boxShadow = '0 0 20px #3ddc84';
 
     const l1 = document.createElement('div');
     l1.className = 'brute-line';
@@ -952,9 +934,7 @@ function blinkEye(body) {
   }
 }
 
-/* ============================================================
-   COMANDOS
-   ============================================================ */
+/* COMANDOS */
 const COMMANDS = {
   help: { desc: 'Ayuda', run: (body) => {
     printLine(body, '+-- COMANDOS DISPONIBLES --------------------------+', 'accent');
@@ -1082,10 +1062,10 @@ const COMMANDS = {
     printLine(body, `  <span class="ok">muncixop</span><span class="dim">@</span><span class="ok">void</span>`, '');
     printLine(body, '  ' + '-'.repeat(30), 'dim');
     const info = [
-      ['OS', 'VOID SYSTEMS v7.5'],
+      ['OS', 'VOID SYSTEMS v7.6'],
       ['Host', 'muncixop.github.io'],
       ['Kernel', 'glitch-6.6.6'],
-      ['Shell', 'voidsh 7.5'],
+      ['Shell', 'voidsh 7.6'],
       ['Uptime', uptime + 's'],
       ['CPU', 'Void Core (64)'],
       ['GPU', 'Phantom Renderer'],
@@ -1399,21 +1379,14 @@ const COMMANDS = {
     printLine(body, 'Cerrando...', 'warn');
     setTimeout(() => closeWindow(win.id), 400);
   }},
-
-  /* ============================================================
-     SUDO — versión FUNCIONAL con modo password
-     ============================================================ */
   sudo: { desc: 'Intenta escalar privilegios', run: (body, win, args) => {
-    // Si ya hay args, avisa
     if (args.length > 0) {
       printLine(body, '[sudo] no puedes pasar la password como argumento. Intenta solo "sudo".', 'warn');
       return;
     }
-    // Activa modo password
     printLine(body, '[sudo] password for muncixop:', 'warn');
     if (window._enterPasswordMode) {
       window._enterPasswordMode((password) => {
-        // Simular verificación (delay)
         const checkLine = printLine(body, '', 'dim');
         checkLine.textContent = 'Verificando credenciales...';
         setTimeout(() => {
@@ -1431,14 +1404,12 @@ const COMMANDS = {
         }, 900);
       });
     } else {
-      // Fallback si no está el handler
       setTimeout(() => {
         printLine(body, 'Nice try. Pero no.', 'err');
         effectQuake();
       }, 800);
     }
   }},
-
   banner: { desc: 'Banner', run: (body) => {
     printLines(body, [
       ['  ██╗   ██╗ ██████╗ ██╗██████╗ ', 'ok'],
@@ -1456,9 +1427,7 @@ const COMMANDS = {
   echo: { desc: 'Echo', run: (body, w, args) => printLine(body, escapeHTML(args.join(' ') || '')) }
 };
 
-/* ============================================================
-   BOOT SEQUENCE
-   ============================================================ */
+/* BOOT */
 let booted = false;
 async function bootSequence(isReboot = false) {
   if (booted && !isReboot) return;
@@ -1466,20 +1435,19 @@ async function bootSequence(isReboot = false) {
 
   const term = createWindow('voidsh - ~', { width: 740, height: 580 });
   const body = term.body;
-  body.style.minHeight = '100%';
 
   if (!isReboot) playBoot();
   else playPowerUp();
 
   const bootLines = [
-    ['VOID BIOS v7.5 - Inicializando...', 'dim', 100],
+    ['VOID BIOS v7.6 - Inicializando...', 'dim', 100],
     ['  [OK] CPU Void Core x64 @ 3.20GHz', 'ok', 80],
     ['  [OK] Memoria ECC 128GB', 'ok', 80],
     ['  [OK] GPU Phantom Renderer', 'ok', 70],
     ['  [OK] Red local activa', 'ok', 70],
     ['  [OK] Asistencias moviles cargadas', 'ok', 60],
     ['', '', 60],
-    ['Cargando VOID SYSTEMS v7.5...', 'info', 200],
+    ['Cargando VOID SYSTEMS v7.6...', 'info', 200],
     ['', '', 100],
   ];
   for (const [text, cls, delay] of bootLines) {
@@ -1495,7 +1463,7 @@ async function bootSequence(isReboot = false) {
     ['  ██║  ██║███████╗██║        ██║   ', 'ok'],
     ['  ╚═╝  ╚═╝╚══════╝╚═╝        ╚═╝   ', 'ok'],
     ['', ''],
-    ['  Bienvenido a VOID SYSTEMS v7.5, muncixop.', 'accent'],
+    ['  Bienvenido a VOID SYSTEMS v7.6, muncixop.', 'accent'],
     ['  Escribe <span class="ok">help</span> para ver los comandos.', 'dim'],
     ['  Prueba <span class="ok">fastfetch</span> para ver el ojo.', 'dim'],
     ['', ''],
@@ -1505,9 +1473,7 @@ async function bootSequence(isReboot = false) {
   startInput(term);
 }
 
-/* ============================================================
-   INPUT LOOP v7.5 — Input real + password mode para sudo
-   ============================================================ */
+/* INPUT LOOP */
 let currentTerm = null;
 let currentInputLineRef = null;
 let globalKeydownInstalled = false;
@@ -1524,7 +1490,6 @@ function startInput(term) {
   let suggestIdx = 0;
   let idleTimer = null;
   let passwordMode = false;
-  let passwordCallback = null;
 
   const createInputLine = () => {
     if (currentLine && currentLine.parentNode) currentLine.remove();
@@ -1555,19 +1520,14 @@ function startInput(term) {
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
-        // Si estamos en modo password, ejecutamos el callback
         if (passwordMode) {
           const val = input.value;
           passwordMode = false;
-          passwordCallback = null;
           input.type = 'text';
           input.value = '';
-          input.placeholder = '';
-          // Restaurar prompt normal
           const pr = currentLine.querySelector('.pr');
           if (pr) pr.innerHTML = `${PROMPT_USER}@${PROMPT_HOST}:<span class="path">${PROMPT_PATH}</span>$&nbsp;`;
           typed = '';
-          // Ejecutar callback
           if (typeof window._currentPasswordCallback === 'function') {
             const cb = window._currentPasswordCallback;
             window._currentPasswordCallback = null;
@@ -1712,14 +1672,12 @@ function startInput(term) {
     body.scrollTop = body.scrollHeight;
   };
 
-  // Exponer para mobile bar
   window._submitCurrent = submit;
   window._getCurrentInput = () => {
     if (!currentInputLineRef) return null;
     return currentInputLineRef.querySelector('.ki');
   };
 
-  // Exponer para sudo — modo password
   window._enterPasswordMode = (cb) => {
     if (!currentLine) createInputLine();
     const input = currentLine.querySelector('.ki');
@@ -1730,7 +1688,6 @@ function startInput(term) {
     input.type = 'password';
     input.focus();
     if (pr) pr.innerHTML = `<span style="color:#ffcc00;font-weight:700">[sudo] password:</span>&nbsp;`;
-    // Actualizar prompt visual
     currentLine.classList.remove('idle');
   };
 
@@ -1751,7 +1708,6 @@ function startInput(term) {
     window.addEventListener('keydown', (e) => {
       const tag = document.activeElement && document.activeElement.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
-
       if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 't') {
         e.preventDefault();
         bootSequence(true);
@@ -1765,9 +1721,7 @@ function startInput(term) {
   }
 }
 
-/* ============================================================
-   MOBILE ASSISTS
-   ============================================================ */
+/* MOBILE ASSISTS */
 function initMobileAssists() {
   document.querySelectorAll('.chip').forEach(chip => {
     chip.addEventListener('click', () => {
@@ -1792,7 +1746,6 @@ function initMobileAssists() {
       haptic(10);
       const input = window._getCurrentInput ? window._getCurrentInput() : null;
       if (!input) return;
-
       if (action === 'enter') {
         if (window._submitCurrent) window._submitCurrent();
       } else if (action === 'backspace') {
@@ -1800,14 +1753,11 @@ function initMobileAssists() {
         input.dispatchEvent(new Event('input', { bubbles: true }));
         playKey();
       } else if (action === 'tab') {
-        const ev = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
-        input.dispatchEvent(ev);
+        input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true }));
       } else if (action === 'up') {
-        const ev = new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true, cancelable: true });
-        input.dispatchEvent(ev);
+        input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true, cancelable: true }));
       } else if (action === 'down') {
-        const ev = new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true });
-        input.dispatchEvent(ev);
+        input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }));
       } else if (action === 'esc') {
         input.blur();
         document.body.classList.remove('kb-open');
@@ -1836,9 +1786,7 @@ function initMobileAssists() {
   observer.observe(document.body, { childList: true, subtree: true });
 }
 
-/* ============================================================
-   RUN COMMAND
-   ============================================================ */
+/* RUN COMMAND */
 function runCommand(input, body, win) {
   const parts = input.split(/\s+/);
   const cmd = parts[0].toLowerCase();
@@ -1863,9 +1811,7 @@ function runCommand(input, body, win) {
   }
 }
 
-/* ============================================================
-   GLOBAL EVENTS
-   ============================================================ */
+/* GLOBAL */
 window.addEventListener('load', () => {
   setTimeout(bootSequence, 300);
   setTimeout(initMobileAssists, 200);
@@ -1933,6 +1879,6 @@ document.addEventListener('touchmove', () => {
   if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
 }, { passive: true });
 
-console.log('%c VOID SYSTEMS v7.5 ', 'background:#3ddc84;color:#000;font-weight:bold;padding:4px 8px;border-radius:4px;font-size:14px');
+console.log('%c VOID SYSTEMS v7.6 ', 'background:#3ddc84;color:#000;font-weight:bold;padding:4px 8px;border-radius:4px;font-size:14px');
 console.log('%c Bienvenido, muncixop. ', 'color:#3ddc84;font-weight:bold;font-size:12px');
-console.log('%c Sudo funcional + win-bar anclada + favicon ', 'color:#5eaaff;font-style:italic');
+console.log('%c GRID layout: bar y body como filas independientes ', 'color:#5eaaff;font-style:italic');
