@@ -1,5 +1,5 @@
 /* ============================================================
-   VOID SYSTEMS v7.2 — Style
+   VOID SYSTEMS v7.3 — Style
    ============================================================ */
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 html{height:100%;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
@@ -125,17 +125,17 @@ body.cyberpunk .crt-overlay{background:radial-gradient(ellipse at center,transpa
 }
 
 /* ============================================================
-   WIN-BAR — Alineación perfecta vertical
+   WIN-BAR — Posicionamiento absoluto (bulletproof)
    ============================================================ */
 .win-bar{
-  display:flex;align-items:center;
+  position:relative;
   height:clamp(34px,4.5vh,42px);
-  padding:0 clamp(10px,1.5vw,16px);
+  padding:0;
   background:linear-gradient(180deg,#28282c 0%,#1c1c20 100%);
   border-radius:12px 12px 0 0;
   border-bottom:1px solid #00000090;
   cursor:grab;flex-shrink:0;touch-action:none;
-  position:relative;z-index:5;
+  z-index:5;
   box-shadow:0 1px 0 #ffffff05 inset;
   overflow:hidden;
   line-height:1;
@@ -149,10 +149,28 @@ body.cyberpunk .crt-overlay{background:radial-gradient(ellipse at center,transpa
   pointer-events:none;
 }
 @keyframes barSheen{0%{left:-100%}100%{left:200%}}
-.win-bar > *{align-self:center;line-height:1}
 
-.btns{display:flex;gap:clamp(6px,.9vw,9px);align-items:center;position:relative;z-index:6;height:100%}
-.btns-r{width:clamp(42px,6vw,54px);height:100%}
+.btns{
+  position:absolute;
+  left:clamp(10px,1.5vw,16px);
+  top:50%;
+  transform:translateY(-50%);
+  display:flex;
+  gap:clamp(6px,.9vw,9px);
+  align-items:center;
+  z-index:6;
+  pointer-events:auto;
+}
+.btns-r{
+  position:absolute;
+  right:clamp(10px,1.5vw,16px);
+  top:50%;
+  transform:translateY(-50%);
+  width:clamp(42px,6vw,54px);
+  height:1px;
+  pointer-events:none;
+}
+
 .btn{
   width:clamp(10px,1.1vw,13px);height:clamp(10px,1.1vw,13px);
   border-radius:50%;
@@ -160,7 +178,8 @@ body.cyberpunk .crt-overlay{background:radial-gradient(ellipse at center,transpa
   cursor:pointer;position:relative;z-index:6;pointer-events:auto;
   display:flex;align-items:center;justify-content:center;
   font-size:0;line-height:1;border:none;
-  align-self:center;
+  padding:0;margin:0;
+  flex-shrink:0;
 }
 .btn:hover{filter:brightness(1.5) saturate(1.4);transform:scale(1.35)}
 .btn:active{transform:scale(.7);transition-duration:.08s}
@@ -168,21 +187,24 @@ body.cyberpunk .crt-overlay{background:radial-gradient(ellipse at center,transpa
 .min{background:#febc2e;box-shadow:0 0 6px #febc2e30}
 .max{background:#28c840;box-shadow:0 0 6px #28c84030}
 
-/* WIN-TITLE — Centrado perfecto vertical y horizontal */
 .win-title{
-  flex:1;
+  position:absolute;
+  left:clamp(60px,7vw,80px);
+  right:clamp(60px,7vw,80px);
+  top:50%;
+  transform:translateY(-50%);
   text-align:center;
   font-size:clamp(10px,1.1vw,12px);
   color:#666;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-  letter-spacing:.025em;font-weight:500;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  letter-spacing:.025em;
+  font-weight:500;
   transition:color .3s ease;
   line-height:1;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  height:100%;
-  padding:0 8px;
+  height:auto;
+  padding:0;
 }
 .win:hover .win-title{color:#999}
 
@@ -196,6 +218,7 @@ body.cyberpunk .crt-overlay{background:radial-gradient(ellipse at center,transpa
   scrollbar-width:thin;scrollbar-color:#333 transparent;
   position:relative;
   user-select:text;-webkit-user-select:text;
+  scrollbar-gutter:stable;
 }
 .win-body::-webkit-scrollbar{width:5px}
 .win-body::-webkit-scrollbar-track{background:transparent}
@@ -492,20 +515,29 @@ body.hypnotize{animation:hypno 4s linear infinite}
 /* OS VARIANTS */
 .os-win .win{border-radius:8px}
 .os-win .win-bar{height:38px;border-radius:8px 8px 0 0;cursor:default}
-.os-win .btns{order:3;gap:0}
+.os-win .btns{left:0;top:0;transform:none;height:100%;gap:0;align-items:stretch}
 .os-win .btns-r{display:none}
-.os-win .win-title{order:1;text-align:left;padding-left:12px;color:#ccc;justify-content:flex-start}
-.os-win .btn{width:44px;height:38px;border-radius:0;font-size:11px;color:#aaa;background:transparent}
+.os-win .win-title{left:12px;right:auto;top:50%;transform:translateY(-50%);text-align:left}
+.os-win .btn{width:44px;height:38px;border-radius:0;font-size:11px;color:#aaa;background:transparent;
+  transition:background .12s;filter:none}
+.os-win .btn:hover{background:#ffffff12;transform:none;filter:none;color:#fff}
+.os-win .btn:active{background:#ffffff1e;transform:none}
+.os-win .close{background:transparent;color:#aaa}
+.os-win .close:hover{background:#e81123!important;color:#fff}
+.os-win .min,.os-win .max{background:transparent;color:#aaa}
 .os-win .min::before{content:'-';font-size:14px}
 .os-win .max::before{content:'[]';font-size:10px}
 .os-win .close::before{content:'X';font-size:13px}
-.os-win .close:hover{background:#e81123!important}
 
 .os-linux .win{border-radius:8px}
 .os-linux .win-bar{height:36px;border-radius:8px 8px 0 0;cursor:default}
-.os-linux .btns{order:3}
+.os-linux .btns{right:0;left:auto;top:0;transform:none;height:100%;gap:0;align-items:stretch;flex-direction:row-reverse}
 .os-linux .btns-r{display:none}
-.os-linux .win-title{order:1;text-align:left;padding-left:12px;color:#ccc;justify-content:flex-start}
+.os-linux .win-title{left:12px;right:12px;top:50%;transform:translateY(-50%);text-align:left}
+.os-linux .btn{width:34px;height:36px;border-radius:0;font-size:10px;color:#888;background:transparent;
+  transition:all .12s;filter:none}
+.os-linux .btn:hover{background:#ffffff10;transform:none;filter:none;color:#ccc}
+.os-linux .close:hover{background:#ff453a80;color:#fff}
 .os-linux .close::before{content:'X';font-size:12px}
 .os-linux .min::before{content:'-';font-size:13px}
 .os-linux .max::before{content:'[]';font-size:9px}
