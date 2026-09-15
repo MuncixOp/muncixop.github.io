@@ -1,6 +1,7 @@
 /* ============================================================
-   VOID SYSTEMS v6.1 — Terminal / OS Simulator
+   VOID SYSTEMS v6.4 — Terminal / OS Simulator
    Author: MuncixOp
+   Wobbly spring + Mobile assists (virtual keys, chips, gestures)
    ============================================================ */
 
 /* ---------- OS DETECTION ---------- */
@@ -17,6 +18,14 @@ const mob = os === 'ios' || os === 'android' || matchMedia('(max-width:700px)').
 const reducedMotion = matchMedia('(prefers-reduced-motion:reduce)').matches;
 document.body.classList.add('os-' + os);
 if (mob) document.body.classList.add('mobile-eye');
+
+/* Haptic feedback helper */
+function haptic(pattern = 10) {
+  if (!mob) return;
+  if ('vibrate' in navigator) {
+    try { navigator.vibrate(pattern); } catch (e) {}
+  }
+}
 
 /* ============================================================
    LINKS PROTEGIDOS
@@ -137,6 +146,7 @@ function showAchToast(name) {
   `;
   document.body.appendChild(toast);
   playSuccess();
+  haptic([20, 40, 20]);
   setTimeout(() => {
     toast.style.animation = 'achIn .4s reverse forwards';
     setTimeout(() => toast.remove(), 400);
@@ -402,6 +412,33 @@ function drawParticles() {
 drawParticles();
 
 /* ============================================================
+   SPRING CLASS — física de resortes real para wobbly
+   ============================================================ */
+class Spring {
+  constructor(stiffness = 0.14, damping = 0.80) {
+    this.value = 0;
+    this.target = 0;
+    this.velocity = 0;
+    this.stiffness = stiffness;
+    this.damping = damping;
+  }
+  update() {
+    const force = (this.target - this.value) * this.stiffness;
+    this.velocity = (this.velocity + force) * this.damping;
+    this.value += this.velocity;
+    if (Math.abs(this.velocity) < 0.001 && Math.abs(this.value - this.target) < 0.001) {
+      this.value = this.target;
+      this.velocity = 0;
+      return true;
+    }
+    return false;
+  }
+  kick(amount) { this.velocity += amount; }
+  reset() { this.value = 0; this.target = 0; this.velocity = 0; }
+  isIdle() { return Math.abs(this.value) < 0.01 && Math.abs(this.velocity) < 0.01; }
+}
+
+/* ============================================================
    WINDOW SYSTEM
    ============================================================ */
 const winsContainer = document.getElementById('wins');
@@ -453,6 +490,7 @@ function createWindow(title, options = {}) {
 
   makeDraggable(win, win.querySelector('.win-bar'));
   makeResizable(win, win.querySelector('.rz'));
+  makeSwipeGestures(win, win.querySelector('.win-bar'), id);
 
   return { id, el: win, body: win.querySelector('.win-body') };
 }
@@ -462,6 +500,7 @@ function closeWindow(id) {
   if (!entry) return;
   entry.el.classList.add('closing');
   playGlitch();
+  haptic(30);
   setTimeout(() => {
     entry.el.remove();
     openWindows.delete(id);
@@ -476,6 +515,7 @@ function minimizeWindow(id) {
   entry.el.classList.add('minimized');
   updateDock();
   playKey();
+  haptic(15);
 }
 function restoreWindow(id) {
   const entry = openWindows.get(id);
@@ -485,12 +525,14 @@ function restoreWindow(id) {
   entry.el.style.zIndex = ++zIndex;
   updateDock();
   playKey();
+  haptic(15);
 }
 function toggleMaximize(id) {
   const entry = openWindows.get(id);
   if (!entry) return;
   entry.el.classList.toggle('maximized');
   playKey();
+  haptic(20);
 }
 function updateDock() {
   dock.innerHTML = '';
@@ -512,38 +554,70 @@ function updateLauncher() {
   launcher.classList.toggle('on', shouldShow);
 }
 
-/* WOBBLY DRAG */
+/* ============================================================
+   DRAG CON WOBBLY REAL (Spring Physics + RAF)
+   ============================================================ */
 function makeDraggable(win, handle) {
   let sx, sy, ox, oy, dragging = false;
   let lastX = 0, lastY = 0, lastTime = 0;
-  let velX = 0, velY = 0;
+  let rafId = null;
+  let isLooping = false;
 
-  const applyWobble = (vx, vy) => {
-    const maxV = 2.4;
-    const sx2 = Math.max(-maxV, Math.min(maxV, vx));
-    const sy2 = Math.max(-maxV, Math.min(maxV, vy));
-    if (Math.abs(sx2) < .05 && Math.abs(sy2) < .05) {
+  const springScaleX = new Spring(0.18, 0.72);
+  const springScaleY = new Spring(0.18, 0.72);
+  const springRotX   = new Spring(0.13, 0.78);
+  const springRotY   = new Spring(0.13, 0.78);
+  const springSkewX  = new Spring(0.20, 0.68);
+  const springSkewY  = new Spring(0.20, 0.68);
+
+  const allSprings = [springScaleX, springScaleY, springRotX, springRotY, springSkewX, springSkewY];
+
+  const resetSprings = () => allSprings.forEach(s => s.reset());
+  const allIdle = () => allSprings.every(s => s.isIdle());
+
+  const applyTransform = () => {
+    if (allIdle()) {
       win.style.transform = '';
       return;
     }
-    const scaleX = 1 + Math.abs(sx2) * 0.04;
-    const scaleY = 1 + Math.abs(sy2) * 0.04;
-    const skewX = -sy2 * 1.4;
-    const skewY = sx2 * 1.4;
+    const scX = 1 + springScaleX.value * 0.006;
+    const scY = 1 + springScaleY.value * 0.006;
+    const rx = springRotX.value * 0.8;
+    const ry = springRotY.value * 0.8;
+    const skx = springSkewX.value * 0.5;
+    const sky = springSkewY.value * 0.5;
+
     win.style.transform =
-      `translate3d(${sx2 * 3}px, ${sy2 * 3}px, 0) ` +
-      `scale(${scaleX}, ${scaleY}) ` +
-      `skew(${skewX}deg, ${skewY}deg) ` +
-      `rotate(${sx2 * 0.3}deg)`;
+      `perspective(1200px) ` +
+      `rotateX(${rx}deg) ` +
+      `rotateY(${ry}deg) ` +
+      `scale(${scX}, ${scY}) ` +
+      `skew(${skx}deg, ${sky}deg)`;
   };
 
-  const releaseWobble = () => {
-    win.classList.remove('dragging');
-    win.classList.add('releasing');
-    win.style.transform = 'scale(1.02, 0.98) skew(0, 0) rotate(0.3deg)';
-    setTimeout(() => { win.style.transform = 'scale(0.99, 1.01) skew(0, 0) rotate(-0.2deg)'; }, 150);
-    setTimeout(() => { win.style.transform = 'scale(1.005, 0.995) skew(0, 0)'; }, 320);
-    setTimeout(() => { win.style.transform = ''; win.classList.remove('releasing'); }, 800);
+  const loop = () => {
+    let anyActive = false;
+    allSprings.forEach(s => {
+      const done = s.update();
+      if (!done) anyActive = true;
+    });
+    applyTransform();
+
+    if (anyActive || dragging) {
+      rafId = requestAnimationFrame(loop);
+    } else {
+      isLooping = false;
+      rafId = null;
+      win.classList.remove('wobbling');
+      win.style.transform = '';
+    }
+  };
+
+  const startLoop = () => {
+    if (isLooping) return;
+    isLooping = true;
+    win.classList.add('wobbling');
+    rafId = requestAnimationFrame(loop);
   };
 
   const start = (e) => {
@@ -554,11 +628,11 @@ function makeDraggable(win, handle) {
     ox = win.offsetLeft; oy = win.offsetTop;
     lastX = p.clientX; lastY = p.clientY;
     lastTime = performance.now();
-    velX = 0; velY = 0;
     dragging = true;
+    resetSprings();
     win.classList.add('dragging');
-    win.classList.remove('releasing');
     win.style.zIndex = ++zIndex;
+    startLoop();
 
     document.addEventListener('mousemove', move);
     document.addEventListener('touchmove', move, { passive: false });
@@ -575,9 +649,23 @@ function makeDraggable(win, handle) {
     const dt = Math.max(1, now - lastTime);
     const dx = p.clientX - lastX;
     const dy = p.clientY - lastY;
-    velX = velX * 0.6 + (dx / dt * 16) * 0.4;
-    velY = velY * 0.6 + (dy / dt * 16) * 0.4;
-    lastX = p.clientX; lastY = p.clientY; lastTime = now;
+    const vx = (dx / dt) * 16;
+    const vy = (dy / dt) * 16;
+
+    springScaleX.kick(Math.abs(vx) * 6);
+    springScaleY.kick(Math.abs(vy) * 6);
+    springRotX.kick(vy * 2.2);
+    springRotY.kick(-vx * 2.2);
+    springSkewX.kick(vy * 1.6);
+    springSkewY.kick(vx * 1.6);
+
+    allSprings.forEach(s => {
+      s.velocity = Math.max(-40, Math.min(40, s.velocity));
+    });
+
+    lastX = p.clientX;
+    lastY = p.clientY;
+    lastTime = now;
 
     let nx = ox + (p.clientX - sx);
     let ny = oy + (p.clientY - sy);
@@ -585,14 +673,13 @@ function makeDraggable(win, handle) {
     ny = Math.max(0, Math.min(ny, window.innerHeight - 40));
     win.style.left = nx + 'px';
     win.style.top = ny + 'px';
-
-    applyWobble(velX, velY);
   };
 
   const end = () => {
     if (!dragging) return;
     dragging = false;
-    releaseWobble();
+    win.classList.remove('dragging');
+    startLoop();
     document.removeEventListener('mousemove', move);
     document.removeEventListener('touchmove', move);
     document.removeEventListener('mouseup', end);
@@ -601,6 +688,58 @@ function makeDraggable(win, handle) {
 
   handle.addEventListener('mousedown', start);
   handle.addEventListener('touchstart', start, { passive: false });
+}
+
+/* ============================================================
+   SWIPE GESTURES EN LA BARRA DE TÍTULO (móvil)
+   - Swipe down → minimizar
+   - Swipe up → maximizar/restaurar
+   - Swipe left/right rápido → cerrar
+   ============================================================ */
+function makeSwipeGestures(win, handle, id) {
+  if (!mob) return;
+  let startX = 0, startY = 0, startTime = 0;
+  let tracking = false;
+
+  handle.addEventListener('touchstart', (e) => {
+    if (e.touches.length !== 1) return;
+    const t = e.touches[0];
+    startX = t.clientX;
+    startY = t.clientY;
+    startTime = Date.now();
+    tracking = true;
+  }, { passive: true });
+
+  handle.addEventListener('touchend', (e) => {
+    if (!tracking) return;
+    tracking = false;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - startX;
+    const dy = t.clientY - startY;
+    const dt = Date.now() - startTime;
+    const absX = Math.abs(dx);
+    const absY = Math.abs(dy);
+
+    // Solo gestos rápidos (< 500ms) y largos (> 40px)
+    if (dt > 500) return;
+    if (absX < 40 && absY < 40) return;
+
+    if (absY > absX) {
+      // Vertical
+      if (dy > 60) {
+        // Swipe down → minimizar
+        minimizeWindow(id);
+      } else if (dy < -60) {
+        // Swipe up → maximizar/restaurar
+        toggleMaximize(id);
+      }
+    } else {
+      // Horizontal → cerrar (si es muy largo)
+      if (absX > 120) {
+        closeWindow(id);
+      }
+    }
+  }, { passive: true });
 }
 
 function makeResizable(win, handle) {
@@ -658,6 +797,7 @@ function effectQuake() {
   void document.body.offsetWidth;
   document.body.classList.add('quake');
   playImpact();
+  haptic(50);
   setTimeout(() => document.body.classList.remove('quake'), 700);
 }
 function effectGlitchSlice() {
@@ -852,6 +992,7 @@ function showUnlockResult(win, linkKey) {
   playSuccess();
   effectConfetti(40);
   effectFlash('rgba(61,220,132,.3)');
+  haptic([30, 40, 30, 40, 60]);
   unlockAch('first_unlock', 'Primer desbloqueo');
 
   printLine(body, '');
@@ -878,6 +1019,7 @@ function showUnlockResult(win, linkKey) {
     const btn = e.currentTarget;
     navigator.clipboard.writeText(btn.dataset.token).then(() => {
       btn.textContent = '[ Copiado ]';
+      haptic(20);
       setTimeout(() => btn.textContent = '[ Copiar token ]', 1500);
     }).catch(() => {
       btn.textContent = '[ Error ]';
@@ -900,7 +1042,9 @@ function blinkEye(body) {
   }
 }
 
-/* COMANDOS */
+/* ============================================================
+   COMANDOS
+   ============================================================ */
 const COMMANDS = {
   help: { desc: 'Ayuda', run: (body) => {
     printLine(body, '+-- COMANDOS DISPONIBLES --------------------------+', 'accent');
@@ -1028,10 +1172,10 @@ const COMMANDS = {
     printLine(body, `  <span class="ok">muncixop</span><span class="dim">@</span><span class="ok">void</span>`, '');
     printLine(body, '  ' + '-'.repeat(30), 'dim');
     const info = [
-      ['OS', 'VOID SYSTEMS v6.1'],
+      ['OS', 'VOID SYSTEMS v6.4'],
       ['Host', 'muncixop.github.io'],
       ['Kernel', 'glitch-6.6.6'],
-      ['Shell', 'voidsh 6.1'],
+      ['Shell', 'voidsh 6.4'],
       ['Uptime', uptime + 's'],
       ['CPU', 'Void Core (64)'],
       ['GPU', 'Phantom Renderer'],
@@ -1187,6 +1331,7 @@ const COMMANDS = {
     for (let i = n; i > 0; i--) {
       printLine(body, `  ${i}...`, 'accent');
       playBeep(400 + i * 60, .15);
+      haptic(20);
       await sleep(500);
     }
     printLine(body, '  DESPEGUE!', 'ok');
@@ -1250,6 +1395,7 @@ const COMMANDS = {
   confetti: { desc: 'Confetti', run: (body) => {
     effectConfetti(60);
     playSuccess();
+    haptic([20, 30, 20, 30, 60]);
     printLine(body, '[OK] Confetti!', 'ok');
     unlockAch('confetti', 'Fiestero');
   }},
@@ -1386,8 +1532,9 @@ async function bootSequence(isReboot = false) {
     ['  [OK] GPU Phantom Renderer', 'ok', 70],
     ['  [OK] Red eth0 192.168.1.42/24', 'ok', 70],
     ['  [OK] Wobbly windows activado', 'ok', 60],
+    ['  [OK] Asistencias moviles cargadas', 'ok', 60],
     ['', '', 60],
-    ['Cargando VOID SYSTEMS v6.1...', 'info', 200],
+    ['Cargando VOID SYSTEMS v6.4...', 'info', 200],
     ['', '', 100],
   ];
   for (const [text, cls, delay] of bootLines) {
@@ -1403,7 +1550,7 @@ async function bootSequence(isReboot = false) {
     ['  ██║  ██║███████╗██║        ██║   ', 'ok'],
     ['  ╚═╝  ╚═╝╚══════╝╚═╝        ╚═╝   ', 'ok'],
     ['', ''],
-    ['  Bienvenido a VOID SYSTEMS v6.1, muncixop.', 'accent'],
+    ['  Bienvenido a VOID SYSTEMS v6.4, muncixop.', 'accent'],
     ['  Escribe <span class="ok">help</span> para ver los comandos.', 'dim'],
     ['  Prueba <span class="ok">fastfetch</span> para ver el ojo.', 'dim'],
     ['', ''],
@@ -1414,15 +1561,20 @@ async function bootSequence(isReboot = false) {
 }
 
 /* ============================================================
-   INPUT LOOP v6.1 — A PRUEBA DE BALAS
+   INPUT LOOP v6.4 — con asistencias móviles
    ============================================================ */
 let currentTerm = null;
 let globalKeydownInstalled = false;
+let currentInputLine = null;
+let currentTypedValue = '';
+let historyIndex = 0;
+let suggestBoxRef = null;
+let suggestItemsRef = [];
+let suggestIdxRef = 0;
 
 function startInput(term) {
   currentTerm = term;
   const body = term.body;
-  const ki = document.getElementById('ki');
 
   let currentLine = null;
   let typed = '';
@@ -1437,26 +1589,110 @@ function startInput(term) {
     currentLine = document.createElement('div');
     currentLine.className = 'input-line idle';
     currentLine.style.position = 'relative';
-    currentLine.innerHTML = getPromptHTML() + '<span class="typed"></span><span class="cur">_</span>';
+    currentLine.innerHTML = getPromptHTML() + '<input class="ki" type="text" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="" aria-label="Terminal input">';
     body.appendChild(currentLine);
     body.scrollTop = body.scrollHeight;
-    resetIdleTimer();
-    updateSuggest();
-  };
 
-  const render = () => {
-    if (!currentLine || !currentLine.parentNode) {
-      createInputLine();
+    // Auto-focus en desktop
+    const input = currentLine.querySelector('.ki');
+    if (!mob) {
+      setTimeout(() => {
+        try { input.focus({ preventScroll: true }); } catch (e) {}
+      }, 30);
     }
-    const el = currentLine.querySelector('.typed');
-    if (el) {
-      el.textContent = typed;
-      void el.offsetHeight;
-    }
-    if (currentLine.classList.contains('idle')) currentLine.classList.remove('idle');
-    updateSuggest();
-    resetIdleTimer();
-    body.scrollTop = body.scrollHeight;
+
+    // Eventos del input real
+    input.addEventListener('input', () => {
+      typed = input.value;
+      currentTypedValue = typed;
+      updateSuggest();
+      if (currentLine.classList.contains('idle')) currentLine.classList.remove('idle');
+      resetIdleTimer();
+      body.scrollTop = body.scrollHeight;
+      // Si es móvil y hay sugerencia, mostrarla
+      if (mob && suggestItems.length > 0) {
+        // no-op
+      }
+    });
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        submit();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (suggestItems.length && suggestBox) {
+          suggestIdx = Math.max(0, suggestIdx - 1);
+          Array.from(suggestBox.children).forEach((el, i) => el.classList.toggle('active', i === suggestIdx));
+          return;
+        }
+        if (cmdHistory.length) {
+          histIdx = Math.max(0, histIdx - 1);
+          input.value = cmdHistory[histIdx] || '';
+          typed = input.value;
+          currentTypedValue = typed;
+        }
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (suggestItems.length && suggestBox) {
+          suggestIdx = Math.min(suggestItems.length - 1, suggestIdx + 1);
+          Array.from(suggestBox.children).forEach((el, i) => el.classList.toggle('active', i === suggestIdx));
+          return;
+        }
+        if (histIdx < cmdHistory.length - 1) {
+          histIdx++;
+          input.value = cmdHistory[histIdx] || '';
+        } else {
+          histIdx = cmdHistory.length;
+          input.value = '';
+        }
+        typed = input.value;
+        currentTypedValue = typed;
+      } else if (e.key === 'Tab') {
+        e.preventDefault();
+        if (suggestItems.length && suggestBox) {
+          typed = suggestItems[suggestIdx] + ' ';
+          input.value = typed;
+          currentTypedValue = typed;
+          updateSuggest();
+          return;
+        }
+        const partial = typed.trim();
+        if (!partial) return;
+        const matches = Object.keys(COMMANDS).filter(c => c.startsWith(partial));
+        if (matches.length === 1) { typed = matches[0] + ' '; input.value = typed; currentTypedValue = typed; updateSuggest(); }
+        else if (matches.length > 1) printLine(body, matches.join('  '), 'dim');
+      } else if (e.key === 'l' && e.ctrlKey) {
+        e.preventDefault();
+        body.innerHTML = '';
+        currentLine = null;
+        createInputLine();
+      } else if (e.key.length === 1) {
+        // Sonido + glitch aleatorio
+        playKey();
+        if (Math.random() > 0.85) {
+          input.classList.add('glitch-flash');
+          setTimeout(() => input.classList.remove('glitch-flash'), 80);
+        }
+      }
+    });
+
+    // Focus on tap (móvil o desktop)
+    input.addEventListener('focus', () => {
+      if (currentLine) currentLine.classList.remove('idle');
+      // Detectar teclado abierto en móvil
+      if (mob) {
+        setTimeout(() => document.body.classList.add('kb-open'), 100);
+      }
+    });
+    input.addEventListener('blur', () => {
+      if (mob) {
+        setTimeout(() => document.body.classList.remove('kb-open'), 100);
+      }
+    });
+
+    currentLine._input = input;
+    currentInputLine = currentLine;
   };
 
   const resetIdleTimer = () => {
@@ -1486,9 +1722,13 @@ function startInput(term) {
       item.className = 'suggest-item' + (i === 0 ? ' active' : '');
       item.innerHTML = `<span class="key">${escapeHTML(m)}</span><span class="desc">${escapeHTML(COMMANDS[m].desc)}</span>`;
       item.addEventListener('click', () => {
+        if (!currentLine) return;
+        const input = currentLine.querySelector('.ki');
         typed = m + ' ';
-        if (ki) ki.value = typed;
-        render();
+        input.value = typed;
+        currentTypedValue = typed;
+        input.focus();
+        updateSuggest();
       });
       suggestBox.appendChild(item);
     });
@@ -1497,206 +1737,164 @@ function startInput(term) {
   };
 
   const submit = () => {
-    const cmd = typed.trim();
-    if (ki) ki.value = '';
+    if (!currentLine) return;
+    const input = currentLine.querySelector('.ki');
+    const cmd = (input.value || typed).trim();
     typed = '';
+    currentTypedValue = '';
     hideSuggest();
 
-    if (currentLine && currentLine.parentNode) {
-      const cmdLine = document.createElement('div');
-      cmdLine.className = 'out cmd';
-      cmdLine.innerHTML = getPromptHTML() + escapeHTML(cmd);
-      currentLine.replaceWith(cmdLine);
-      currentLine = null;
-    }
+    const cmdLine = document.createElement('div');
+    cmdLine.className = 'out cmd';
+    cmdLine.innerHTML = getPromptHTML() + escapeHTML(cmd);
+    currentLine.replaceWith(cmdLine);
+    currentLine = null;
+    currentInputLine = null;
 
     if (cmd) {
       cmdHistory.push(cmd);
       saveHistory();
       histIdx = cmdHistory.length;
       playEnter();
+      haptic(10);
       runCommand(cmd, body, term);
     }
 
     createInputLine();
-    setTimeout(() => {
-      if (!body.querySelector('.input-line')) createInputLine();
-    }, 100);
     body.scrollTop = body.scrollHeight;
   };
 
+  // Guardar referencias globales para el mobile bar
+  window._submitCurrent = submit;
+  window._getCurrentInput = () => currentLine ? currentLine.querySelector('.ki') : null;
+
   createInputLine();
 
+  // Click global en la terminal → focus al input
+  body.addEventListener('click', (e) => {
+    if (e.target.closest('a') || e.target.closest('button')) return;
+    if (currentLine) {
+      const input = currentLine.querySelector('.ki');
+      if (input) {
+        try { input.focus({ preventScroll: true }); } catch (err) {}
+      }
+    }
+  });
+
+  // Atajos de teclado globales (solo cuando el input no tiene foco)
   if (!globalKeydownInstalled) {
     globalKeydownInstalled = true;
     window.addEventListener('keydown', (e) => {
-      if (!currentTerm) return;
-      const term = currentTerm;
-      const b = term.body;
-
-      if (document.activeElement === ki) return;
       const tag = document.activeElement && document.activeElement.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
 
       if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 't') {
         e.preventDefault();
         bootSequence(true);
-        return;
-      }
-      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'w') {
+      } else if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'w') {
         e.preventDefault();
-        closeWindow(term.id);
-        return;
-      }
-      if (e.key === 'Escape' && document.body.classList.contains('cyberpunk')) {
+        if (currentTerm) closeWindow(currentTerm.id);
+      } else if (e.key === 'Escape' && document.body.classList.contains('cyberpunk')) {
         document.body.classList.remove('cyberpunk');
       }
-
-      if (e.key === 'Enter') { e.preventDefault(); submit(); return; }
-      if (e.key === 'Backspace') {
-        e.preventDefault();
-        if (typed.length > 0) { typed = typed.slice(0, -1); render(); playKey(); }
-        return;
-      }
-      if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        if (suggestItems.length && suggestBox) {
-          suggestIdx = Math.max(0, suggestIdx - 1);
-          Array.from(suggestBox.children).forEach((el, i) => el.classList.toggle('active', i === suggestIdx));
-          return;
-        }
-        if (cmdHistory.length) {
-          histIdx = Math.max(0, histIdx - 1);
-          typed = cmdHistory[histIdx] || '';
-          render();
-        }
-        return;
-      }
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        if (suggestItems.length && suggestBox) {
-          suggestIdx = Math.min(suggestItems.length - 1, suggestIdx + 1);
-          Array.from(suggestBox.children).forEach((el, i) => el.classList.toggle('active', i === suggestIdx));
-          return;
-        }
-        if (histIdx < cmdHistory.length - 1) { histIdx++; typed = cmdHistory[histIdx] || ''; }
-        else { histIdx = cmdHistory.length; typed = ''; }
-        render();
-        return;
-      }
-      if (e.key === 'Tab') {
-        e.preventDefault();
-        if (suggestItems.length && suggestBox) {
-          typed = suggestItems[suggestIdx] + ' ';
-          render();
-          return;
-        }
-        const partial = typed.trim();
-        if (!partial) return;
-        const matches = Object.keys(COMMANDS).filter(c => c.startsWith(partial));
-        if (matches.length === 1) { typed = matches[0] + ' '; render(); }
-        else if (matches.length > 1) printLine(b, matches.join('  '), 'dim');
-        return;
-      }
-      if (e.key === 'l' && e.ctrlKey) {
-        e.preventDefault();
-        b.innerHTML = '';
-        createInputLine();
-        return;
-      }
-      if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
-        e.preventDefault();
-        typed += e.key;
-        render();
-        playKey();
-        if (currentLine && Math.random() > 0.85) {
-          const t = currentLine.querySelector('.typed');
-          if (t) {
-            t.classList.add('glitch-flash');
-            setTimeout(() => t.classList.remove('glitch-flash'), 80);
-          }
-        }
-      }
-    }, true);
+    });
   }
+}
 
-  ki.addEventListener('input', () => {
-    if (document.activeElement !== ki) return;
-    typed = ki.value;
-    render();
+/* ============================================================
+   MOBILE ASSISTS — inicialización
+   ============================================================ */
+function initMobileAssists() {
+  // 1. Quick chips
+  document.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const cmd = chip.dataset.cmd;
+      if (!cmd) return;
+      haptic(12);
+      const input = window._getCurrentInput ? window._getCurrentInput() : null;
+      if (input) {
+        input.value = cmd;
+        currentTypedValue = cmd;
+        input.focus();
+        // Ejecutar tras un pequeño delay
+        setTimeout(() => {
+          if (window._submitCurrent) window._submitCurrent();
+        }, 60);
+      }
+    });
   });
 
-  ki.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
+  // 2. Mobile bar (teclas virtuales)
+  document.querySelectorAll('.mb-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
       e.preventDefault();
-      submit();
-      ki.blur();
-    } else if (e.key === 'Escape') {
-      ki.blur();
-    }
+      const action = btn.dataset.action;
+      haptic(10);
+      const input = window._getCurrentInput ? window._getCurrentInput() : null;
+      if (!input) return;
+
+      if (action === 'enter') {
+        if (window._submitCurrent) window._submitCurrent();
+      } else if (action === 'backspace') {
+        input.value = input.value.slice(0, -1);
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        playKey();
+      } else if (action === 'tab') {
+        const ev = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+        input.dispatchEvent(ev);
+      } else if (action === 'up') {
+        const ev = new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true, cancelable: true });
+        input.dispatchEvent(ev);
+      } else if (action === 'down') {
+        const ev = new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true });
+        input.dispatchEvent(ev);
+      } else if (action === 'esc') {
+        input.blur();
+        document.body.classList.remove('kb-open');
+      }
+      input.focus();
+    });
   });
 
-  ki.addEventListener('blur', () => {
-    if (ki.value !== typed) {
-      typed = ki.value;
-      render();
+  // 3. Detectar teclado virtual abierto/cerrado (visualViewport)
+  if (window.visualViewport) {
+    let baseHeight = window.visualViewport.height;
+    window.visualViewport.addEventListener('resize', () => {
+      const h = window.visualViewport.height;
+      const isKeyboardOpen = h < baseHeight - 150;
+      document.body.classList.toggle('kb-open', isKeyboardOpen);
+    });
+  }
+
+  // 4. Ocultar chips cuando hay foco
+  const observer = new MutationObserver(() => {
+    const hasInput = document.querySelector('.input-line');
+    const chips = document.getElementById('quick-chips');
+    if (chips) {
+      if (!hasInput) chips.classList.add('hidden');
+      else chips.classList.remove('hidden');
     }
   });
-
-  const focusKI = () => {
-    if (!mob) return;
-    ki.value = typed;
-    ki.focus({ preventScroll: true });
-  };
-  body.addEventListener('click', focusKI);
-  body.addEventListener('touchstart', focusKI, { passive: true });
-
-  if (!mob) {
-    ki.addEventListener('focus', () => {
-      setTimeout(() => ki.blur(), 0);
-    });
-    setTimeout(() => {
-      if (document.activeElement === ki) ki.blur();
-    }, 500);
-  }
+  observer.observe(document.body, { childList: true, subtree: true });
 }
 
-function runCommand(input, body, win) {
-  const parts = input.split(/\s+/);
-  const cmd = parts[0].toLowerCase();
-  const args = parts.slice(1);
-  const command = COMMANDS[cmd];
-  if (!command) {
-    printLine(body, `voidsh: comando no encontrado: ${escapeHTML(cmd)}`, 'err');
-    printLine(body, `Escribe <span class="ok">help</span> para ver los comandos.`, 'dim');
-    playError();
-    effectGlitchSlice();
-    return;
-  }
-  try {
-    const r = command.run(body, win, args);
-    if (r && typeof r.catch === 'function') r.catch(e => {
-      printLine(body, `Error: ${escapeHTML(e.message)}`, 'err');
-    });
-  } catch (e) {
-    printLine(body, `Error al ejecutar "${cmd}": ${escapeHTML(e.message)}`, 'err');
-    playError();
-  }
-}
-
-/* GLOBAL */
+/* ============================================================
+   GLOBAL EVENTS
+   ============================================================ */
 window.addEventListener('load', () => {
   setTimeout(bootSequence, 300);
+  setTimeout(initMobileAssists, 200);
 });
 
 document.addEventListener('click', (e) => {
-  if (e.target.closest('.btn') || e.target.closest('.launcher') || e.target.closest('.copy-token') || e.target.closest('.err-btn')) return;
+  if (e.target.closest('.btn') || e.target.closest('.launcher') || e.target.closest('.copy-token') || e.target.closest('.err-btn') || e.target.closest('.chip') || e.target.closest('.mb-btn')) return;
   effectRipple(e.clientX, e.clientY);
 });
 
 launcher.addEventListener('click', () => {
   playSuccess();
   effectFlash('rgba(61,220,132,.15)');
+  haptic(20);
   bootSequence(true);
 });
 
@@ -1707,6 +1905,7 @@ document.addEventListener('touchend', (e) => {
   lastTouch = now;
 }, { passive: false });
 
+// Konami code
 const konamiSeq = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
 let konamiIdx = 0;
 window.addEventListener('keydown', (e) => {
@@ -1727,6 +1926,33 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
-console.log('%c VOID SYSTEMS v6.1 ', 'background:#3ddc84;color:#000;font-weight:bold;padding:4px 8px;border-radius:4px;font-size:14px');
+// Long-press en title bar → menú de opciones (móvil)
+let longPressTimer = null;
+document.addEventListener('touchstart', (e) => {
+  const bar = e.target.closest('.win-bar');
+  if (!bar) return;
+  if (e.target.closest('.btn')) return;
+  const win = bar.closest('.win');
+  if (!win) return;
+  longPressTimer = setTimeout(() => {
+    haptic([30, 20, 30]);
+    // Mostrar menú de acciones
+    const id = win.dataset.id;
+    const entry = openWindows.get(id);
+    if (!entry) return;
+    const action = confirm('Acciones de ventana:\n\nAceptar = Maximizar/Restaurar\nCancelar = Cerrar ventana');
+    if (action) toggleMaximize(id);
+    else closeWindow(id);
+  }, 700);
+}, { passive: true });
+
+document.addEventListener('touchend', () => {
+  if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+}, { passive: true });
+document.addEventListener('touchmove', () => {
+  if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+}, { passive: true });
+
+console.log('%c VOID SYSTEMS v6.4 ', 'background:#3ddc84;color:#000;font-weight:bold;padding:4px 8px;border-radius:4px;font-size:14px');
 console.log('%c Bienvenido, muncixop. ', 'color:#3ddc84;font-weight:bold;font-size:12px');
-console.log('%c Input: keydown global (desktop) + input event (móvil) ', 'color:#5eaaff;font-style:italic');
+console.log('%c Wobbly real + asistencias móviles cargadas ', 'color:#5eaaff;font-style:italic');
