@@ -1,7 +1,7 @@
 /* ============================================================
-   VOID SYSTEMS v7.0 — Terminal / OS Simulator
+   VOID SYSTEMS v7.1 — Terminal / OS Simulator
    Author: MuncixOp
-   Wobbly spring + Input real + Asistencias móviles
+   Sin wobbly windows. Input real. Asistencias móviles.
    ============================================================ */
 
 /* ---------- OS DETECTION ---------- */
@@ -411,33 +411,6 @@ function drawParticles() {
 drawParticles();
 
 /* ============================================================
-   SPRING — Física de resortes para wobbly
-   ============================================================ */
-class Spring {
-  constructor(stiffness = 0.14, damping = 0.80) {
-    this.value = 0;
-    this.target = 0;
-    this.velocity = 0;
-    this.stiffness = stiffness;
-    this.damping = damping;
-  }
-  update() {
-    const force = (this.target - this.value) * this.stiffness;
-    this.velocity = (this.velocity + force) * this.damping;
-    this.value += this.velocity;
-    if (Math.abs(this.velocity) < 0.001 && Math.abs(this.value - this.target) < 0.001) {
-      this.value = this.target;
-      this.velocity = 0;
-      return true;
-    }
-    return false;
-  }
-  kick(amount) { this.velocity += amount; }
-  reset() { this.value = 0; this.target = 0; this.velocity = 0; }
-  isIdle() { return Math.abs(this.value) < 0.01 && Math.abs(this.velocity) < 0.01; }
-}
-
-/* ============================================================
    WINDOW SYSTEM
    ============================================================ */
 const winsContainer = document.getElementById('wins');
@@ -554,98 +527,28 @@ function updateLauncher() {
 }
 
 /* ============================================================
-   DRAG con WOBBLY REAL
+   DRAG — Simple, sin wobbly
    ============================================================ */
 function makeDraggable(win, handle) {
   let sx, sy, ox, oy, dragging = false;
-  let lastX = 0, lastY = 0, lastTime = 0;
-  let rafId = null;
-  let isLooping = false;
-
-  const springScaleX = new Spring(0.18, 0.72);
-  const springScaleY = new Spring(0.18, 0.72);
-  const springRotX   = new Spring(0.13, 0.78);
-  const springRotY   = new Spring(0.13, 0.78);
-  const springSkewX  = new Spring(0.20, 0.68);
-  const springSkewY  = new Spring(0.20, 0.68);
-
-  const allSprings = [springScaleX, springScaleY, springRotX, springRotY, springSkewX, springSkewY];
-  const resetSprings = () => allSprings.forEach(s => s.reset());
-  const allIdle = () => allSprings.every(s => s.isIdle());
-
-  const applyTransform = () => {
-    if (allIdle()) { win.style.transform = ''; return; }
-    const scX = 1 + springScaleX.value * 0.006;
-    const scY = 1 + springScaleY.value * 0.006;
-    const rx = springRotX.value * 0.8;
-    const ry = springRotY.value * 0.8;
-    const skx = springSkewX.value * 0.5;
-    const sky = springSkewY.value * 0.5;
-    win.style.transform =
-      `perspective(1200px) rotateX(${rx}deg) rotateY(${ry}deg) scale(${scX}, ${scY}) skew(${skx}deg, ${sky}deg)`;
-  };
-
-  const loop = () => {
-    let anyActive = false;
-    allSprings.forEach(s => { if (!s.update()) anyActive = true; });
-    applyTransform();
-    if (anyActive || dragging) {
-      rafId = requestAnimationFrame(loop);
-    } else {
-      isLooping = false;
-      rafId = null;
-      win.classList.remove('wobbling');
-      win.style.transform = '';
-    }
-  };
-  const startLoop = () => {
-    if (isLooping) return;
-    isLooping = true;
-    win.classList.add('wobbling');
-    rafId = requestAnimationFrame(loop);
-  };
-
   const start = (e) => {
     if (win.classList.contains('maximized')) return;
     if (e.target.closest('.btn')) return;
     const p = e.touches ? e.touches[0] : e;
     sx = p.clientX; sy = p.clientY;
     ox = win.offsetLeft; oy = win.offsetTop;
-    lastX = p.clientX; lastY = p.clientY;
-    lastTime = performance.now();
     dragging = true;
-    resetSprings();
     win.classList.add('dragging');
     win.style.zIndex = ++zIndex;
-    startLoop();
     document.addEventListener('mousemove', move);
     document.addEventListener('touchmove', move, { passive: false });
     document.addEventListener('mouseup', end);
     document.addEventListener('touchend', end);
   };
-
   const move = (e) => {
     if (!dragging) return;
     if (e.cancelable) e.preventDefault();
     const p = e.touches ? e.touches[0] : e;
-    const now = performance.now();
-    const dt = Math.max(1, now - lastTime);
-    const dx = p.clientX - lastX;
-    const dy = p.clientY - lastY;
-    const vx = (dx / dt) * 16;
-    const vy = (dy / dt) * 16;
-
-    springScaleX.kick(Math.abs(vx) * 6);
-    springScaleY.kick(Math.abs(vy) * 6);
-    springRotX.kick(vy * 2.2);
-    springRotY.kick(-vx * 2.2);
-    springSkewX.kick(vy * 1.6);
-    springSkewY.kick(vx * 1.6);
-
-    allSprings.forEach(s => { s.velocity = Math.max(-40, Math.min(40, s.velocity)); });
-
-    lastX = p.clientX; lastY = p.clientY; lastTime = now;
-
     let nx = ox + (p.clientX - sx);
     let ny = oy + (p.clientY - sy);
     nx = Math.max(-win.offsetWidth + 80, Math.min(nx, window.innerWidth - 80));
@@ -653,18 +556,14 @@ function makeDraggable(win, handle) {
     win.style.left = nx + 'px';
     win.style.top = ny + 'px';
   };
-
   const end = () => {
-    if (!dragging) return;
     dragging = false;
     win.classList.remove('dragging');
-    startLoop();
     document.removeEventListener('mousemove', move);
     document.removeEventListener('touchmove', move);
     document.removeEventListener('mouseup', end);
     document.removeEventListener('touchend', end);
   };
-
   handle.addEventListener('mousedown', start);
   handle.addEventListener('touchstart', start, { passive: false });
 }
@@ -1142,10 +1041,10 @@ const COMMANDS = {
     printLine(body, `  <span class="ok">muncixop</span><span class="dim">@</span><span class="ok">void</span>`, '');
     printLine(body, '  ' + '-'.repeat(30), 'dim');
     const info = [
-      ['OS', 'VOID SYSTEMS v7.0'],
+      ['OS', 'VOID SYSTEMS v7.1'],
       ['Host', 'muncixop.github.io'],
       ['Kernel', 'glitch-6.6.6'],
-      ['Shell', 'voidsh 7.0'],
+      ['Shell', 'voidsh 7.1'],
       ['Uptime', uptime + 's'],
       ['CPU', 'Void Core (64)'],
       ['GPU', 'Phantom Renderer'],
@@ -1496,15 +1395,14 @@ async function bootSequence(isReboot = false) {
   else playPowerUp();
 
   const bootLines = [
-    ['VOID BIOS v7.0 - Inicializando...', 'dim', 100],
+    ['VOID BIOS v7.1 - Inicializando...', 'dim', 100],
     ['  [OK] CPU Void Core x64 @ 3.20GHz', 'ok', 80],
     ['  [OK] Memoria ECC 128GB', 'ok', 80],
     ['  [OK] GPU Phantom Renderer', 'ok', 70],
     ['  [OK] Red local activa', 'ok', 70],
-    ['  [OK] Wobbly windows activado', 'ok', 60],
     ['  [OK] Asistencias moviles cargadas', 'ok', 60],
     ['', '', 60],
-    ['Cargando VOID SYSTEMS v7.0...', 'info', 200],
+    ['Cargando VOID SYSTEMS v7.1...', 'info', 200],
     ['', '', 100],
   ];
   for (const [text, cls, delay] of bootLines) {
@@ -1520,7 +1418,7 @@ async function bootSequence(isReboot = false) {
     ['  ██║  ██║███████╗██║        ██║   ', 'ok'],
     ['  ╚═╝  ╚═╝╚══════╝╚═╝        ╚═╝   ', 'ok'],
     ['', ''],
-    ['  Bienvenido a VOID SYSTEMS v7.0, muncixop.', 'accent'],
+    ['  Bienvenido a VOID SYSTEMS v7.1, muncixop.', 'accent'],
     ['  Escribe <span class="ok">help</span> para ver los comandos.', 'dim'],
     ['  Prueba <span class="ok">fastfetch</span> para ver el ojo.', 'dim'],
     ['', ''],
@@ -1531,7 +1429,7 @@ async function bootSequence(isReboot = false) {
 }
 
 /* ============================================================
-   INPUT LOOP v7.0 — Input real + asistencias
+   INPUT LOOP v7.1 — Input real + asistencias
    ============================================================ */
 let currentTerm = null;
 let currentInputLineRef = null;
@@ -1561,7 +1459,6 @@ function startInput(term) {
 
     const input = currentLine.querySelector('.ki');
 
-    // Auto-focus en desktop
     if (!mob) {
       setTimeout(() => {
         try { input.focus({ preventScroll: true }); } catch (e) {}
@@ -1709,7 +1606,6 @@ function startInput(term) {
     body.scrollTop = body.scrollHeight;
   };
 
-  // Exponer para mobile bar
   window._submitCurrent = submit;
   window._getCurrentInput = () => {
     if (!currentInputLineRef) return null;
@@ -1718,7 +1614,6 @@ function startInput(term) {
 
   createInputLine();
 
-  // Click en cualquier parte de la terminal → focus al input
   body.addEventListener('click', (e) => {
     if (e.target.closest('a') || e.target.closest('button') || e.target.closest('input')) return;
     if (currentInputLineRef) {
@@ -1729,7 +1624,6 @@ function startInput(term) {
     }
   });
 
-  // Atajos globales
   if (!globalKeydownInstalled) {
     globalKeydownInstalled = true;
     window.addEventListener('keydown', (e) => {
@@ -1750,10 +1644,9 @@ function startInput(term) {
 }
 
 /* ============================================================
-   MOBILE ASSISTS — inicialización
+   MOBILE ASSISTS
    ============================================================ */
 function initMobileAssists() {
-  // 1. Quick chips
   document.querySelectorAll('.chip').forEach(chip => {
     chip.addEventListener('click', () => {
       const cmd = chip.dataset.cmd;
@@ -1770,7 +1663,6 @@ function initMobileAssists() {
     });
   });
 
-  // 2. Mobile bar (teclas virtuales)
   document.querySelectorAll('.mb-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
@@ -1802,7 +1694,6 @@ function initMobileAssists() {
     });
   });
 
-  // 3. Detectar teclado virtual abierto/cerrado
   if (window.visualViewport) {
     let baseHeight = window.visualViewport.height;
     window.visualViewport.addEventListener('resize', () => {
@@ -1812,7 +1703,6 @@ function initMobileAssists() {
     });
   }
 
-  // 4. Ocultar chips cuando no hay input-line
   const observer = new MutationObserver(() => {
     const hasInput = document.querySelector('.input-line');
     const chips = document.getElementById('quick-chips');
@@ -1878,7 +1768,6 @@ document.addEventListener('touchend', (e) => {
   lastTouch = now;
 }, { passive: false });
 
-// Konami code
 const konamiSeq = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
 let konamiIdx = 0;
 window.addEventListener('keydown', (e) => {
@@ -1899,7 +1788,6 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
-// Long-press en title bar → menú de opciones (móvil)
 let longPressTimer = null;
 document.addEventListener('touchstart', (e) => {
   const bar = e.target.closest('.win-bar');
@@ -1923,6 +1811,6 @@ document.addEventListener('touchmove', () => {
   if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
 }, { passive: true });
 
-console.log('%c VOID SYSTEMS v7.0 ', 'background:#3ddc84;color:#000;font-weight:bold;padding:4px 8px;border-radius:4px;font-size:14px');
+console.log('%c VOID SYSTEMS v7.1 ', 'background:#3ddc84;color:#000;font-weight:bold;padding:4px 8px;border-radius:4px;font-size:14px');
 console.log('%c Bienvenido, muncixop. ', 'color:#3ddc84;font-weight:bold;font-size:12px');
-console.log('%c Input real + wobbly spring + mobile assists ', 'color:#5eaaff;font-style:italic');
+console.log('%c Sin wobbly. Input real. Estilo intacto. ', 'color:#5eaaff;font-style:italic');
