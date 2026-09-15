@@ -1,5 +1,5 @@
 /* ============================================================
-   VOID SYSTEMS v7.1 — Style
+   VOID SYSTEMS v7.2 — Style
    ============================================================ */
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 html{height:100%;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
@@ -89,7 +89,7 @@ body.cyberpunk .crt-overlay{background:radial-gradient(ellipse at center,transpa
   50%{box-shadow:0 8px 24px rgba(0,0,0,.6),0 0 60px rgba(var(--accent-rgb),.35)}
 }
 
-/* WINDOW (sin wobbly) */
+/* WINDOW */
 .win{
   position:absolute;
   width:min(720px,92vw);max-height:85vh;
@@ -124,6 +124,9 @@ body.cyberpunk .crt-overlay{background:radial-gradient(ellipse at center,transpa
   100%{opacity:0;transform:scale(.6) translateY(80px) rotate(-8deg);filter:blur(20px) brightness(2) hue-rotate(-60deg)}
 }
 
+/* ============================================================
+   WIN-BAR — Alineación perfecta vertical
+   ============================================================ */
 .win-bar{
   display:flex;align-items:center;
   height:clamp(34px,4.5vh,42px);
@@ -135,6 +138,7 @@ body.cyberpunk .crt-overlay{background:radial-gradient(ellipse at center,transpa
   position:relative;z-index:5;
   box-shadow:0 1px 0 #ffffff05 inset;
   overflow:hidden;
+  line-height:1;
 }
 .win-bar:active{cursor:grabbing}
 .win-bar::before{
@@ -145,9 +149,10 @@ body.cyberpunk .crt-overlay{background:radial-gradient(ellipse at center,transpa
   pointer-events:none;
 }
 @keyframes barSheen{0%{left:-100%}100%{left:200%}}
+.win-bar > *{align-self:center;line-height:1}
 
-.btns{display:flex;gap:clamp(6px,.9vw,9px);align-items:center;position:relative;z-index:6}
-.btns-r{width:clamp(42px,6vw,54px)}
+.btns{display:flex;gap:clamp(6px,.9vw,9px);align-items:center;position:relative;z-index:6;height:100%}
+.btns-r{width:clamp(42px,6vw,54px);height:100%}
 .btn{
   width:clamp(10px,1.1vw,13px);height:clamp(10px,1.1vw,13px);
   border-radius:50%;
@@ -155,6 +160,7 @@ body.cyberpunk .crt-overlay{background:radial-gradient(ellipse at center,transpa
   cursor:pointer;position:relative;z-index:6;pointer-events:auto;
   display:flex;align-items:center;justify-content:center;
   font-size:0;line-height:1;border:none;
+  align-self:center;
 }
 .btn:hover{filter:brightness(1.5) saturate(1.4);transform:scale(1.35)}
 .btn:active{transform:scale(.7);transition-duration:.08s}
@@ -162,12 +168,21 @@ body.cyberpunk .crt-overlay{background:radial-gradient(ellipse at center,transpa
 .min{background:#febc2e;box-shadow:0 0 6px #febc2e30}
 .max{background:#28c840;box-shadow:0 0 6px #28c84030}
 
+/* WIN-TITLE — Centrado perfecto vertical y horizontal */
 .win-title{
-  flex:1;text-align:center;
-  font-size:clamp(10px,1.1vw,12px);color:#666;
+  flex:1;
+  text-align:center;
+  font-size:clamp(10px,1.1vw,12px);
+  color:#666;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   letter-spacing:.025em;font-weight:500;
   transition:color .3s ease;
+  line-height:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  height:100%;
+  padding:0 8px;
 }
 .win:hover .win-title{color:#999}
 
@@ -243,7 +258,7 @@ body.cyberpunk .crt-overlay{background:radial-gradient(ellipse at center,transpa
 .out.eye::-webkit-scrollbar{display:none}
 body.mobile-eye .out.eye{font-size:clamp(5px,1.7vw,7px)}
 
-/* INPUT LINE — INPUT REAL */
+/* INPUT LINE */
 .input-line{
   display:flex;
   align-items:baseline;
@@ -479,7 +494,7 @@ body.hypnotize{animation:hypno 4s linear infinite}
 .os-win .win-bar{height:38px;border-radius:8px 8px 0 0;cursor:default}
 .os-win .btns{order:3;gap:0}
 .os-win .btns-r{display:none}
-.os-win .win-title{order:1;text-align:left;padding-left:12px;color:#ccc}
+.os-win .win-title{order:1;text-align:left;padding-left:12px;color:#ccc;justify-content:flex-start}
 .os-win .btn{width:44px;height:38px;border-radius:0;font-size:11px;color:#aaa;background:transparent}
 .os-win .min::before{content:'-';font-size:14px}
 .os-win .max::before{content:'[]';font-size:10px}
@@ -490,7 +505,7 @@ body.hypnotize{animation:hypno 4s linear infinite}
 .os-linux .win-bar{height:36px;border-radius:8px 8px 0 0;cursor:default}
 .os-linux .btns{order:3}
 .os-linux .btns-r{display:none}
-.os-linux .win-title{order:1;text-align:left;padding-left:12px;color:#ccc}
+.os-linux .win-title{order:1;text-align:left;padding-left:12px;color:#ccc;justify-content:flex-start}
 .os-linux .close::before{content:'X';font-size:12px}
 .os-linux .min::before{content:'-';font-size:13px}
 .os-linux .max::before{content:'[]';font-size:9px}
