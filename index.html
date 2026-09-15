@@ -11,7 +11,44 @@
 <meta name="description" content="MuncixOp — Creative Developer & UI Engineer.">
 <meta name="format-detection" content="telephone=no">
 <title>~/muncixop — VOID SYSTEMS</title>
+
+<!-- CSS CRÍTICO INLINE — siempre se aplica, aunque style.css falle -->
+<style>
+  html,body{margin:0;padding:0;background:#060606;color:#c8c8cc;height:100%;overflow:hidden;font-family:'SF Mono','Menlo','Fira Code','Consolas',monospace;}
+  body{--accent:#3ddc84;--accent-rgb:61,220,132;--accent-2:#5eaaff;}
+  #c,#p{position:fixed;inset:0;pointer-events:none;}
+  #c{opacity:.05;z-index:0}
+  #p{opacity:.55;z-index:1}
+  #wins{position:fixed;inset:0;z-index:2}
+  .win{position:absolute;background:#141416;border-radius:12px;box-shadow:0 8px 24px #00000070;display:flex;flex-direction:column;overflow:hidden;}
+  .win-bar{display:flex;align-items:center;height:42px;padding:0 14px;background:linear-gradient(180deg,#28282c 0%,#1c1c20 100%);border-bottom:1px solid #00000090;cursor:grab;}
+  .win-title{flex:1;text-align:center;font-size:12px;color:#666;}
+  .btns{display:flex;gap:8px}
+  .btn{width:12px;height:12px;border-radius:50%;border:none;cursor:pointer;}
+  .close{background:#ff5f57}
+  .min{background:#febc2e}
+  .max{background:#28c840}
+  .win-body{padding:16px;flex:1;overflow-y:auto;background:#141416;}
+  .out{white-space:pre-wrap;word-break:break-word;line-height:1.7;}
+  .out.ok{color:#3ddc84}
+  .out.err{color:#ff453a}
+  .out.warn{color:#ffcc00}
+  .out.dim{color:#48484c}
+  .out.info{color:#5eaaff}
+  .input-line{display:flex;align-items:baseline;line-height:1.7;}
+  .input-line .pr{color:#3ddc84;font-weight:600;flex-shrink:0;}
+  .input-line .pr .path{color:#5eaaff;}
+  .input-line .ki{flex:1;background:transparent;border:none;outline:none;color:#fff;font:inherit;caret-color:#3ddc84;padding:0;}
+  .launcher{position:fixed;bottom:20px;right:20px;padding:12px 18px;background:rgba(61,220,132,.15);border:1px solid rgba(61,220,132,.4);border-radius:14px;color:#3ddc84;font-weight:700;cursor:pointer;display:none;}
+  .launcher.on{display:flex;gap:8px;align-items:center;}
+  .dock{position:fixed;bottom:0;left:0;right:0;height:48px;background:#141416dd;border-top:1px solid #ffffff08;display:none;align-items:center;padding:0 20px;gap:8px;}
+  .dock.on{display:flex;}
+  .crt-overlay,.scanlines,.chromatic,.quick-chips,.mobile-bar{display:none;}
+</style>
+
+<!-- CSS COMPLETO EXTERNO -->
 <link rel="stylesheet" href="style.css">
+
 </head>
 <body>
 <canvas id="c" aria-hidden="true"></canvas>
@@ -22,9 +59,6 @@
 <div id="wins" role="application" aria-label="Terminal workspace"></div>
 <div id="dock" class="dock" aria-label="Ventanas minimizadas"></div>
 
-<!-- ============================================================
-     ASISTENCIAS MÓVILES
-     ============================================================ -->
 <div id="quick-chips" class="quick-chips" aria-label="Comandos rápidos">
   <button class="chip" data-cmd="help">help</button>
   <button class="chip" data-cmd="about">about</button>
