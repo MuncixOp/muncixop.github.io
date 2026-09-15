@@ -1,8 +1,10 @@
 /* ============================================================
-   VOID SYSTEMS v7.4 — Terminal / OS Simulator
+   VOID SYSTEMS v7.5 — Terminal / OS Simulator
    Author: MuncixOp
-   Fixes: barra title absoluta, help escapado, bruteforce 15s,
-          enter vacío sin crear línea, OS Windows/Linux sin overlap
+   Novedades v7.5:
+   - Sudo funcional con modo password (input enmascarado)
+   - Barra win totalmente anclada con flex:0 0 auto
+   - Favicon inline (sin 404)
    ============================================================ */
 
 /* ---------- OS DETECTION ---------- */
@@ -527,7 +529,6 @@ function updateLauncher() {
   launcher.classList.toggle('on', shouldShow);
 }
 
-/* DRAG — Simple */
 function makeDraggable(win, handle) {
   let sx, sy, ox, oy, dragging = false;
   const start = (e) => {
@@ -567,21 +568,17 @@ function makeDraggable(win, handle) {
   handle.addEventListener('touchstart', start, { passive: false });
 }
 
-/* SWIPE GESTURES (móvil) */
 function makeSwipeGestures(win, handle, id) {
   if (!mob) return;
   let startX = 0, startY = 0, startTime = 0;
   let tracking = false;
-
   handle.addEventListener('touchstart', (e) => {
     if (e.touches.length !== 1) return;
     const t = e.touches[0];
-    startX = t.clientX;
-    startY = t.clientY;
+    startX = t.clientX; startY = t.clientY;
     startTime = Date.now();
     tracking = true;
   }, { passive: true });
-
   handle.addEventListener('touchend', (e) => {
     if (!tracking) return;
     tracking = false;
@@ -741,7 +738,7 @@ function padEnd(s, n, c = ' ') { s = String(s); while (s.length < n) s += c; ret
 function padStart(s, n, c = ' ') { s = String(s); while (s.length < n) s = c + s; return s; }
 
 /* ============================================================
-   BRUTEFORCE — 15s con auto-unlock
+   BRUTEFORCE
    ============================================================ */
 function launchBruteforce(win, linkKey) {
   const link = LINKS_DB[linkKey];
@@ -833,30 +830,21 @@ function launchBruteforce(win, linkKey) {
 
   function tick() {
     if (!running || unlocked) return;
-
     const elapsed = performance.now() - startTime;
     const progress = Math.min(elapsed / TOTAL_TIME, 1);
     const remaining = Math.max(0, TOTAL_TIME - elapsed);
-
     if (Math.random() > progress * 0.4) {
       addAttemptLines();
       attempts += Math.floor(Math.random() * 800) + 200;
     }
-
     const speed = Math.floor(Math.random() * 50000) + 20000;
     attEl.textContent = attempts.toLocaleString();
     speedEl.textContent = speed.toLocaleString();
     barEl.style.width = (progress * 100).toFixed(1) + '%';
     etaEl.textContent = Math.ceil(remaining / 1000) + 's';
     hashEl.textContent = randomHex(32);
-
     if (Math.random() > .7) playTick(600 + Math.random() * 400);
-
-    if (progress >= 1) {
-      finishSuccess();
-      return;
-    }
-
+    if (progress >= 1) { finishSuccess(); return; }
     const interval = progress > 0.85 ? 80 : 180;
     setTimeout(tick, interval);
   }
@@ -865,27 +853,23 @@ function launchBruteforce(win, linkKey) {
     unlocked = true;
     running = false;
     clearInterval(termInterval);
-
     barEl.style.width = '100%';
     etaEl.textContent = '0s';
     barEl.style.background = 'linear-gradient(90deg, #3ddc84, #5eaaff)';
     barEl.style.boxShadow = '0 0 20px #3ddc84';
 
-    const finalLine1 = document.createElement('div');
-    finalLine1.className = 'brute-line';
-    finalLine1.innerHTML = `<span class="success">[+] >>> MATCH ENCONTRADO <<<</span>`;
-    displayEl.appendChild(finalLine1);
-
-    const finalLine2 = document.createElement('div');
-    finalLine2.className = 'brute-line';
-    finalLine2.innerHTML = `<span class="success">[+] TOKEN VALIDADO: ${escapeHTML(link.token)}</span>`;
-    displayEl.appendChild(finalLine2);
-
-    const finalLine3 = document.createElement('div');
-    finalLine3.className = 'brute-line';
-    finalLine3.innerHTML = `<span class="success">[+] ACCESO CONCEDIDO.</span>`;
-    displayEl.appendChild(finalLine3);
-
+    const l1 = document.createElement('div');
+    l1.className = 'brute-line';
+    l1.innerHTML = `<span class="success">[+] >>> MATCH ENCONTRADO <<<</span>`;
+    displayEl.appendChild(l1);
+    const l2 = document.createElement('div');
+    l2.className = 'brute-line';
+    l2.innerHTML = `<span class="success">[+] TOKEN VALIDADO: ${escapeHTML(link.token)}</span>`;
+    displayEl.appendChild(l2);
+    const l3 = document.createElement('div');
+    l3.className = 'brute-line';
+    l3.innerHTML = `<span class="success">[+] ACCESO CONCEDIDO.</span>`;
+    displayEl.appendChild(l3);
     displayEl.scrollTop = displayEl.scrollHeight;
 
     effectFlash('rgba(61,220,132,.45)');
@@ -898,17 +882,12 @@ function launchBruteforce(win, linkKey) {
     termEl.appendChild(termLine);
     termEl.scrollTop = termEl.scrollHeight;
 
-    setTimeout(() => {
-      showUnlockResult(win, linkKey);
-    }, 900);
+    setTimeout(() => showUnlockResult(win, linkKey), 900);
   }
 
   tick();
-
   body._bruteforce = body._bruteforce || {};
-  body._bruteforce[linkKey] = {
-    stop: () => { running = false; clearInterval(termInterval); }
-  };
+  body._bruteforce[linkKey] = { stop: () => { running = false; clearInterval(termInterval); } };
 }
 
 function showUnlockResult(win, linkKey) {
@@ -997,7 +976,7 @@ const COMMANDS = {
       ['list', 'tokens'], ['whoami', 'quien'], ['date', 'fecha'], ['clear', 'limpiar'],
       ['matrix', 'toggle matrix'], ['glitch', 'glitch'], ['os <mac|win|linux>', 'tema SO'],
       ['sound', 'audio'], ['reset', 'borrar tokens'], ['reboot', 'reiniciar'],
-      ['void', 'nueva terminal'], ['close', 'cerrar'], ['sudo', 'suerte'],
+      ['void', 'nueva terminal'], ['close', 'cerrar'], ['sudo', 'escalar permisos'],
       ['banner', 'banner'], ['exit', 'salir'],
     ];
     cmds.forEach(([c, d]) => {
@@ -1103,10 +1082,10 @@ const COMMANDS = {
     printLine(body, `  <span class="ok">muncixop</span><span class="dim">@</span><span class="ok">void</span>`, '');
     printLine(body, '  ' + '-'.repeat(30), 'dim');
     const info = [
-      ['OS', 'VOID SYSTEMS v7.4'],
+      ['OS', 'VOID SYSTEMS v7.5'],
       ['Host', 'muncixop.github.io'],
       ['Kernel', 'glitch-6.6.6'],
-      ['Shell', 'voidsh 7.4'],
+      ['Shell', 'voidsh 7.5'],
       ['Uptime', uptime + 's'],
       ['CPU', 'Void Core (64)'],
       ['GPU', 'Phantom Renderer'],
@@ -1420,10 +1399,46 @@ const COMMANDS = {
     printLine(body, 'Cerrando...', 'warn');
     setTimeout(() => closeWindow(win.id), 400);
   }},
-  sudo: { desc: 'Sudo', run: (body) => {
-    printLine(body, '[sudo] password: ', 'warn');
-    setTimeout(() => { printLine(body, 'Nice try. Pero no.', 'err'); effectQuake(); }, 800);
+
+  /* ============================================================
+     SUDO — versión FUNCIONAL con modo password
+     ============================================================ */
+  sudo: { desc: 'Intenta escalar privilegios', run: (body, win, args) => {
+    // Si ya hay args, avisa
+    if (args.length > 0) {
+      printLine(body, '[sudo] no puedes pasar la password como argumento. Intenta solo "sudo".', 'warn');
+      return;
+    }
+    // Activa modo password
+    printLine(body, '[sudo] password for muncixop:', 'warn');
+    if (window._enterPasswordMode) {
+      window._enterPasswordMode((password) => {
+        // Simular verificación (delay)
+        const checkLine = printLine(body, '', 'dim');
+        checkLine.textContent = 'Verificando credenciales...';
+        setTimeout(() => {
+          checkLine.remove();
+          if (!password || password.length < 1) {
+            printLine(body, 'sudo: se requiere una contraseña', 'err');
+            playError();
+            return;
+          }
+          printLine(body, `sudo: 3 intentos fallidos. Cuenta bloqueada temporalmente.`, 'err');
+          printLine(body, 'Nice try. Pero no.', 'err');
+          playError();
+          effectQuake();
+          unlockAch('sudo_fail', 'Intento de sudo');
+        }, 900);
+      });
+    } else {
+      // Fallback si no está el handler
+      setTimeout(() => {
+        printLine(body, 'Nice try. Pero no.', 'err');
+        effectQuake();
+      }, 800);
+    }
   }},
+
   banner: { desc: 'Banner', run: (body) => {
     printLines(body, [
       ['  ██╗   ██╗ ██████╗ ██╗██████╗ ', 'ok'],
@@ -1457,14 +1472,14 @@ async function bootSequence(isReboot = false) {
   else playPowerUp();
 
   const bootLines = [
-    ['VOID BIOS v7.4 - Inicializando...', 'dim', 100],
+    ['VOID BIOS v7.5 - Inicializando...', 'dim', 100],
     ['  [OK] CPU Void Core x64 @ 3.20GHz', 'ok', 80],
     ['  [OK] Memoria ECC 128GB', 'ok', 80],
     ['  [OK] GPU Phantom Renderer', 'ok', 70],
     ['  [OK] Red local activa', 'ok', 70],
     ['  [OK] Asistencias moviles cargadas', 'ok', 60],
     ['', '', 60],
-    ['Cargando VOID SYSTEMS v7.4...', 'info', 200],
+    ['Cargando VOID SYSTEMS v7.5...', 'info', 200],
     ['', '', 100],
   ];
   for (const [text, cls, delay] of bootLines) {
@@ -1480,7 +1495,7 @@ async function bootSequence(isReboot = false) {
     ['  ██║  ██║███████╗██║        ██║   ', 'ok'],
     ['  ╚═╝  ╚═╝╚══════╝╚═╝        ╚═╝   ', 'ok'],
     ['', ''],
-    ['  Bienvenido a VOID SYSTEMS v7.4, muncixop.', 'accent'],
+    ['  Bienvenido a VOID SYSTEMS v7.5, muncixop.', 'accent'],
     ['  Escribe <span class="ok">help</span> para ver los comandos.', 'dim'],
     ['  Prueba <span class="ok">fastfetch</span> para ver el ojo.', 'dim'],
     ['', ''],
@@ -1491,7 +1506,7 @@ async function bootSequence(isReboot = false) {
 }
 
 /* ============================================================
-   INPUT LOOP v7.4 — Input real + asistencias
+   INPUT LOOP v7.5 — Input real + password mode para sudo
    ============================================================ */
 let currentTerm = null;
 let currentInputLineRef = null;
@@ -1508,6 +1523,8 @@ function startInput(term) {
   let suggestItems = [];
   let suggestIdx = 0;
   let idleTimer = null;
+  let passwordMode = false;
+  let passwordCallback = null;
 
   const createInputLine = () => {
     if (currentLine && currentLine.parentNode) currentLine.remove();
@@ -1529,7 +1546,7 @@ function startInput(term) {
 
     input.addEventListener('input', () => {
       typed = input.value;
-      updateSuggest();
+      if (!passwordMode) updateSuggest();
       if (currentLine.classList.contains('idle')) currentLine.classList.remove('idle');
       resetIdleTimer();
       body.scrollTop = body.scrollHeight;
@@ -1538,9 +1555,30 @@ function startInput(term) {
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
+        // Si estamos en modo password, ejecutamos el callback
+        if (passwordMode) {
+          const val = input.value;
+          passwordMode = false;
+          passwordCallback = null;
+          input.type = 'text';
+          input.value = '';
+          input.placeholder = '';
+          // Restaurar prompt normal
+          const pr = currentLine.querySelector('.pr');
+          if (pr) pr.innerHTML = `${PROMPT_USER}@${PROMPT_HOST}:<span class="path">${PROMPT_PATH}</span>$&nbsp;`;
+          typed = '';
+          // Ejecutar callback
+          if (typeof window._currentPasswordCallback === 'function') {
+            const cb = window._currentPasswordCallback;
+            window._currentPasswordCallback = null;
+            cb(val);
+          }
+          return;
+        }
         submit();
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
+        if (passwordMode) return;
         if (suggestItems.length && suggestBox) {
           suggestIdx = Math.max(0, suggestIdx - 1);
           Array.from(suggestBox.children).forEach((el, i) => el.classList.toggle('active', i === suggestIdx));
@@ -1553,6 +1591,7 @@ function startInput(term) {
         }
       } else if (e.key === 'ArrowDown') {
         e.preventDefault();
+        if (passwordMode) return;
         if (suggestItems.length && suggestBox) {
           suggestIdx = Math.min(suggestItems.length - 1, suggestIdx + 1);
           Array.from(suggestBox.children).forEach((el, i) => el.classList.toggle('active', i === suggestIdx));
@@ -1568,6 +1607,7 @@ function startInput(term) {
         typed = input.value;
       } else if (e.key === 'Tab') {
         e.preventDefault();
+        if (passwordMode) return;
         if (suggestItems.length && suggestBox) {
           typed = suggestItems[suggestIdx] + ' ';
           input.value = typed;
@@ -1604,7 +1644,7 @@ function startInput(term) {
   const resetIdleTimer = () => {
     if (idleTimer) clearTimeout(idleTimer);
     idleTimer = setTimeout(() => {
-      if (currentLine && typed === '') currentLine.classList.add('idle');
+      if (currentLine && typed === '' && !passwordMode) currentLine.classList.add('idle');
     }, 3000);
   };
 
@@ -1648,7 +1688,6 @@ function startInput(term) {
     typed = '';
     hideSuggest();
 
-    // FIX: Enter en línea vacía = solo limpia el input, NO crea línea nueva
     if (!cmd) {
       input.value = '';
       body.scrollTop = body.scrollHeight;
@@ -1673,10 +1712,26 @@ function startInput(term) {
     body.scrollTop = body.scrollHeight;
   };
 
+  // Exponer para mobile bar
   window._submitCurrent = submit;
   window._getCurrentInput = () => {
     if (!currentInputLineRef) return null;
     return currentInputLineRef.querySelector('.ki');
+  };
+
+  // Exponer para sudo — modo password
+  window._enterPasswordMode = (cb) => {
+    if (!currentLine) createInputLine();
+    const input = currentLine.querySelector('.ki');
+    const pr = currentLine.querySelector('.pr');
+    passwordMode = true;
+    window._currentPasswordCallback = cb;
+    input.value = '';
+    input.type = 'password';
+    input.focus();
+    if (pr) pr.innerHTML = `<span style="color:#ffcc00;font-weight:700">[sudo] password:</span>&nbsp;`;
+    // Actualizar prompt visual
+    currentLine.classList.remove('idle');
   };
 
   createInputLine();
@@ -1878,6 +1933,6 @@ document.addEventListener('touchmove', () => {
   if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
 }, { passive: true });
 
-console.log('%c VOID SYSTEMS v7.4 ', 'background:#3ddc84;color:#000;font-weight:bold;padding:4px 8px;border-radius:4px;font-size:14px');
+console.log('%c VOID SYSTEMS v7.5 ', 'background:#3ddc84;color:#000;font-weight:bold;padding:4px 8px;border-radius:4px;font-size:14px');
 console.log('%c Bienvenido, muncixop. ', 'color:#3ddc84;font-weight:bold;font-size:12px');
-console.log('%c Fix OS Windows/Linux: botones a la derecha, sin overlap ', 'color:#5eaaff;font-style:italic');
+console.log('%c Sudo funcional + win-bar anclada + favicon ', 'color:#5eaaff;font-style:italic');
