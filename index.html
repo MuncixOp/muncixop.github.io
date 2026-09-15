@@ -12,10 +12,9 @@
 <meta name="format-detection" content="telephone=no">
 <title>~/muncixop — VOID SYSTEMS</title>
 
-<!-- FAVICON INLINE — elimina el error 404 -->
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23060606'/%3E%3Ctext x='32' y='42' text-anchor='middle' font-size='44' fill='%233ddc84' font-family='monospace' font-weight='bold'%3E%E2%97%89%3C/text%3E%3C/svg%3E">
 
-<!-- CSS CRÍTICO INLINE -->
+<!-- CSS CRÍTICO INLINE — Grid layout a prueba de balas -->
 <style>
   *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
   html,body{height:100%;overflow:hidden;background:#060606;color:#c8c8cc;
@@ -27,28 +26,63 @@
   #c{opacity:.05;z-index:0}
   #p{opacity:.55;z-index:1}
   #wins{position:fixed;inset:0;z-index:2}
-  .win{position:absolute;width:min(720px,92vw);max-height:85vh;background:#141416;
-    border-radius:12px;box-shadow:0 8px 24px #00000070,0 0 0 .5px #ffffff08;
-    display:flex;flex-direction:column;overflow:hidden;}
+
+  /* ============================================================
+     WINDOW — GRID layout: fila 1 = bar, fila 2 = body
+     ============================================================ */
+  .win{
+    position:absolute;
+    width:min(720px,92vw);max-height:85vh;
+    height:85vh;
+    background:#141416;border-radius:12px;
+    box-shadow:0 8px 24px #00000070,0 0 0 .5px #ffffff08;
+    display:grid;
+    grid-template-rows:auto 1fr;
+    grid-template-columns:1fr;
+    overflow:hidden;
+  }
   .win.dragging{cursor:grabbing}
-  .win-bar{position:relative;flex:0 0 42px;height:42px;min-height:42px;max-height:42px;
-    padding:0;background:linear-gradient(180deg,#28282c 0%,#1c1c20 100%);border-bottom:1px solid #00000090;
-    cursor:grab;touch-action:none;z-index:5;overflow:hidden;line-height:1;}
+
+  /* ============================================================
+     WIN-BAR — Fila 1 del grid. NUNCA se mueve.
+     ============================================================ */
+  .win-bar{
+    position:relative;
+    grid-row:1;
+    height:42px;
+    padding:0;
+    background:linear-gradient(180deg,#28282c 0%,#1c1c20 100%);
+    border-bottom:1px solid #00000090;
+    cursor:grab;touch-action:none;
+    z-index:5;overflow:hidden;line-height:1;
+    border-radius:12px 12px 0 0;
+  }
   .btns{position:absolute;left:14px;top:0;bottom:0;display:flex;gap:8px;align-items:center;z-index:6;}
   .btns-r{position:absolute;right:14px;top:50%;transform:translateY(-50%);width:54px;height:1px;pointer-events:none;}
-  .btn{width:12px;height:12px;border-radius:50%;border:none;cursor:pointer;
-    font-size:0;line-height:1;padding:0;flex-shrink:0;}
+  .btn{width:12px;height:12px;border-radius:50%;border:none;cursor:pointer;font-size:0;line-height:1;padding:0;flex-shrink:0;}
   .close{background:#ff5f57}
   .min{background:#febc2e}
   .max{background:#28c840}
   .win-title{position:absolute;left:70px;right:70px;top:50%;transform:translateY(-50%);
     text-align:center;font-size:12px;color:#666;letter-spacing:.03em;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1;}
-  .win-body{flex:1 1 0;min-height:0;padding:16px;overflow-y:auto;overflow-x:hidden;background:#141416;
-    cursor:text;scrollbar-width:thin;scrollbar-color:#333 transparent;position:relative;
-    scrollbar-gutter:stable;}
+
+  /* ============================================================
+     WIN-BODY — Fila 2 del grid. min-height:0 permite scroll.
+     ============================================================ */
+  .win-body{
+    grid-row:2;
+    min-height:0; /* CRÍTICO: sin esto el grid no permite scroll interno */
+    padding:16px;
+    overflow-y:auto;overflow-x:hidden;
+    background:#141416;
+    cursor:text;
+    scrollbar-width:thin;scrollbar-color:#333 transparent;
+    scrollbar-gutter:stable;
+  }
   .win-body::-webkit-scrollbar{width:5px}
   .win-body::-webkit-scrollbar-thumb{background:#2a2a2e;border-radius:10px}
+
   .out{white-space:pre-wrap;word-break:break-word;line-height:1.7;opacity:0;
     animation:lineIn .4s cubic-bezier(.25,.46,.45,.94) forwards}
   @keyframes lineIn{0%{opacity:0;transform:translateY(8px);filter:blur(6px)}
@@ -59,52 +93,39 @@
   .out.h1{color:#fff;font-size:16px;font-weight:700;letter-spacing:.08em}
   .out.mono-dim{color:#5a5a5f;font-size:.95em}
   .out.eye{color:var(--accent);line-height:1.05;font-weight:700;font-size:10px;
-    white-space:pre;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;
-    text-shadow:0 0 8px rgba(var(--accent-rgb),.25)}
-  .out.eye::-webkit-scrollbar{display:none}
+    white-space:pre;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;}
   .input-line{display:flex;align-items:baseline;line-height:1.7;position:relative;
     margin-top:2px;width:100%;font-family:inherit;font-size:inherit}
   .input-line .pr{color:var(--accent);font-weight:600;flex-shrink:0;white-space:pre}
   .input-line .pr .path{color:var(--accent-2)}
   .input-line .ki{flex:1 1 auto;min-width:0;background:transparent;border:none;outline:none;
     color:#fff;font-family:inherit;font-size:inherit;line-height:inherit;padding:0;margin:0;
-    letter-spacing:inherit;caret-color:var(--accent);-webkit-caret-color:var(--accent);width:100%}
-  .input-line .ki::selection{background:rgba(var(--accent-rgb),.3);color:#fff}
+    letter-spacing:inherit;caret-color:var(--accent);width:100%}
   .launcher{position:fixed;bottom:20px;right:20px;z-index:99999;
     display:flex;align-items:center;gap:8px;padding:12px 18px;
     background:linear-gradient(135deg,rgba(var(--accent-rgb),.15),rgba(var(--accent-rgb),.05));
     border:1px solid rgba(var(--accent-rgb),.4);border-radius:14px;color:var(--accent);
     font-family:inherit;font-size:13px;font-weight:700;letter-spacing:.15em;cursor:pointer;
-    box-shadow:0 8px 24px rgba(0,0,0,.6);backdrop-filter:blur(12px);
-    opacity:0;pointer-events:none;transform:translateY(20px) scale(.9);
-    transition:all .3s cubic-bezier(.34,1.56,.64,1);}
-  .launcher.on{opacity:1;pointer-events:auto;transform:translateY(0) scale(1)}
-  .launcher:hover{transform:translateY(-3px) scale(1.05);color:#fff}
-  .launcher:active{transform:translateY(0) scale(.97)}
-  .launcher-eye{font-size:1.3em;filter:drop-shadow(0 0 6px rgba(var(--accent-rgb),.8))}
-  .launcher-pulse{position:absolute;inset:-6px;border-radius:18px;
-    border:1px solid rgba(var(--accent-rgb),.5);pointer-events:none}
+    opacity:0;pointer-events:none;}
+  .launcher.on{opacity:1;pointer-events:auto}
   .dock{position:fixed;bottom:0;left:0;right:0;height:48px;background:#141416dd;
-    backdrop-filter:blur(16px);border-top:1px solid #ffffff08;display:flex;align-items:center;
-    gap:8px;padding:0 20px;z-index:9999;opacity:0;pointer-events:none;
-    transform:translateY(100%);transition:all .4s cubic-bezier(.22,1,.36,1);overflow-x:auto;overflow-y:hidden}
-  .dock.on{opacity:1;pointer-events:auto;transform:translateY(0)}
+    display:flex;align-items:center;gap:8px;padding:0 20px;z-index:9999;
+    opacity:0;pointer-events:none;overflow-x:auto;overflow-y:hidden}
+  .dock.on{opacity:1;pointer-events:auto}
   .dock-item{padding:6px 14px;background:#242428;border-radius:8px;font-size:12px;color:#999;
     cursor:pointer;border:1px solid #ffffff08;font-family:inherit;flex-shrink:0}
-  .dock-item:hover{background:#333338;color:#fff}
   .crt-overlay{position:fixed;inset:0;pointer-events:none;z-index:99996;
-    background:radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,.35) 100%);mix-blend-mode:multiply}
+    background:radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,.35) 100%);}
   .scanlines{position:fixed;inset:0;pointer-events:none;z-index:99995;
     background:repeating-linear-gradient(0deg,transparent 0,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 4px);
     opacity:.6}
   .chromatic{position:fixed;inset:0;pointer-events:none;z-index:99994;
-    background:linear-gradient(90deg,rgba(255,0,255,.015) 0%,transparent 15%,transparent 85%,rgba(0,255,255,.015) 100%);
-    mix-blend-mode:screen}
+    background:linear-gradient(90deg,rgba(255,0,255,.015) 0%,transparent 15%,transparent 85%,rgba(0,255,255,.015) 100%);}
   .quick-chips,.mobile-bar{display:none}
   @media(max-width:700px){
     .win{width:100vw!important;max-width:none;left:0!important;top:0!important;
       border-radius:0;height:100vh;height:100dvh;max-height:100vh;max-height:100dvh;box-shadow:none}
-    .win-bar{flex:0 0 48px;height:48px;min-height:48px;max-height:48px;border-radius:0}
+    .win-bar{height:48px;border-radius:0}
     .win-body{padding:12px 14px}
     .out.eye{font-size:7px}
   }
@@ -145,12 +166,12 @@
 </div>
 
 <div id="mobile-bar" class="mobile-bar" aria-label="Teclas virtuales">
-  <button class="mb-btn mb-esc" data-action="esc" aria-label="Escape">ESC</button>
-  <button class="mb-btn mb-tab" data-action="tab" aria-label="Tab">TAB</button>
-  <button class="mb-btn mb-up" data-action="up" aria-label="Arriba">↑</button>
-  <button class="mb-btn mb-down" data-action="down" aria-label="Abajo">↓</button>
-  <button class="mb-btn mb-backspace" data-action="backspace" aria-label="Borrar">⌫</button>
-  <button class="mb-btn mb-enter" data-action="enter" aria-label="Enter">ENTER ⏎</button>
+  <button class="mb-btn mb-esc" data-action="esc">ESC</button>
+  <button class="mb-btn mb-tab" data-action="tab">TAB</button>
+  <button class="mb-btn mb-up" data-action="up">↑</button>
+  <button class="mb-btn mb-down" data-action="down">↓</button>
+  <button class="mb-btn mb-backspace" data-action="backspace">⌫</button>
+  <button class="mb-btn mb-enter" data-action="enter">ENTER ⏎</button>
 </div>
 
 <button id="launcher" class="launcher" aria-label="Abrir terminal">
