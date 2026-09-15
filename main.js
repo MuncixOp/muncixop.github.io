@@ -3199,3 +3199,1555 @@ document.addEventListener('touchmove', () => {
 console.log('%c VOID SYSTEMS v9.0 ', 'background:#3ddc84;color:#000;font-weight:bold;padding:4px 8px;border-radius:4px;font-size:14px');
 console.log('%c Bienvenido, muncixop. ', 'color:#3ddc84;font-weight:bold;font-size:12px');
 console.log('%c v9.0: RAF drag, storage migrado, packages v2, todo mejorado ', 'color:#5eaaff;font-style:italic');
+
+/* ============================================================
+   VOID SYSTEMS v9.1 — Terminal / OS Simulator
+   main.js — PARTE 2 de 2
+   Author: MuncixOp
+   ============================================================ */
+
+/* ============================================================
+   GLOBAL REFS (usadas por moveInputToEnd de la Parte 1)
+   ============================================================ */
+var currentInputLineRef = null;
+var currentWindowRef = null;
+var inputLocked = false;
+
+/* ============================================================
+   COMBO COUNTER
+   ============================================================ */
+let comboCount = 0;
+let comboTimer = null;
+function bumpCombo() {
+  comboCount++;
+  const el = document.getElementById('combo-counter') || (() => {
+    const d = document.createElement('div');
+    d.id = 'combo-counter';
+    d.className = 'combo-counter';
+    document.body.appendChild(d);
+    return d;
+  })();
+  el.textContent = 'x' + comboCount + ' COMBO';
+  el.classList.add('on');
+  el.classList.remove('big');
+  void el.offsetWidth;
+  el.classList.add('big');
+  clearTimeout(comboTimer);
+  comboTimer = setTimeout(() => {
+    el.classList.remove('on');
+    if (comboCount >= 10) unlockAch('combo_king', 'Combo King');
+    comboCount = 0;
+  }, 4000);
+}
+
+/* ============================================================
+   THEMES
+   ============================================================ */
+const THEMES = ['default', 'red', 'blue', 'purple', 'amber', 'cyan', 'pink', 'mono', 'rainbow'];
+function setTheme(name) {
+  THEMES.forEach(t => {
+    if (t !== 'default') document.body.classList.remove('theme-' + t);
+  });
+  if (name && name !== 'default') document.body.classList.add('theme-' + name);
+}
+
+/* ============================================================
+   BANNER / EYE
+   ============================================================ */
+function printBanner(body) {
+  printLine(body, '');
+  printLine(body, '  ██╗   ██╗ ██████╗ ██╗██████╗ ', 'accent');
+  printLine(body, '  ██║   ██║██╔═══██╗██║██╔══██╗', 'accent');
+  printLine(body, '  ██║   ██║██║   ██║██║██║  ██║', 'accent');
+  printLine(body, '  ╚██╗ ██╔╝██║   ██║██║██║  ██║', 'accent');
+  printLine(body, '   ╚████╔╝ ╚██████╔╝██║██████╔╝', 'accent');
+  printLine(body, '    ╚═══╝   ╚═════╝ ╚═╝╚═════╝ ', 'accent');
+  printLine(body, '        S Y S T E M S   v 9 . 1', 'dim');
+  printLine(body, '');
+}
+
+function printEye(body) {
+  const eye = getEye();
+  eye.forEach(line => printLine(body, line, 'eye'));
+  printLine(body, '');
+}
+
+/* ============================================================
+   WAKE-UP ANIMATION (Boot)
+   ============================================================ */
+const BOOT_LINES = [
+  ['[ OK ] Inicializando VOID SYSTEMS v9.1...', 'ok'],
+  ['[ OK ] Cargando kernel 6.9.0-void', 'dim'],
+  ['[ OK ] Montando /dev/matrix', 'dim'],
+  ['[ OK ] Enlazando modulo de audio', 'dim'],
+  ['[ OK ] Iniciando gestor de ventanas', 'dim'],
+  ['[ OK ] Cargando paquetes instalados', 'dim'],
+  ['[ OK ] Restaurando historial de comandos', 'dim'],
+  ['[ OK ] Restaurando logros', 'dim'],
+  ['[ OK ] Sistema listo.', 'ok'],
+];
+
+async function bootSequence(body) {
+  playBoot();
+  for (const [text, cls] of BOOT_LINES) {
+    printLine(body, text, cls);
+    playTick(500 + Math.random() * 400);
+    await sleep(90 + Math.random() * 70);
+  }
+  printLine(body, '');
+  await sleep(200);
+  printBanner(body);
+  printEye(body);
+  printLine(body, '  Bienvenido a VOID SYSTEMS.', 'info');
+  printLine(body, '  Escribe <span class="ok">help</span> para ver los comandos disponibles.', 'dim');
+  printLine(body, '  Pista: <span class="warn">hack curseforge</span> para desbloquear el primer enlace.', 'dim');
+  printLine(body, '');
+  playSuccess();
+}
+
+/* ============================================================
+   COMMANDS — Diccionario principal
+   ============================================================ */
+const COMMANDS = {};
+
+/* ---------- CORE ---------- */
+COMMANDS.help = {
+  desc: 'Lista de comandos disponibles',
+  fn: async (args, body) => {
+    printLine(body, '');
+    printLine(body, '  COMANDOS DISPONIBLES', 'h1');
+    printLine(body, '  ────────────────────────────────', 'dim');
+
+    const groups = {
+      'Sistema': ['help', 'clear', 'about', 'stats', 'achievements', 'fastfetch', 'whoami', 'date', 'history', 'theme', 'cyberpunk', 'sound', 'matrix'],
+      'Portfolio': ['projects', 'skills', 'social', 'links', 'banner'],
+      'Desbloqueo': ['hack', 'decrypt'],
+      'Notas': ['notes'],
+      'Paquetes': ['pkg'],
+      'Efectos': ['confetti', 'glitch', 'hypnotize', 'flash', 'quake', 'rainbow', 'scramble', 'spinner', 'countdown'],
+    };
+
+    for (const [group, cmds] of Object.entries(groups)) {
+      printLine(body, `  ${group}`, 'accent');
+      cmds.forEach(c => {
+        const pkg = findPackageForCommand(c);
+        const locked = pkg && !installedPackages.includes(pkg.name);
+        const name = locked ? `<span class="dim">${c}</span>` : `<span class="ok">${c}</span>`;
+        const desc = locked ? `— [paquete ${pkg.name}]` : (COMMANDS[c]?.desc || '');
+        printLine(body, `    ${padEnd(name, 40)} <span class="dim">${desc}</span>`);
+      });
+      printLine(body, '');
+    }
+    printLine(body, '  Usa <span class="ok">pkg list</span> para ver todos los paquetes.', 'dim');
+    printLine(body, '');
+  }
+};
+
+COMMANDS.clear = {
+  desc: 'Limpia la pantalla',
+  fn: async (args, body) => {
+    body.querySelectorAll('.out').forEach(el => el.remove());
+  }
+};
+
+COMMANDS.about = {
+  desc: 'Sobre MuncixOp y el proyecto',
+  fn: async (args, body) => {
+    printLine(body, '');
+    printLine(body, '  SOBRE VOID SYSTEMS', 'h1');
+    printLine(body, '  ────────────────────────────────', 'dim');
+    printLine(body, '  Un simulador de terminal/OS en el navegador.', '');
+    printLine(body, '  Hecho por <span class="ok">MuncixOp</span> — Creative Developer & UI Engineer.', '');
+    printLine(body, '  Sin frameworks. Sin dependencias. Solo HTML, CSS y JS.', 'dim');
+    printLine(body, '');
+    printLine(body, '  Stack:', 'accent');
+    printLine(body, '    · HTML5 + CSS3 (grid, animaciones, custom properties)', 'dim');
+    printLine(body, '    · JavaScript vanilla (Web Audio API, Canvas 2D, localStorage)', 'dim');
+    printLine(body, '    · 0 dependencias externas', 'dim');
+    printLine(body, '');
+    printLine(body, '  Inspirado en terminales Unix, CRT de los 80 y cyberpunk.', 'dim');
+    printLine(body, '');
+    playBeep(660, .08);
+  }
+};
+
+COMMANDS.whoami = {
+  desc: 'Muestra el usuario actual',
+  fn: async (args, body) => printLine(body, '  muncixop', 'ok')
+};
+
+COMMANDS.date = {
+  desc: 'Fecha y hora actual',
+  fn: async (args, body) => printLine(body, '  ' + new Date().toString(), 'info')
+};
+
+COMMANDS.banner = {
+  desc: 'Muestra el banner de VOID',
+  fn: async (args, body) => { printBanner(body); printEye(body); }
+};
+
+COMMANDS.echo = {
+  desc: 'Imprime texto',
+  fn: async (args, body) => printLine(body, '  ' + escapeHTML(args.join(' ')))
+};
+
+COMMANDS.sudo = {
+  desc: 'Intenta elevar privilegios',
+  fn: async (args, body) => {
+    unlockAch('sudo_fail', 'Intento de sudo');
+    playError();
+    effectGlitchSlice();
+    printLine(body, '  [sudo] contraseña para muncixop:', 'warn');
+    await sleep(600);
+    printLine(body, '  Lo siento, muncixop no esta en el archivo sudoers.', 'err');
+    printLine(body, '  Este incidente sera reportado.', 'err');
+    printLine(body, '');
+  }
+};
+
+COMMANDS.history = {
+  desc: 'Historial de comandos',
+  fn: async (args, body) => {
+    printLine(body, '');
+    printLine(body, '  HISTORIAL', 'h1');
+    cmdHistory.slice(-20).forEach((c, i) => {
+      printLine(body, `    ${padStart(String(cmdHistory.length - 20 + i + 1), 4)}  ${escapeHTML(c)}`, 'dim');
+    });
+    printLine(body, '');
+  }
+};
+
+COMMANDS.stats = {
+  desc: 'Estadísticas de uso',
+  fn: async (args, body) => {
+    const session = Math.floor((Date.now() - userStats.sessionStart) / 1000);
+    const mins = Math.floor(session / 60);
+    const secs = session % 60;
+    printLine(body, '');
+    printLine(body, '  ESTADISTICAS', 'h1');
+    printLine(body, '  ────────────────────────────────', 'dim');
+    printLine(body, `  Comandos usados     <span class="ok">${userStats.commandsUsed}</span>`);
+    printLine(body, `  Comandos unicos     <span class="ok">${userStats.uniqueCommands.length}</span>`);
+    printLine(body, `  Sesion actual       <span class="info">${mins}m ${secs}s</span>`);
+    printLine(body, `  Juegos ganados      <span class="ok">${userStats.gamesWon}</span>`);
+    printLine(body, `  Juegos perdidos     <span class="err">${userStats.gamesLost}</span>`);
+    printLine(body, `  Apuestas ganadas    <span class="ok">${userStats.gamblesWon}</span>`);
+    printLine(body, `  Apuestas perdidas   <span class="err">${userStats.gamblesLost}</span>`);
+    printLine(body, `  Links desbloqueados <span class="info">${Object.keys(unlockedLinks).length}/${Object.keys(LINKS_DB).length}</span>`);
+    printLine(body, `  Notas creadas       <span class="info">${userNotes.length}</span>`);
+    printLine(body, `  Paquetes instalados <span class="ok">${installedPackages.length}/${Object.keys(PACKAGES).length}</span>`);
+    printLine(body, `  Brute-force OK/FAIL <span class="ok">${userStats.bruteSuccess}</span> / <span class="err">${userStats.bruteFail}</span>`);
+    printLine(body, `  Balance             <span class="warn">$${userBalance}</span>`);
+    printLine(body, `  Ultimo comando      <span class="dim">${escapeHTML(userStats.lastCommand || '—')}</span>`);
+    printLine(body, '');
+  }
+};
+
+COMMANDS.achievements = {
+  desc: 'Lista de logros',
+  fn: async (args, body) => {
+    const total = Object.keys(ACHIEVEMENTS_LIST).length;
+    const got = Object.keys(achievements).length;
+    printLine(body, '');
+    printLine(body, `  LOGROS  <span class="ok">${got}</span>/<span class="dim">${total}</span>`, 'h1');
+    printLine(body, '  ────────────────────────────────', 'dim');
+    for (const [key, name] of Object.entries(ACHIEVEMENTS_LIST)) {
+      if (achievements[key]) {
+        const date = new Date(achievements[key].at).toLocaleDateString();
+        printLine(body, `  <span class="ok">[✓]</span> ${padEnd(escapeHTML(name), 28)} <span class="dim">${date}</span>`);
+      } else {
+        printLine(body, `  <span class="dim">[ ] ${escapeHTML(name)}</span>`);
+      }
+    }
+    printLine(body, '');
+  }
+};
+
+COMMANDS.fastfetch = {
+  desc: 'Info del sistema al estilo neofetch',
+  fn: async (args, body) => {
+    unlockAch('first_fetch', 'El ojo te vio');
+    const eye = getEye();
+    const info = [
+      ['OS', 'VOID SYSTEMS v9.1'],
+      ['Host', 'MuncixOp Creative Suite'],
+      ['Kernel', '6.9.0-void'],
+      ['Shell', 'voidsh 9.1'],
+      ['WM', 'VoidWM'],
+      ['Terminal', 'void-term'],
+      ['CPU', 'Void Core @ ' + (2 + Math.random() * 4).toFixed(1) + 'GHz'],
+      ['GPU', 'WebGL Renderer'],
+      ['Memory', (Math.random() * 500 + 200).toFixed(0) + ' MB / 4096 MB'],
+      ['Uptime', Math.floor((Date.now() - userStats.sessionStart) / 60000) + ' min'],
+      ['Packages', installedPackages.length + ' (pkg)'],
+      ['Theme', THEMES.find(t => t !== 'default' && document.body.classList.contains('theme-' + t)) || 'default'],
+      ['Resolution', window.innerWidth + 'x' + window.innerHeight],
+      ['Locale', navigator.language],
+    ];
+    printLine(body, '');
+    const maxRows = Math.max(eye.length, info.length);
+    for (let i = 0; i < maxRows; i++) {
+      const eyeLine = (eye[i] || '').padEnd(34, ' ');
+      const infoLine = info[i] ? `<span class="accent">${padEnd(info[i][0], 12)}</span><span class="dim">·</span> ${escapeHTML(info[i][1])}` : '';
+      printLine(body, `<span class="ok">${eyeLine}</span>  ${infoLine}`);
+    }
+    printLine(body, '');
+    playSuccess();
+    effectFlash('rgba(61,220,132,.15)');
+  }
+};
+
+COMMANDS.theme = {
+  desc: 'Cambia el tema (red/blue/purple/amber/cyan/pink/mono/rainbow/default)',
+  fn: async (args, body) => {
+    const name = (args[0] || '').toLowerCase();
+    if (!name) {
+      printLine(body, '  Temas: ' + THEMES.join(', '), 'dim');
+      printLine(body, '  Uso: <span class="ok">theme red</span>', 'dim');
+      return;
+    }
+    if (!THEMES.includes(name)) {
+      printLine(body, `  Tema desconocido: ${escapeHTML(name)}`, 'err');
+      return;
+    }
+    setTheme(name);
+    unlockAch('themer', 'Estilista');
+    playPowerUp();
+    effectFlash('rgba(61,220,132,.15)');
+    printLine(body, `  Tema aplicado: <span class="ok">${name}</span>`, 'ok');
+  }
+};
+
+COMMANDS.cyberpunk = {
+  desc: 'Activa/desactiva modo cyberpunk',
+  fn: async (args, body) => {
+    const on = document.body.classList.toggle('cyberpunk');
+    playWhoosh();
+    effectGlitchSlice();
+    printLine(body, on ? '  ⚡ CYBERPUNK MODE: ON' : '  CYBERPUNK MODE: OFF', 'accent');
+  }
+};
+
+COMMANDS.sound = {
+  desc: 'Activa/desactiva sonido',
+  fn: async (args, body) => {
+    userSettings.audioEnabled = !userSettings.audioEnabled;
+    audioEnabled = userSettings.audioEnabled;
+    saveSettings();
+    printLine(body, userSettings.audioEnabled ? '  Sonido: ON' : '  Sonido: OFF', 'info');
+    if (userSettings.audioEnabled) playBeep(880, .1);
+  }
+};
+
+COMMANDS.matrix = {
+  desc: 'Activa/desactiva la lluvia matrix',
+  fn: async (args, body) => {
+    userSettings.matrixActive = !userSettings.matrixActive;
+    matrixActive = userSettings.matrixActive;
+    saveSettings();
+    printLine(body, userSettings.matrixActive ? '  Matrix: ON' : '  Matrix: OFF', 'info');
+  }
+};
+
+COMMANDS.eyes = {
+  desc: 'Hace parpadear los ojos en pantalla',
+  fn: async (args, body) => blinkEye(body)
+};
+
+/* ---------- PORTFOLIO ---------- */
+COMMANDS.projects = {
+  desc: 'Proyectos destacados',
+  fn: async (args, body) => {
+    printLine(body, '');
+    printLine(body, '  PROYECTOS', 'h1');
+    printLine(body, '  ────────────────────────────────', 'dim');
+    const projects = [
+      ['VOID SYSTEMS', 'Simulador de terminal/OS en el navegador', 'JS, Canvas, Web Audio'],
+      ['CurseForge Mods', 'Mods para Minecraft Java Edition', 'Java, Forge'],
+      ['UI Experiments', 'Laboratorio de interfaces creativas', 'HTML, CSS'],
+      ['Terminal Portfolio', 'Portfolio personal en formato terminal', 'JS, CSS'],
+    ];
+    projects.forEach(([name, desc, stack]) => {
+      printLine(body, `  <span class="ok">${name}</span>  <span class="dim">— ${desc}</span>`);
+      printLine(body, `    <span class="info">${stack}</span>`);
+      printLine(body, '');
+    });
+  }
+};
+
+COMMANDS.skills = {
+  desc: 'Habilidades técnicas',
+  fn: async (args, body) => {
+    printLine(body, '');
+    printLine(body, '  SKILLS', 'h1');
+    printLine(body, '  ────────────────────────────────', 'dim');
+    const skills = [
+      ['JavaScript', 90], ['HTML/CSS', 95], ['Node.js', 75],
+      ['Java', 70], ['Python', 65], ['UI/UX', 85],
+      ['WebGL/Canvas', 80], ['Git', 85],
+    ];
+    for (const [name, pct] of skills) {
+      const filled = Math.round(pct / 5);
+      const bar = '█'.repeat(filled) + '░'.repeat(20 - filled);
+      printLine(body, `  ${padEnd(name, 14)} <span class="ok">${bar}</span> <span class="dim">${pct}%</span>`);
+      await sleep(40);
+      playTick(600 + pct * 4);
+    }
+    printLine(body, '');
+  }
+};
+
+COMMANDS.social = {
+  desc: 'Redes sociales',
+  fn: async (args, body) => {
+    printLine(body, '');
+    printLine(body, '  REDES', 'h1');
+    printLine(body, '  ────────────────────────────────', 'dim');
+    printLine(body, '  Las redes estan protegidas. Desbloquealas con:', 'dim');
+    printLine(body, '    <span class="ok">hack curseforge</span>', '');
+    printLine(body, '    <span class="ok">hack tiktok</span>', '');
+    printLine(body, '    <span class="ok">hack twitter</span>', '');
+    printLine(body, '');
+    COMMANDS.links.fn([], body);
+  }
+};
+
+COMMANDS.links = {
+  desc: 'Enlaces desbloqueados',
+  fn: async (args, body) => {
+    printLine(body, '');
+    printLine(body, '  ENLACES', 'h1');
+    printLine(body, '  ────────────────────────────────', 'dim');
+    for (const [key, link] of Object.entries(LINKS_DB)) {
+      if (unlockedLinks[key]) {
+        printLine(body, `  <span class="ok">[✓]</span> ${link.icon} ${escapeHTML(link.name)}`);
+        printLine(body, `      <a href="${escapeHTML(link.url)}" target="_blank" rel="noopener" style="color:var(--accent-2)">${escapeHTML(link.url)}</a>`);
+      } else {
+        printLine(body, `  <span class="dim">[ ] ${link.icon} ${escapeHTML(link.name)} — bloqueado (hint: ${escapeHTML(link.hint)})</span>`);
+      }
+    }
+    printLine(body, '');
+  }
+};
+
+/* ---------- HACK ---------- */
+COMMANDS.hack = {
+  desc: 'Inicia brute-force sobre un link (hack <nombre>)',
+  fn: async (args, body, win) => {
+    const key = (args[0] || '').toLowerCase();
+    if (!key) {
+      printLine(body, '  Uso: <span class="ok">hack <nombre></span>', 'dim');
+      printLine(body, '  Objetivos: ' + Object.keys(LINKS_DB).join(', '), 'dim');
+      return;
+    }
+    if (!LINKS_DB[key]) {
+      printLine(body, `  Objetivo desconocido: ${escapeHTML(key)}`, 'err');
+      const names = Object.keys(LINKS_DB);
+      const sug = names.map(n => ({ n, d: levenshtein(key, n) })).sort((a, b) => a.d - b.d);
+      if (sug[0].d <= 4) printLine(body, `  ¿Quisiste decir? <span class="ok">${sug[0].n}</span>`, 'dim');
+      return;
+    }
+    if (unlockedLinks[key]) {
+      printLine(body, `  [i] "${key}" ya esta desbloqueado.`, 'info');
+      showUnlockResult(win, key);
+      return;
+    }
+    unlockAch('hacker', 'Hacker');
+    launchBruteforce(win, key);
+  }
+};
+
+COMMANDS.decrypt = {
+  desc: 'Descifra un token',
+  fn: async (args, body) => {
+    const input = args.join(' ');
+    if (!input) {
+      printLine(body, '  Uso: <span class="ok">decrypt <texto></span>', 'dim');
+      return;
+    }
+    printLine(body, '');
+    printLine(body, '  Descifrando...', 'accent');
+    const line = document.createElement('div');
+    line.className = 'out ok';
+    body.appendChild(line);
+    moveInputToEnd(body);
+    await new Promise(res => scrambleText(line, '  Resultado: ' + input.split('').reverse().join(''), 900) || setTimeout(res, 900));
+    printLine(body, '');
+    unlockAch('decryptor', 'Descifrador');
+    playSuccess();
+  }
+};
+
+/* ---------- NOTES ---------- */
+COMMANDS.notes = {
+  desc: 'Gestiona notas (notes [add|del|clear] [texto])',
+  fn: async (args, body) => {
+    const sub = (args[0] || 'list').toLowerCase();
+    if (sub === 'list' || !args.length) {
+      printLine(body, '');
+      printLine(body, `  NOTAS (${userNotes.length})`, 'h1');
+      if (!userNotes.length) printLine(body, '  No hay notas. Usa: <span class="ok">notes add <texto></span>', 'dim');
+      userNotes.forEach((n, i) => {
+        printLine(body, `  <span class="info">${i + 1}.</span> ${escapeHTML(n.text)}  <span class="dim">${new Date(n.at).toLocaleString()}</span>`, 'note-item');
+      });
+      printLine(body, '');
+      return;
+    }
+    if (sub === 'add') {
+      const text = args.slice(1).join(' ');
+      if (!text) { printLine(body, '  Uso: notes add <texto>', 'dim'); return; }
+      userNotes.push({ text, at: Date.now() });
+      saveNotes();
+      userStats.notesCreated++;
+      saveStats();
+      unlockAch('notes_master', 'Escritor');
+      if (userNotes.length >= 10) unlockAch('note_collector', 'Coleccionista');
+      printLine(body, `  [OK] Nota agregada: ${escapeHTML(text)}`, 'ok');
+      playBeep(880, .08);
+      return;
+    }
+    if (sub === 'del' || sub === 'delete') {
+      const idx = parseInt(args[1], 10) - 1;
+      if (isNaN(idx) || idx < 0 || idx >= userNotes.length) { printLine(body, '  Indice invalido.', 'err'); return; }
+      const removed = userNotes.splice(idx, 1)[0];
+      saveNotes();
+      printLine(body, `  [OK] Nota eliminada: ${escapeHTML(removed.text)}`, 'ok');
+      playWhoosh();
+      return;
+    }
+    if (sub === 'clear') {
+      userNotes = [];
+      saveNotes();
+      printLine(body, '  [OK] Notas eliminadas.', 'ok');
+      playWhoosh();
+      return;
+    }
+    printLine(body, '  Subcomandos: list, add, del, clear', 'dim');
+  }
+};
+
+/* ---------- PKG ---------- */
+COMMANDS.pkg = {
+  desc: 'Gestor de paquetes (pkg [list|installed|install|remove|info] [nombre])',
+  fn: async (args, body) => {
+    const sub = (args[0] || 'list').toLowerCase();
+    if (sub === 'list') {
+      printLine(body, '');
+      printLine(body, '  PAQUETES DISPONIBLES', 'h1');
+      printLine(body, '  ────────────────────────────────', 'dim');
+      Object.values(PACKAGES).forEach(p => {
+        const inst = installedPackages.includes(p.name);
+        const tag = inst ? '<span class="ok">[✓]</span>' : '<span class="dim">[ ]</span>';
+        printLine(body, `  ${tag} ${p.icon} <span class="ok">${padEnd(p.name, 14)}</span> <span class="dim">v${p.version} · ${p.size} · ${p.desc}</span>`);
+      });
+      printLine(body, '');
+      printLine(body, '  Instala con: <span class="ok">pkg install <nombre></span>', 'dim');
+      printLine(body, '');
+      return;
+    }
+    if (sub === 'installed') {
+      printLine(body, '');
+      printLine(body, '  PAQUETES INSTALADOS', 'h1');
+      if (!installedPackages.length) printLine(body, '  Ninguno.', 'dim');
+      installedPackages.forEach(n => {
+        const p = PACKAGES[n];
+        printLine(body, `  ${p.icon} <span class="ok">${n}</span> <span class="dim">v${p.version}</span>`);
+      });
+      printLine(body, '');
+      return;
+    }
+    if (sub === 'install') {
+      const name = args[1];
+      if (!name) { printLine(body, '  Uso: pkg install <nombre>', 'dim'); return; }
+      await installPackage(name, body);
+      return;
+    }
+    if (sub === 'remove' || sub === 'uninstall') {
+      const name = args[1];
+      if (!name) { printLine(body, '  Uso: pkg remove <nombre>', 'dim'); return; }
+      removePackage(name, body);
+      return;
+    }
+    if (sub === 'info') {
+      const name = args[1];
+      const p = PACKAGES[name];
+      if (!p) { printLine(body, `  Paquete no encontrado: ${escapeHTML(name)}`, 'err'); return; }
+      printLine(body, '');
+      printLine(body, `  ${p.icon} ${p.name}`, 'h1');
+      printLine(body, `  ${p.desc}`, 'dim');
+      printLine(body, `  Version: <span class="ok">${p.version}</span>`);
+      printLine(body, `  Tamano:  <span class="info">${p.size}</span>`);
+      printLine(body, `  Estado:  ${installedPackages.includes(name) ? '<span class="ok">instalado</span>' : '<span class="dim">no instalado</span>'}`);
+      printLine(body, `  Deps:    ${p.deps.length ? p.deps.join(', ') : '<span class="dim">ninguna</span>'}`);
+      printLine(body, `  Comandos: <span class="info">${p.commands.join(', ')}</span>`);
+      printLine(body, '');
+      return;
+    }
+    printLine(body, '  Subcomandos: list, installed, install, remove, info', 'dim');
+  }
+};
+
+/* ---------- GAMES (paquete games) ---------- */
+COMMANDS.coin = {
+  desc: 'Lanza una moneda',
+  fn: async (args, body) => {
+    const r = Math.random() < .5 ? 'CARA' : 'CRUZ';
+    printLine(body, '  Lanzando...', 'dim');
+    await sleep(400);
+    printLine(body, `  → <span class="ok">${r}</span>`, 'accent');
+    playCoin();
+  }
+};
+
+COMMANDS.dice = {
+  desc: 'Lanza un dado (1-6)',
+  fn: async (args, body) => {
+    const sides = Math.max(2, Math.min(100, parseInt(args[0], 10) || 6));
+    const r = randInt(1, sides);
+    printLine(body, '  Rodando d' + sides + '...', 'dim');
+    await sleep(300);
+    printLine(body, `  → <span class="ok">${r}</span>`, 'accent');
+    playBeep(700, .05);
+  }
+};
+
+COMMANDS.rps = {
+  desc: 'Piedra, papel o tijera (rps <piedra|papel|tijera>)',
+  fn: async (args, body) => {
+    const opts = ['piedra', 'papel', 'tijera'];
+    const user = (args[0] || '').toLowerCase();
+    if (!opts.includes(user)) { printLine(body, '  Uso: rps <piedra|papel|tijera>', 'dim'); return; }
+    const cpu = randomFrom(opts);
+    printLine(body, `  Tu:  <span class="info">${user}</span>`, '');
+    await sleep(300);
+    printLine(body, `  CPU: <span class="warn">${cpu}</span>`, '');
+    await sleep(300);
+    const wins = { piedra: 'tijera', papel: 'piedra', tijera: 'papel' };
+    if (user === cpu) printLine(body, '  → EMPATE', 'accent');
+    else if (wins[user] === cpu) { printLine(body, '  → GANASTE', 'ok'); userStats.gamesWon++; saveStats(); playWin(); }
+    else { printLine(body, '  → PERDISTE', 'err'); userStats.gamesLost++; saveStats(); playLose(); }
+  }
+};
+
+COMMANDS.guess = {
+  desc: 'Adivina el numero (1-100)',
+  fn: async (args, body) => {
+    const n = parseInt(args[0], 10);
+    if (isNaN(n)) { printLine(body, '  Uso: guess <1-100>', 'dim'); return; }
+    if (!body._guess || body._guess.done) {
+      body._guess = { target: randInt(1, 100), tries: 0, done: false };
+    }
+    body._guess.tries++;
+    if (n === body._guess.target) {
+      printLine(body, `  → <span class="ok">CORRECTO! Era ${n}. Intentos: ${body._guess.tries}</span>`, 'ok');
+      userStats.gamesWon++; saveStats();
+      playWin(); effectConfetti(20);
+      body._guess.done = true;
+    } else if (n < body._guess.target) printLine(body, '  → El numero es MAYOR', 'warn');
+    else printLine(body, '  → El numero es MENOR', 'warn');
+  }
+};
+
+COMMANDS['8ball'] = {
+  desc: 'Bola magica (8ball <pregunta>)',
+  fn: async (args, body) => {
+    const q = args.join(' ');
+    if (!q) { printLine(body, '  Uso: 8ball <pregunta>', 'dim'); return; }
+    const answers = [
+      'Si, definitivamente.', 'No lo creo.', 'Pregunta de nuevo.', 'Sin duda.',
+      'No cuentes con ello.', 'Las señales apuntan a que si.', 'Muy dudoso.',
+      'Concentrate y pregunta.', 'El resultado es incierto.', 'Claro que si.',
+    ];
+    printLine(body, `  <span class="dim">> ${escapeHTML(q)}</span>`, '');
+    await sleep(500);
+    printLine(body, `  → <span class="ok">${randomFrom(answers)}</span>`, 'accent');
+    playBeep(500, .06);
+  }
+};
+
+/* ---------- GAMBLING ---------- */
+COMMANDS.gamble = {
+  desc: 'Apuesta dinero (gamble <monto>)',
+  fn: async (args, body) => {
+    const amount = parseInt(args[0], 10);
+    if (isNaN(amount) || amount <= 0) { printLine(body, `  Uso: gamble <monto>. Balance: $${userBalance}`, 'dim'); return; }
+    if (amount > userBalance) { printLine(body, `  Saldo insuficiente. Balance: $${userBalance}`, 'err'); return; }
+    unlockAch('gambler', 'Apostador');
+    printLine(body, `  Apostando $${amount}...`, 'dim');
+    await sleep(600);
+    playTick(500);
+    if (Math.random() < 0.45) {
+      userBalance += amount;
+      userStats.gamblesWon++; saveStats(); saveBalance();
+      printLine(body, `  → GANASTE $${amount}. Balance: <span class="ok">$${userBalance}</span>`, 'ok');
+      playWin(); effectConfetti(15);
+      if (userBalance >= 10000) unlockAch('rich', 'Millonario');
+    } else {
+      userBalance -= amount;
+      userStats.gamblesLost++; saveStats(); saveBalance();
+      printLine(body, `  → PERDISTE $${amount}. Balance: <span class="err">$${userBalance}</span>`, 'err');
+      playLose();
+      if (userBalance <= 0) unlockAch('poor', 'En bancarrota');
+    }
+  }
+};
+
+/* ---------- CRYPTO-UTILS ---------- */
+COMMANDS.base64 = {
+  desc: 'Codifica/decodifica base64 (base64 [-d] <texto>)',
+  fn: async (args, body) => {
+    const dec = args[0] === '-d';
+    const text = (dec ? args.slice(1) : args).join(' ');
+    if (!text) { printLine(body, '  Uso: base64 <texto> | base64 -d <texto>', 'dim'); return; }
+    try {
+      const out = dec ? atob(text) : btoa(text);
+      printLine(body, `  → <span class="ok">${escapeHTML(out)}</span>`, '');
+      unlockAch('cryptographer', 'Criptógrafo');
+    } catch { printLine(body, '  Error de codificacion.', 'err'); }
+  }
+};
+
+COMMANDS.rot13 = {
+  desc: 'ROT13',
+  fn: async (args, body) => {
+    const text = args.join(' ');
+    const out = text.replace(/[a-zA-Z]/g, c => {
+      const base = c <= 'Z' ? 65 : 97;
+      return String.fromCharCode(((c.charCodeAt(0) - base + 13) % 26) + base);
+    });
+    printLine(body, `  → <span class="ok">${escapeHTML(out)}</span>`, '');
+    unlockAch('cryptographer', 'Criptógrafo');
+  }
+};
+
+COMMANDS.hash = {
+  desc: 'Simula un hash',
+  fn: async (args, body) => {
+    const text = args.join(' ');
+    if (!text) { printLine(body, '  Uso: hash <texto>', 'dim'); return; }
+    printLine(body, `  SHA-256: <span class="info">${randomHex(64)}</span>`, '');
+    printLine(body, `  MD5:     <span class="dim">${randomHex(32)}</span>`, '');
+  }
+};
+
+COMMANDS.password = {
+  desc: 'Genera una contrasena segura',
+  fn: async (args, body) => {
+    const len = Math.max(8, Math.min(64, parseInt(args[0], 10) || 20));
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%^&*';
+    let p = '';
+    for (let i = 0; i < len; i++) p += chars[Math.floor(Math.random() * chars.length)];
+    printLine(body, `  → <span class="ok">${p}</span>`, '');
+    unlockAch('cryptographer', 'Criptógrafo');
+  }
+};
+
+COMMANDS.uuid = {
+  desc: 'Genera un UUID v4',
+  fn: async (args, body) => {
+    const u = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+      const r = Math.random() * 16 | 0;
+      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+    printLine(body, `  → <span class="ok">${u}</span>`, '');
+  }
+};
+
+COMMANDS.pick = {
+  desc: 'Elige al azar de una lista (pick a b c)',
+  fn: async (args, body) => {
+    if (!args.length) { printLine(body, '  Uso: pick <a> <b> ...', 'dim'); return; }
+    printLine(body, `  → <span class="ok">${escapeHTML(randomFrom(args))}</span>`, '');
+  }
+};
+
+/* ---------- FUN ---------- */
+COMMANDS.quote = {
+  desc: 'Frase aleatoria',
+  fn: async (args, body) => {
+    const quotes = [
+      'La simplicidad es la maxima sofisticacion. — Da Vinci',
+      'Habla poco, haz mucho.', 'El codigo es poesia.',
+      'Primero resuelve el problema. Luego escribe el codigo.',
+      'La mejor interfaz es la que no se nota.',
+    ];
+    printLine(body, `  "${randomFrom(quotes)}"`, 'info');
+  }
+};
+
+COMMANDS.joke = {
+  desc: 'Chiste aleatorio',
+  fn: async (args, body) => {
+    const jokes = [
+      'Hay 10 tipos de personas: las que entienden binario y las que no.',
+      'Un byte entra a un bar. El bartender: "¿Que va a tomar?" — "Un bit, por favor."',
+      '¿Por que los programadores prefieren el modo oscuro? Porque la luz atrae bugs.',
+      '!false — Es gracioso porque es true.',
+    ];
+    printLine(body, `  ${randomFrom(jokes)}`, '');
+    playBeep(600, .05);
+  }
+};
+
+COMMANDS.fact = {
+  desc: 'Dato curioso',
+  fn: async (args, body) => {
+    const facts = [
+      'El primer bug informatico fue una polilla real (1947).',
+      'El 90% del codigo de una app es mantenimiento.',
+      'La primera programadora fue Ada Lovelace (1843).',
+      'El nombre "JavaScript" fue puro marketing.',
+      'Un programador promedio escribe ~10 lineas utiles al dia.',
+    ];
+    printLine(body, `  ${randomFrom(facts)}`, 'info');
+  }
+};
+
+COMMANDS.meme = {
+  desc: 'Meme ASCII aleatorio',
+  fn: async (args, body) => {
+    const memes = [
+      ['(╯°□°)╯︵ ┻━┻', 'table flip'],
+      ['┬─┬ノ( º _ ºノ)', 'table unflip'],
+      ['(•_•) ( •_•)>⌐■-■ (⌐■_■)', 'deal with it'],
+      ['¯\\_(ツ)_/¯', 'shrug'],
+      ['( ͡° ͜ʖ ͡°)', 'lenny'],
+    ];
+    const [art, name] = randomFrom(memes);
+    printLine(body, `  ${art}  <span class="dim">${name}</span>`, 'accent');
+  }
+};
+
+COMMANDS.cowsay = {
+  desc: 'Vaca filosofa (cowsay <texto>)',
+  fn: async (args, body) => {
+    const text = args.join(' ') || 'Muuu';
+    const top = ' ' + '_'.repeat(text.length + 2);
+    const bot = ' ' + '-'.repeat(text.length + 2);
+    printLine(body, top, 'dim');
+    printLine(body, `< ${text} >`, '');
+    printLine(body, bot, 'dim');
+    printLine(body, '        \\   ^__^', 'dim');
+    printLine(body, '         \\  (oo)\\_______', 'dim');
+    printLine(body, '            (__)\\       )\\/\\', 'dim');
+    printLine(body, '                ||----w |', 'dim');
+    printLine(body, '                ||     ||', 'dim');
+    unlockAch('cow', 'Vaca filósofa');
+    playBeep(440, .15);
+  }
+};
+
+COMMANDS.fortune = {
+  desc: 'Fortune cookie',
+  fn: async (args, body) => {
+    const fortunes = [
+      'Tendras un dia productivo si cierras el navegador.',
+      'El bug que buscas esta en la linea 42.',
+      'Hoy es un buen dia para refactorizar.',
+      'No hagas deploy los viernes.',
+      'El cafe es tu mejor aliado.',
+    ];
+    printLine(body, `  🥠 ${randomFrom(fortunes)}`, 'info');
+    unlockAch('fortune', 'Sabio');
+  }
+};
+
+COMMANDS.random = {
+  desc: 'Numero aleatorio (random [min] [max])',
+  fn: async (args, body) => {
+    const min = parseInt(args[0], 10) || 1;
+    const max = parseInt(args[1], 10) || 100;
+    printLine(body, `  → <span class="ok">${randInt(Math.min(min, max), Math.max(min, max))}</span>`, '');
+  }
+};
+
+/* ---------- NET-TOOLS ---------- */
+COMMANDS.ping = {
+  desc: 'Simula ping (ping <host>)',
+  fn: async (args, body) => {
+    const host = args[0] || 'void.systems';
+    unlockAch('pinger', 'Ping Master');
+    printLine(body, `  PING ${escapeHTML(host)} (${randInt(1, 255)}.${randInt(0, 255)}.${randInt(0, 255)}.${randInt(1, 254)}) 56(84) bytes of data.`, 'dim');
+    for (let i = 0; i < 4; i++) {
+      await sleep(500);
+      const t = (Math.random() * 80 + 5).toFixed(1);
+      printLine(body, `  64 bytes from ${escapeHTML(host)}: icmp_seq=${i + 1} ttl=${randInt(50, 64)} time=<span class="ok">${t} ms</span>`, '');
+      playTick(700);
+    }
+    await sleep(200);
+    printLine(body, `  --- ${escapeHTML(host)} ping statistics ---`, 'dim');
+    printLine(body, `  4 packets transmitted, 4 received, 0% packet loss`, 'ok');
+    printLine(body, '');
+  }
+};
+
+COMMANDS.trace = {
+  desc: 'Traceroute simulado',
+  fn: async (args, body) => {
+    const host = args[0] || 'void.systems';
+    unlockAch('tracer', 'Rastreador');
+    printLine(body, `  traceroute to ${escapeHTML(host)}, 30 hops max`, 'dim');
+    for (let i = 1; i <= 8; i++) {
+      await sleep(200);
+      const ip = `${randInt(1, 223)}.${randInt(0, 255)}.${randInt(0, 255)}.${randInt(1, 254)}`;
+      const t = (Math.random() * 50 + i * 5).toFixed(1);
+      printLine(body, `  ${padStart(String(i), 2)}  ${ip}  <span class="ok">${t} ms</span>`, '');
+      playTick(500 + i * 50);
+    }
+    printLine(body, '');
+  }
+};
+
+COMMANDS.nmap = {
+  desc: 'Escaneo de puertos simulado',
+  fn: async (args, body) => {
+    const host = args[0] || 'localhost';
+    unlockAch('nmap', 'Puertos Abiertos');
+    printLine(body, `  Starting Nmap 7.94 ( https://nmap.org )`, 'dim');
+    printLine(body, `  Nmap scan report for ${escapeHTML(host)}`, '');
+    await sleep(400);
+    printLine(body, '  PORT     STATE  SERVICE', 'accent');
+    const ports = [
+      [22, 'open', 'ssh'], [80, 'open', 'http'], [443, 'open', 'https'],
+      [3000, 'open', 'node'], [5432, 'closed', 'postgres'], [8080, 'open', 'http-alt'],
+    ];
+    for (const [p, s, svc] of ports) {
+      await sleep(150);
+      const cls = s === 'open' ? 'ok' : 'dim';
+      printLine(body, `  ${padEnd(String(p), 8)} <span class="${cls}">${padEnd(s, 6)}</span> ${svc}`);
+      playTick(600);
+    }
+    printLine(body, '');
+    printLine(body, `  Nmap done: 1 IP address (1 host up) scanned`, 'dim');
+    printLine(body, '');
+  }
+};
+
+COMMANDS.whois = {
+  desc: 'WHOIS simulado',
+  fn: async (args, body) => {
+    const host = args[0] || 'void.systems';
+    printLine(body, `  Domain Name: ${escapeHTML(host).toUpperCase()}`, '');
+    printLine(body, `  Registrar: VOID Registrar Inc.`, 'dim');
+    printLine(body, `  Created: ${new Date(Date.now() - 86400000 * 365).toLocaleDateString()}`, 'dim');
+    printLine(body, `  Expires: ${new Date(Date.now() + 86400000 * 365).toLocaleDateString()}`, 'dim');
+    printLine(body, `  Status: clientTransferProhibited`, 'dim');
+    printLine(body, '');
+  }
+};
+
+COMMANDS.scan = {
+  desc: 'Escaneo general simulado',
+  fn: async (args, body) => {
+    unlockAch('scanner', 'Escaneo completo');
+    const target = args[0] || 'red-local';
+    printLine(body, `  Escaneando ${escapeHTML(target)}...`, 'accent');
+    for (let i = 0; i < 12; i++) {
+      await sleep(140);
+      const ip = `192.168.1.${randInt(1, 254)}`;
+      const status = Math.random() > .3 ? '<span class="ok">UP</span>' : '<span class="dim">DOWN</span>';
+      printLine(body, `  ${padEnd(ip, 18)} ${status}  ${randomHex(6)}`, '');
+      playTick(600);
+    }
+    printLine(body, '  Escaneo completo.', 'ok');
+  }
+};
+
+COMMANDS.curl = {
+  desc: 'HTTP request simulado',
+  fn: async (args, body) => {
+    const url = args[0] || 'https://void.systems';
+    unlockAch('curler', 'HTTP Client');
+    printLine(body, `  * Trying ${randInt(1, 223)}.${randInt(0, 255)}.${randInt(0, 255)}.${randInt(1, 254)}:443...`, 'dim');
+    await sleep(400);
+    printLine(body, '  * Connected', 'dim');
+    await sleep(200);
+    printLine(body, '  > GET / HTTP/1.1', '');
+    printLine(body, `  > Host: ${escapeHTML(url.replace(/^https?:\/\//, ''))}`, '');
+    printLine(body, '  > User-Agent: void-curl/9.1', '');
+    await sleep(400);
+    printLine(body, '  < HTTP/1.1 200 OK', 'ok');
+    printLine(body, '  < Content-Type: text/html', 'dim');
+    printLine(body, '  < Server: void-server', 'dim');
+    printLine(body, '  < Content-Length: 1337', 'dim');
+    printLine(body, '');
+  }
+};
+
+/* ---------- SYS-TOOLS ---------- */
+COMMANDS.ps = {
+  desc: 'Procesos activos',
+  fn: async (args, body) => {
+    printLine(body, '  PID    USER      CPU%   MEM%   COMMAND', 'accent');
+    const procs = [
+      ['1', 'root', '0.1', '0.4', 'void-init'],
+      ['42', 'muncixop', '1.2', '3.1', 'voidsh'],
+      ['133', 'muncixop', '4.8', '8.2', 'matrix-render'],
+      ['256', 'muncixop', '2.1', '5.5', 'particle-engine'],
+      ['512', 'muncixop', '0.5', '1.8', 'audio-synth'],
+    ];
+    procs.forEach(p => printLine(body, `  ${padEnd(p[0], 6)} ${padEnd(p[1], 9)} ${padEnd(p[2], 6)} ${padEnd(p[3], 6)} ${p[4]}`));
+    printLine(body, '');
+  }
+};
+
+COMMANDS.top = {
+  desc: 'Monitor de sistema',
+  fn: async (args, body) => {
+    const cpu = (Math.random() * 30 + 5).toFixed(1);
+    const mem = (Math.random() * 40 + 30).toFixed(1);
+    printLine(body, `  CPU:  <span class="ok">${cpu}%</span>   MEM: <span class="info">${mem}%</span>`, '');
+    printLine(body, '  ' + '█'.repeat(Math.round(cpu / 4)) + '░'.repeat(25 - Math.round(cpu / 4)), 'ok');
+    printLine(body, '  ' + '█'.repeat(Math.round(mem / 4)) + '░'.repeat(25 - Math.round(mem / 4)), 'info');
+  }
+};
+
+COMMANDS.tree = {
+  desc: 'Arbol de archivos',
+  fn: async (args, body) => {
+    const lines = [
+      '  <span class="ok">void/</span>',
+      '  ├── <span class="info">index.html</span>',
+      '  ├── <span class="info">style.css</span>',
+      '  ├── <span class="info">main.js</span>',
+      '  ├── <span class="ok">assets/</span>',
+      '  │   ├── icons/',
+      '  │   └── sounds/',
+      '  ├── <span class="ok">docs/</span>',
+      '  │   └── README.md',
+      '  └── <span class="dim">.git/</span>',
+    ];
+    lines.forEach(l => printLine(body, l, ''));
+    printLine(body, '');
+  }
+};
+
+COMMANDS.ls = {
+  desc: 'Lista archivos',
+  fn: async (args, body) => {
+    printLine(body, '  <span class="ok">index.html</span>  <span class="ok">style.css</span>  <span class="ok">main.js</span>  <span class="dim">assets/</span>  <span class="dim">docs/</span>', '');
+  }
+};
+
+COMMANDS.pwd = {
+  desc: 'Ruta actual',
+  fn: async (args, body) => printLine(body, '  /home/muncixop/void', 'info')
+};
+
+/* ---------- EFFECTS ---------- */
+COMMANDS.confetti = {
+  desc: 'Lanza confetti',
+  fn: async (args, body) => { effectConfetti(60); playSuccess(); unlockAch('confetti', 'Fiestero'); }
+};
+
+COMMANDS.glitch = {
+  desc: 'Efecto glitch',
+  fn: async (args, body) => {
+    effectGlitchSlice();
+    document.body.classList.add('mx-hit');
+    setTimeout(() => document.body.classList.remove('mx-hit'), 500);
+    playGlitch();
+    unlockAch('glitch', 'Glitch Master');
+  }
+};
+
+COMMANDS.hypnotize = {
+  desc: 'Modo hipnotico',
+  fn: async (args, body) => {
+    document.body.classList.toggle('hypnotize');
+    playWhoosh();
+    printLine(body, '  Hipnotizando... (escribe de nuevo para detener)', 'accent');
+  }
+};
+
+COMMANDS.flash = {
+  desc: 'Flash de pantalla',
+  fn: async (args, body) => { effectFlash(); playBeep(1200, .1); }
+};
+
+COMMANDS.quake = {
+  desc: 'Terremoto',
+  fn: async (args, body) => { effectQuake(); unlockAch('quake', 'Terremoto'); }
+};
+
+COMMANDS.rainbow = {
+  desc: 'Texto arcoiris',
+  fn: async (args, body) => {
+    const text = args.join(' ') || 'VOID SYSTEMS';
+    printLine(body, `  <span class="rainbow-text">${escapeHTML(text)}</span>`, '');
+    unlockAch('rainbow', 'Arcoíris');
+  }
+};
+
+COMMANDS.scramble = {
+  desc: 'Descifra texto animado',
+  fn: async (args, body) => {
+    const text = args.join(' ') || 'VOID SYSTEMS 9.1';
+    const line = document.createElement('div');
+    line.className = 'out accent';
+    body.appendChild(line);
+    moveInputToEnd(body);
+    await new Promise(res => { scrambleText(line, '  ' + text, 900); setTimeout(res, 900); });
+  }
+};
+
+COMMANDS.type = {
+  desc: 'Efecto de escritura',
+  fn: async (args, body) => {
+    const text = args.join(' ') || 'Bienvenido a VOID SYSTEMS';
+    const line = document.createElement('div');
+    line.className = 'out';
+    body.appendChild(line);
+    moveInputToEnd(body);
+    for (let i = 0; i < text.length; i++) {
+      line.textContent += text[i];
+      playTick(900);
+      body.scrollTop = body.scrollHeight;
+      await sleep(35);
+    }
+  }
+};
+
+COMMANDS.spinner = {
+  desc: 'Spinner animado',
+  fn: async (args, body) => {
+    const frames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+    const line = document.createElement('div');
+    line.className = 'out';
+    body.appendChild(line);
+    moveInputToEnd(body);
+    for (let i = 0; i < 30; i++) {
+      line.textContent = '  ' + frames[i % frames.length] + ' procesando...';
+      await sleep(80);
+    }
+    line.textContent = '  ✓ listo';
+    line.className = 'out ok';
+  }
+};
+
+COMMANDS.countdown = {
+  desc: 'Cuenta atras (countdown [n])',
+  fn: async (args, body) => {
+    const n = Math.max(1, Math.min(20, parseInt(args[0], 10) || 5));
+    for (let i = n; i > 0; i--) {
+      printLine(body, `  ${i}...`, 'accent');
+      playBeep(600 + i * 50, .08);
+      await sleep(500);
+    }
+    printLine(body, '  ¡CERO!', 'ok glow-pulse');
+    playImpact();
+    effectFlash();
+  }
+};
+
+/* ---------- ASCII-ART ---------- */
+COMMANDS.ascii = {
+  desc: 'Arte ASCII y banners',
+  fn: async (args, body) => {
+    const text = args.join(' ') || 'VOID';
+    printLine(body, '');
+    printLine(body, `  ${text}`, 'h1');
+    printLine(body, '');
+    printLine(body, '     ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄', 'ok');
+    printLine(body, `     █  ${padEnd(text.toUpperCase(), 19)}█`, 'ok');
+    printLine(body, '     ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀', 'ok');
+    printLine(body, '');
+    unlockAch('ascii_artist', 'ASCII Artist');
+    playBeep(700, .1);
+  }
+};
+
+/* ============================================================
+   RUN COMMAND
+   ============================================================ */
+async function runCommand(input, body, win) {
+  const raw = input.trim();
+  if (!raw) return;
+
+  // Comandos de control del shell (no cuentan como comando de paquete)
+  const [cmd, ...args] = raw.split(/\s+/);
+
+  cmdHistory.push(raw);
+  saveHistory();
+  userStats.commandsUsed++;
+  userStats.lastCommand = cmd;
+  if (!userStats.uniqueCommands.includes(cmd)) userStats.uniqueCommands.push(cmd);
+  saveStats();
+
+  // Eco del comando
+  const prompt = document.createElement('div');
+  prompt.className = 'out cmd';
+  prompt.innerHTML = getPromptHTML() + escapeHTML(raw);
+  body.appendChild(prompt);
+  moveInputToEnd(body);
+
+  // Verificar si requiere paquete
+  const pkg = findPackageForCommand(cmd);
+  if (pkg && !installedPackages.includes(pkg.name)) {
+    printLine(body, `  x Comando no disponible: "${cmd}"`, 'err');
+    printLine(body, `  Requiere el paquete: <span class="warn">${pkg.name}</span>`, 'dim');
+    printLine(body, `  Instala con: <span class="ok">pkg install ${pkg.name}</span>`, 'dim');
+    playError();
+    effectGlitchSlice();
+    return;
+  }
+
+  if (!COMMANDS[cmd]) {
+    printLine(body, `  x Comando desconocido: "${cmd}"`, 'err');
+    // Sugerencia
+    const all = Object.keys(COMMANDS);
+    const sug = all.map(n => ({ n, d: levenshtein(cmd, n) })).sort((a, b) => a.d - b.d);
+    if (sug[0].d <= 3) printLine(body, `  ¿Quisiste decir? <span class="ok">${sug[0].n}</span>`, 'dim');
+    playError();
+    effectGlitchSlice();
+    return;
+  }
+
+  try {
+    await COMMANDS[cmd].fn(args, body, win);
+    // Logros contextuales
+    if (cmd === 'projects' || cmd === 'skills' || cmd === 'about') unlockAch('explorer', 'Explorador');
+    if (cmd === 'clear') effectFlash();
+    // Hora
+    const h = new Date().getHours();
+    if (h >= 22 || h < 5) unlockAch('night_owl', 'Búho nocturno');
+    if (h >= 5 && h < 8) unlockAch('early_bird', 'Madrugador');
+    // Combo
+    bumpCombo();
+    // Multi-terminal
+    if (openWindows.size >= 2) unlockAch('void', 'Multi-terminal');
+  } catch (e) {
+    printLine(body, `  x Error al ejecutar "${cmd}": ${escapeHTML(e.message)}`, 'err');
+    console.error(e);
+    playError();
+  }
+}
+
+/* ============================================================
+   INPUT SYSTEM
+   ============================================================ */
+function createInputLine(body) {
+  const line = document.createElement('div');
+  line.className = 'input-line';
+  line.innerHTML = `${getPromptHTML()}<input class="ki" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Entrada de comando">`;
+  body.appendChild(line);
+  currentInputLineRef = line;
+  const input = line.querySelector('.ki');
+  input.focus();
+  return input;
+}
+
+function bindInput(input, body, win) {
+  let histIdx = cmdHistory.length;
+  let tabBuffer = [];
+  let tabIdx = 0;
+
+  input.addEventListener('keydown', async (e) => {
+    playKey();
+
+    // ENTER
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const value = input.value;
+      input.value = '';
+      playEnter();
+      haptic(15);
+      if (value.trim()) {
+        await runCommand(value, body, win);
+      }
+      body.scrollTop = body.scrollHeight;
+      input.focus();
+      return;
+    }
+
+    // BACKSPACE
+    if (e.key === 'Backspace') {
+      haptic(5);
+      return;
+    }
+
+    // TAB autocomplete
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const cur = input.value;
+      if (tabBuffer.length && input.value === tabBuffer[0]) {
+        // Rotar sugerencias
+        tabIdx = (tabIdx + 1) % tabBuffer.length;
+        input.value = tabBuffer[tabIdx];
+      } else {
+        tabBuffer = Object.keys(COMMANDS).filter(c => c.startsWith(cur)).sort();
+        if (tabBuffer.length === 1) {
+          input.value = tabBuffer[0] + ' ';
+          tabBuffer = [];
+        } else if (tabBuffer.length > 1) {
+          tabIdx = 0;
+          input.value = tabBuffer[0];
+          // Mostrar opciones
+          printLine(body, '  ' + tabBuffer.map(c => `<span class="ok">${c}</span>`).join('  '), 'dim');
+        } else {
+          playError();
+        }
+      }
+      return;
+    }
+
+    // ARRIBA (historial)
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!cmdHistory.length) return;
+      histIdx = Math.max(0, histIdx - 1);
+      input.value = cmdHistory[histIdx] || '';
+      setTimeout(() => input.setSelectionRange(input.value.length, input.value.length), 0);
+      return;
+    }
+
+    // ABAJO (historial)
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (!cmdHistory.length) return;
+      histIdx = Math.min(cmdHistory.length, histIdx + 1);
+      input.value = cmdHistory[histIdx] || '';
+      setTimeout(() => input.setSelectionRange(input.value.length, input.value.length), 0);
+      return;
+    }
+
+    // CTRL+L → clear
+    if (e.ctrlKey && e.key === 'l') {
+      e.preventDefault();
+      body.querySelectorAll('.out').forEach(el => el.remove());
+      return;
+    }
+
+    // CTRL+C → cancelar input
+    if (e.ctrlKey && e.key === 'c') {
+      e.preventDefault();
+      input.value = '';
+      printLine(body, '  ^C', 'dim');
+      return;
+    }
+  });
+
+  // Click en cualquier parte del body → focus en input
+  body.addEventListener('click', (e) => {
+    if (window.getSelection().toString()) return;
+    if (e.target.closest('a, button')) return;
+    input.focus();
+  });
+
+  // Glitch flash al tipear
+  input.addEventListener('input', () => {
+    if (Math.random() > .93) {
+      input.classList.add('glitch-flash');
+      setTimeout(() => input.classList.remove('glitch-flash'), 130);
+    }
+  });
+}
+
+/* ============================================================
+   MOBILE ASSISTS (chips + barra)
+   ============================================================ */
+function initMobile() {
+  if (!mob) return;
+
+  // Chips rápidos
+  document.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const cmd = chip.dataset.cmd;
+      if (!cmd) return;
+      const body = currentWindowRef?.body;
+      if (!body) return;
+      const input = body.querySelector('.ki');
+      if (input) { input.value = cmd; input.focus(); }
+      haptic(15);
+      playKey();
+    });
+  });
+
+  // Teclas virtuales
+  document.querySelectorAll('.mb-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const action = btn.dataset.action;
+      const body = currentWindowRef?.body;
+      if (!body) return;
+      const input = body.querySelector('.ki');
+      if (!input) return;
+      haptic(10);
+      playKey();
+      switch (action) {
+        case 'esc':
+          input.value = '';
+          break;
+        case 'tab': {
+          const ev = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true });
+          input.dispatchEvent(ev);
+          break;
+        }
+        case 'up': {
+          const ev = new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true });
+          input.dispatchEvent(ev);
+          break;
+        }
+        case 'down': {
+          const ev = new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true });
+          input.dispatchEvent(ev);
+          break;
+        }
+        case 'backspace':
+          input.value = input.value.slice(0, -1);
+          break;
+        case 'enter': {
+          const ev = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true });
+          input.dispatchEvent(ev);
+          break;
+        }
+      }
+    });
+  });
+
+  // Detectar teclado virtual abierto
+  const vp = window.visualViewport;
+  if (vp) {
+    vp.addEventListener('resize', () => {
+      const kb = window.innerHeight - vp.height > 150;
+      document.body.classList.toggle('kb-open', kb);
+    });
+  }
+}
+
+/* ============================================================
+   KONAMI CODE
+   ============================================================ */
+const KONAMI = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+let konamiIdx = 0;
+function initKonami() {
+  document.addEventListener('keydown', (e) => {
+    const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    if (key === KONAMI[konamiIdx]) {
+      konamiIdx++;
+      if (konamiIdx === KONAMI.length) {
+        konamiIdx = 0;
+        triggerKonami();
+      }
+    } else {
+      konamiIdx = 0;
+    }
+  });
+}
+function triggerKonami() {
+  unlockAch('konami', 'Código Konami');
+  effectConfetti(80);
+  effectFlash('rgba(199,125,255,.4)');
+  playPowerUp();
+  haptic([50, 30, 50, 30, 100, 50, 200]);
+  document.body.classList.add('hypnotize');
+  setTimeout(() => document.body.classList.remove('hypnotize'), 4000);
+  const body = currentWindowRef?.body;
+  if (body) {
+    printLine(body, '');
+    printLine(body, '  ★ ★ ★  KONAMI CODE ACTIVADO  ★ ★ ★', 'accent glow-pulse');
+    printLine(body, '  Balance +1000', 'ok');
+    userBalance += 1000;
+    saveBalance();
+    printLine(body, '');
+  }
+}
+
+/* ============================================================
+   IDLE / AUTO EVENTS
+   ============================================================ */
+function initAuto() {
+  // Contador de inactividad
+  let idleEl = document.createElement('div');
+  idleEl.className = 'idle-zzz';
+  document.body.appendChild(idleEl);
+  let idleTimeout;
+  function resetIdle() {
+    idleEl.classList.remove('on');
+    clearTimeout(idleTimeout);
+    idleTimeout = setTimeout(() => {
+      idleEl.classList.add('on');
+    }, 60000);
+  }
+  ['mousemove', 'keydown', 'touchstart', 'click'].forEach(ev =>
+    document.addEventListener(ev, resetIdle, { passive: true })
+  );
+  resetIdle();
+
+  // Saludo por hora
+  const h = new Date().getHours();
+  if (h >= 22 || h < 5) unlockAch('night_owl', 'Búho nocturno');
+  if (h >= 5 && h < 8) unlockAch('early_bird', 'Madrugador');
+
+  // Guardar tiempo total cada 30s
+  setInterval(() => {
+    userStats.totalTime += 30;
+    saveStats();
+  }, 30000);
+
+  // Glitch aleatorio (raro)
+  if (!reducedMotion && userSettings.glitchesAuto) {
+    setInterval(() => {
+      if (Math.random() < 0.03) effectGlitchSlice();
+    }, 30000);
+  }
+}
+
+/* ============================================================
+   BOOT / MAIN
+   ============================================================ */
+async function main() {
+  // Crear ventana principal
+  const win = createWindow('muncixop@void: ~', { width: 760, height: 560, x: 40, y: 40 });
+  currentWindowRef = win;
+
+  // Crear input (queda "flotando" hasta que se imprima algo)
+  const input = createInputLine(win.body);
+  bindInput(input, win.body, win);
+
+  // Secuencia de arranque
+  await bootSequence(win.body);
+
+  // Sistema inicializado
+  initMobile();
+  initKonami();
+  initAuto();
+
+  // Marcar "void" si hay más de una ventana
+  // (ya se maneja en runCommand)
+
+  // Logros de instalación iniciales
+  if (installedPackages.length > 0) {
+    unlockAch('first_pkg', 'Instalador');
+    if (installedPackages.length >= 5) unlockAch('pkg_master', 'Package Master');
+    if (installedPackages.length === Object.keys(PACKAGES).length) unlockAch('all_pkgs', 'Completo');
+  }
+
+  // Links desbloqueados previos
+  if (Object.keys(unlockedLinks).length === Object.keys(LINKS_DB).length) {
+    unlockAch('all_links', 'Coleccionista de links');
+  }
+
+  // Aplicar settings
+  audioEnabled = userSettings.audioEnabled;
+  matrixActive = userSettings.matrixActive;
+
+  // Click en el launcher → nueva ventana
+  launcher.addEventListener('click', () => {
+    haptic(20);
+    playEnter();
+    const nw = createWindow('muncixop@void: ~', { width: 760, height: 560 });
+    const ni = createInputLine(nw.body);
+    bindInput(ni, nw.body, nw);
+    currentWindowRef = nw;
+  });
+}
+
+/* ============================================================
+   ARRANQUE
+   ============================================================ */
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', main);
+} else {
+  main();
+}
