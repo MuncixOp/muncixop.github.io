@@ -12,50 +12,130 @@
 <meta name="format-detection" content="telephone=no">
 <title>~/muncixop — VOID SYSTEMS</title>
 
-<!-- CSS CRÍTICO INLINE — siempre se aplica, aunque style.css falle -->
+<!-- ============================================================
+     CSS CRÍTICO INLINE — Garantiza que NUNCA se vea blanco
+     ============================================================ -->
 <style>
-  html,body{margin:0;padding:0;background:#060606;color:#c8c8cc;height:100%;overflow:hidden;font-family:'SF Mono','Menlo','Fira Code','Consolas',monospace;}
-  body{--accent:#3ddc84;--accent-rgb:61,220,132;--accent-2:#5eaaff;}
-  #c,#p{position:fixed;inset:0;pointer-events:none;}
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden;background:#060606;color:#c8c8cc;
+    font:13.5px/1.65 'SF Mono','Menlo','Fira Code','Consolas',monospace;
+    -webkit-font-smoothing:antialiased;overscroll-behavior:none;touch-action:manipulation;
+    --accent:#3ddc84;--accent-rgb:61,220,132;--accent-2:#5eaaff;--accent-2-rgb:94,170,255;
+  }
+  #c,#p{position:fixed;inset:0;pointer-events:none}
   #c{opacity:.05;z-index:0}
   #p{opacity:.55;z-index:1}
   #wins{position:fixed;inset:0;z-index:2}
-  .win{position:absolute;background:#141416;border-radius:12px;box-shadow:0 8px 24px #00000070;display:flex;flex-direction:column;overflow:hidden;}
-  .win-bar{display:flex;align-items:center;height:42px;padding:0 14px;background:linear-gradient(180deg,#28282c 0%,#1c1c20 100%);border-bottom:1px solid #00000090;cursor:grab;}
-  .win-title{flex:1;text-align:center;font-size:12px;color:#666;}
-  .btns{display:flex;gap:8px}
-  .btn{width:12px;height:12px;border-radius:50%;border:none;cursor:pointer;}
+  .win{position:absolute;width:min(720px,92vw);max-height:85vh;background:#141416;
+    border-radius:12px;box-shadow:0 8px 24px #00000070,0 0 0 .5px #ffffff08;
+    display:flex;flex-direction:column;overflow:hidden;
+    transition:box-shadow .4s ease,left .35s ease,top .35s ease,width .35s ease,height .35s ease;}
+  .win.dragging{transition:box-shadow .3s ease !important;cursor:grabbing}
+  .win-bar{display:flex;align-items:center;height:42px;padding:0 14px;
+    background:linear-gradient(180deg,#28282c 0%,#1c1c20 100%);border-bottom:1px solid #00000090;
+    cursor:grab;flex-shrink:0;touch-action:none;position:relative;z-index:5;overflow:hidden}
+  .win-title{flex:1;text-align:center;font-size:12px;color:#666;letter-spacing:.03em;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .btns{display:flex;gap:8px;align-items:center;position:relative;z-index:6}
+  .btns-r{width:54px}
+  .btn{width:12px;height:12px;border-radius:50%;border:none;cursor:pointer;
+    transition:all .25s cubic-bezier(.34,1.56,.64,1);font-size:0;line-height:1}
+  .btn:hover{filter:brightness(1.5);transform:scale(1.35)}
+  .btn:active{transform:scale(.7)}
   .close{background:#ff5f57}
   .min{background:#febc2e}
   .max{background:#28c840}
-  .win-body{padding:16px;flex:1;overflow-y:auto;background:#141416;}
-  .out{white-space:pre-wrap;word-break:break-word;line-height:1.7;}
-  .out.ok{color:#3ddc84}
-  .out.err{color:#ff453a}
-  .out.warn{color:#ffcc00}
+  .win-body{padding:16px;flex:1;overflow-y:auto;overflow-x:hidden;background:#141416;
+    cursor:text;min-height:80px;scrollbar-width:thin;scrollbar-color:#333 transparent;
+    caret-color:transparent;position:relative}
+  .win-body::-webkit-scrollbar{width:5px}
+  .win-body::-webkit-scrollbar-thumb{background:#2a2a2e;border-radius:10px}
+  .out{white-space:pre-wrap;word-break:break-word;line-height:1.7;opacity:0;
+    animation:lineIn .4s cubic-bezier(.25,.46,.45,.94) forwards}
+  @keyframes lineIn{0%{opacity:0;transform:translateY(8px);filter:blur(6px)}
+    70%{opacity:.9;transform:translateY(-1px);filter:blur(0)}100%{opacity:1;transform:translateY(0);filter:none}}
   .out.dim{color:#48484c}
-  .out.info{color:#5eaaff}
-  .input-line{display:flex;align-items:baseline;line-height:1.7;}
-  .input-line .pr{color:#3ddc84;font-weight:600;flex-shrink:0;}
-  .input-line .pr .path{color:#5eaaff;}
-  .input-line .ki{flex:1;background:transparent;border:none;outline:none;color:#fff;font:inherit;caret-color:#3ddc84;padding:0;}
-  .launcher{position:fixed;bottom:20px;right:20px;padding:12px 18px;background:rgba(61,220,132,.15);border:1px solid rgba(61,220,132,.4);border-radius:14px;color:#3ddc84;font-weight:700;cursor:pointer;display:none;}
-  .launcher.on{display:flex;gap:8px;align-items:center;}
-  .dock{position:fixed;bottom:0;left:0;right:0;height:48px;background:#141416dd;border-top:1px solid #ffffff08;display:none;align-items:center;padding:0 20px;gap:8px;}
-  .dock.on{display:flex;}
-  .crt-overlay,.scanlines,.chromatic,.quick-chips,.mobile-bar{display:none;}
+  .out.ok{color:var(--accent)}
+  .out.warn{color:#ffcc00}
+  .out.err{color:#ff453a}
+  .out.info{color:var(--accent-2)}
+  .out.cmd{color:#e8e8ec;font-weight:500}
+  .out.accent{color:var(--accent);font-weight:600;letter-spacing:.05em}
+  .out.h1{color:#fff;font-size:16px;font-weight:700;letter-spacing:.08em}
+  .out.mono-dim{color:#5a5a5f;font-size:.95em}
+  .out.eye{color:var(--accent);line-height:1.05;font-weight:700;font-size:10px;
+    white-space:pre;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;
+    text-shadow:0 0 8px rgba(var(--accent-rgb),.25)}
+  .out.eye::-webkit-scrollbar{display:none}
+  .input-line{display:flex;align-items:baseline;line-height:1.7;position:relative;
+    margin-top:2px;width:100%;font-family:inherit;font-size:inherit}
+  .input-line .pr{color:var(--accent);font-weight:600;flex-shrink:0;white-space:pre}
+  .input-line .pr .path{color:var(--accent-2)}
+  .input-line .ki{flex:1 1 auto;min-width:0;background:transparent;border:none;outline:none;
+    color:#fff;font-family:inherit;font-size:inherit;line-height:inherit;padding:0;margin:0;
+    letter-spacing:inherit;caret-color:var(--accent);-webkit-caret-color:var(--accent);width:100%}
+  .input-line .ki::selection{background:rgba(var(--accent-rgb),.3);color:#fff}
+  .launcher{position:fixed;bottom:20px;right:20px;z-index:99999;
+    display:flex;align-items:center;gap:8px;padding:12px 18px;
+    background:linear-gradient(135deg,rgba(var(--accent-rgb),.15),rgba(var(--accent-rgb),.05));
+    border:1px solid rgba(var(--accent-rgb),.4);border-radius:14px;color:var(--accent);
+    font-family:inherit;font-size:13px;font-weight:700;letter-spacing:.15em;cursor:pointer;
+    box-shadow:0 8px 24px rgba(0,0,0,.6);backdrop-filter:blur(12px);
+    opacity:0;pointer-events:none;transform:translateY(20px) scale(.9);
+    transition:all .3s cubic-bezier(.34,1.56,.64,1);animation:launcherPulse 2.4s ease-in-out infinite}
+  .launcher.on{opacity:1;pointer-events:auto;transform:translateY(0) scale(1)}
+  @keyframes launcherPulse{0%,100%{box-shadow:0 8px 24px rgba(0,0,0,.6),0 0 40px rgba(var(--accent-rgb),.15)}
+    50%{box-shadow:0 8px 24px rgba(0,0,0,.6),0 0 60px rgba(var(--accent-rgb),.35)}}
+  .launcher:hover{transform:translateY(-3px) scale(1.05);color:#fff}
+  .launcher:active{transform:translateY(0) scale(.97)}
+  .launcher-eye{font-size:1.3em;animation:eyeBob 3s ease-in-out infinite;
+    filter:drop-shadow(0 0 6px rgba(var(--accent-rgb),.8))}
+  @keyframes eyeBob{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-2px) rotate(4deg)}}
+  .launcher-pulse{position:absolute;inset:-6px;border-radius:18px;
+    border:1px solid rgba(var(--accent-rgb),.5);animation:launcherRing 2s ease-out infinite;
+    pointer-events:none}
+  @keyframes launcherRing{0%{transform:scale(1);opacity:.8}100%{transform:scale(1.25);opacity:0}}
+  .dock{position:fixed;bottom:0;left:0;right:0;height:48px;background:#141416dd;
+    backdrop-filter:blur(16px);border-top:1px solid #ffffff08;display:flex;align-items:center;
+    gap:8px;padding:0 20px;z-index:9999;opacity:0;pointer-events:none;
+    transform:translateY(100%);transition:all .4s cubic-bezier(.22,1,.36,1);
+    overflow-x:auto;overflow-y:hidden}
+  .dock.on{opacity:1;pointer-events:auto;transform:translateY(0)}
+  .dock-item{padding:6px 14px;background:#242428;border-radius:8px;font-size:12px;color:#999;
+    cursor:pointer;border:1px solid #ffffff08;font-family:inherit;flex-shrink:0}
+  .dock-item:hover{background:#333338;color:#fff}
+  .crt-overlay{position:fixed;inset:0;pointer-events:none;z-index:99996;
+    background:radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,.35) 100%);
+    mix-blend-mode:multiply}
+  .scanlines{position:fixed;inset:0;pointer-events:none;z-index:99995;
+    background:repeating-linear-gradient(0deg,transparent 0,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 4px);
+    animation:scanMove 8s linear infinite;opacity:.6}
+  @keyframes scanMove{0%{background-position:0 0}100%{background-position:0 100px}}
+  .chromatic{position:fixed;inset:0;pointer-events:none;z-index:99994;
+    background:linear-gradient(90deg,rgba(255,0,255,.015) 0%,transparent 15%,transparent 85%,rgba(0,255,255,.015) 100%);
+    mix-blend-mode:screen;animation:chromaticShift 6s ease-in-out infinite}
+  @keyframes chromaticShift{0%,100%{opacity:.5}50%{opacity:1}}
+  .quick-chips,.mobile-bar{display:none}
+  @media(max-width:700px){
+    .win{width:100vw!important;max-width:none;left:0!important;top:0!important;
+      border-radius:0;height:100vh;height:100dvh;max-height:100vh;max-height:100dvh;box-shadow:none}
+    .win-bar{border-radius:0;height:48px}
+    .win-body{padding:12px 14px}
+    .out.eye{font-size:7px}
+  }
 </style>
 
 <!-- CSS COMPLETO EXTERNO -->
 <link rel="stylesheet" href="style.css">
-
 </head>
 <body>
+
 <canvas id="c" aria-hidden="true"></canvas>
 <canvas id="p" aria-hidden="true"></canvas>
 <div class="crt-overlay" aria-hidden="true"></div>
 <div class="scanlines" aria-hidden="true"></div>
 <div class="chromatic" aria-hidden="true"></div>
+
 <div id="wins" role="application" aria-label="Terminal workspace"></div>
 <div id="dock" class="dock" aria-label="Ventanas minimizadas"></div>
 
@@ -63,6 +143,7 @@
   <button class="chip" data-cmd="help">help</button>
   <button class="chip" data-cmd="about">about</button>
   <button class="chip" data-cmd="projects">projects</button>
+  <button class="chip" data-cmd="skills">skills</button>
   <button class="chip" data-cmd="social">social</button>
   <button class="chip" data-cmd="links">links</button>
   <button class="chip" data-cmd="fastfetch">fastfetch</button>
@@ -73,6 +154,7 @@
   <button class="chip" data-cmd="matrix">matrix</button>
   <button class="chip" data-cmd="cyberpunk">cyberpunk</button>
   <button class="chip" data-cmd="confetti">confetti</button>
+  <button class="chip" data-cmd="glitch">glitch</button>
   <button class="chip" data-cmd="clear">clear</button>
   <button class="chip" data-cmd="sound">sound</button>
   <button class="chip" data-cmd="reboot">reboot</button>
@@ -81,8 +163,8 @@
 <div id="mobile-bar" class="mobile-bar" aria-label="Teclas virtuales">
   <button class="mb-btn mb-esc" data-action="esc" aria-label="Escape">ESC</button>
   <button class="mb-btn mb-tab" data-action="tab" aria-label="Tab">TAB</button>
-  <button class="mb-btn mb-up" data-action="up" aria-label="Historial arriba">↑</button>
-  <button class="mb-btn mb-down" data-action="down" aria-label="Historial abajo">↓</button>
+  <button class="mb-btn mb-up" data-action="up" aria-label="Arriba">↑</button>
+  <button class="mb-btn mb-down" data-action="down" aria-label="Abajo">↓</button>
   <button class="mb-btn mb-backspace" data-action="backspace" aria-label="Borrar">⌫</button>
   <button class="mb-btn mb-enter" data-action="enter" aria-label="Enter">ENTER ⏎</button>
 </div>
@@ -92,6 +174,7 @@
   <span class="launcher-text">VOID</span>
   <span class="launcher-pulse"></span>
 </button>
+
 <script src="main.js"></script>
 </body>
 </html>
