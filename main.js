@@ -1,7 +1,7 @@
 /* ============================================================
-   VOID SYSTEMS v6.4 — Terminal / OS Simulator
+   VOID SYSTEMS v7.0 — Terminal / OS Simulator
    Author: MuncixOp
-   Wobbly spring + Mobile assists (virtual keys, chips, gestures)
+   Wobbly spring + Input real + Asistencias móviles
    ============================================================ */
 
 /* ---------- OS DETECTION ---------- */
@@ -19,7 +19,6 @@ const reducedMotion = matchMedia('(prefers-reduced-motion:reduce)').matches;
 document.body.classList.add('os-' + os);
 if (mob) document.body.classList.add('mobile-eye');
 
-/* Haptic feedback helper */
 function haptic(pattern = 10) {
   if (!mob) return;
   if ('vibrate' in navigator) {
@@ -412,7 +411,7 @@ function drawParticles() {
 drawParticles();
 
 /* ============================================================
-   SPRING CLASS — física de resortes real para wobbly
+   SPRING — Física de resortes para wobbly
    ============================================================ */
 class Spring {
   constructor(stiffness = 0.14, damping = 0.80) {
@@ -555,7 +554,7 @@ function updateLauncher() {
 }
 
 /* ============================================================
-   DRAG CON WOBBLY REAL (Spring Physics + RAF)
+   DRAG con WOBBLY REAL
    ============================================================ */
 function makeDraggable(win, handle) {
   let sx, sy, ox, oy, dragging = false;
@@ -571,38 +570,25 @@ function makeDraggable(win, handle) {
   const springSkewY  = new Spring(0.20, 0.68);
 
   const allSprings = [springScaleX, springScaleY, springRotX, springRotY, springSkewX, springSkewY];
-
   const resetSprings = () => allSprings.forEach(s => s.reset());
   const allIdle = () => allSprings.every(s => s.isIdle());
 
   const applyTransform = () => {
-    if (allIdle()) {
-      win.style.transform = '';
-      return;
-    }
+    if (allIdle()) { win.style.transform = ''; return; }
     const scX = 1 + springScaleX.value * 0.006;
     const scY = 1 + springScaleY.value * 0.006;
     const rx = springRotX.value * 0.8;
     const ry = springRotY.value * 0.8;
     const skx = springSkewX.value * 0.5;
     const sky = springSkewY.value * 0.5;
-
     win.style.transform =
-      `perspective(1200px) ` +
-      `rotateX(${rx}deg) ` +
-      `rotateY(${ry}deg) ` +
-      `scale(${scX}, ${scY}) ` +
-      `skew(${skx}deg, ${sky}deg)`;
+      `perspective(1200px) rotateX(${rx}deg) rotateY(${ry}deg) scale(${scX}, ${scY}) skew(${skx}deg, ${sky}deg)`;
   };
 
   const loop = () => {
     let anyActive = false;
-    allSprings.forEach(s => {
-      const done = s.update();
-      if (!done) anyActive = true;
-    });
+    allSprings.forEach(s => { if (!s.update()) anyActive = true; });
     applyTransform();
-
     if (anyActive || dragging) {
       rafId = requestAnimationFrame(loop);
     } else {
@@ -612,7 +598,6 @@ function makeDraggable(win, handle) {
       win.style.transform = '';
     }
   };
-
   const startLoop = () => {
     if (isLooping) return;
     isLooping = true;
@@ -633,7 +618,6 @@ function makeDraggable(win, handle) {
     win.classList.add('dragging');
     win.style.zIndex = ++zIndex;
     startLoop();
-
     document.addEventListener('mousemove', move);
     document.addEventListener('touchmove', move, { passive: false });
     document.addEventListener('mouseup', end);
@@ -644,7 +628,6 @@ function makeDraggable(win, handle) {
     if (!dragging) return;
     if (e.cancelable) e.preventDefault();
     const p = e.touches ? e.touches[0] : e;
-
     const now = performance.now();
     const dt = Math.max(1, now - lastTime);
     const dx = p.clientX - lastX;
@@ -659,13 +642,9 @@ function makeDraggable(win, handle) {
     springSkewX.kick(vy * 1.6);
     springSkewY.kick(vx * 1.6);
 
-    allSprings.forEach(s => {
-      s.velocity = Math.max(-40, Math.min(40, s.velocity));
-    });
+    allSprings.forEach(s => { s.velocity = Math.max(-40, Math.min(40, s.velocity)); });
 
-    lastX = p.clientX;
-    lastY = p.clientY;
-    lastTime = now;
+    lastX = p.clientX; lastY = p.clientY; lastTime = now;
 
     let nx = ox + (p.clientX - sx);
     let ny = oy + (p.clientY - sy);
@@ -691,10 +670,7 @@ function makeDraggable(win, handle) {
 }
 
 /* ============================================================
-   SWIPE GESTURES EN LA BARRA DE TÍTULO (móvil)
-   - Swipe down → minimizar
-   - Swipe up → maximizar/restaurar
-   - Swipe left/right rápido → cerrar
+   SWIPE GESTURES (móvil)
    ============================================================ */
 function makeSwipeGestures(win, handle, id) {
   if (!mob) return;
@@ -719,25 +695,13 @@ function makeSwipeGestures(win, handle, id) {
     const dt = Date.now() - startTime;
     const absX = Math.abs(dx);
     const absY = Math.abs(dy);
-
-    // Solo gestos rápidos (< 500ms) y largos (> 40px)
     if (dt > 500) return;
     if (absX < 40 && absY < 40) return;
-
     if (absY > absX) {
-      // Vertical
-      if (dy > 60) {
-        // Swipe down → minimizar
-        minimizeWindow(id);
-      } else if (dy < -60) {
-        // Swipe up → maximizar/restaurar
-        toggleMaximize(id);
-      }
-    } else {
-      // Horizontal → cerrar (si es muy largo)
-      if (absX > 120) {
-        closeWindow(id);
-      }
+      if (dy > 60) minimizeWindow(id);
+      else if (dy < -60) toggleMaximize(id);
+    } else if (absX > 120) {
+      closeWindow(id);
     }
   }, { passive: true });
 }
@@ -774,7 +738,9 @@ function makeResizable(win, handle) {
   handle.addEventListener('touchstart', start, { passive: false });
 }
 
-/* EFFECTS */
+/* ============================================================
+   EFFECTS
+   ============================================================ */
 function effectRipple(x, y) {
   const r = document.createElement('div');
   r.className = 'ripple';
@@ -847,7 +813,9 @@ function scrambleText(el, target, duration = 500) {
   frame();
 }
 
-/* HELPERS */
+/* ============================================================
+   HELPERS
+   ============================================================ */
 const PROMPT_USER = 'muncixop';
 const PROMPT_HOST = 'void';
 const PROMPT_PATH = '~';
@@ -880,7 +848,9 @@ function randomFrom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 function padEnd(s, n, c = ' ') { s = String(s); while (s.length < n) s += c; return s; }
 function padStart(s, n, c = ' ') { s = String(s); while (s.length < n) s = c + s; return s; }
 
-/* BRUTEFORCE */
+/* ============================================================
+   BRUTEFORCE
+   ============================================================ */
 function launchBruteforce(win, linkKey) {
   const link = LINKS_DB[linkKey];
   if (!link) return;
@@ -1172,10 +1142,10 @@ const COMMANDS = {
     printLine(body, `  <span class="ok">muncixop</span><span class="dim">@</span><span class="ok">void</span>`, '');
     printLine(body, '  ' + '-'.repeat(30), 'dim');
     const info = [
-      ['OS', 'VOID SYSTEMS v6.4'],
+      ['OS', 'VOID SYSTEMS v7.0'],
       ['Host', 'muncixop.github.io'],
       ['Kernel', 'glitch-6.6.6'],
-      ['Shell', 'voidsh 6.4'],
+      ['Shell', 'voidsh 7.0'],
       ['Uptime', uptime + 's'],
       ['CPU', 'Void Core (64)'],
       ['GPU', 'Phantom Renderer'],
@@ -1526,15 +1496,15 @@ async function bootSequence(isReboot = false) {
   else playPowerUp();
 
   const bootLines = [
-    ['VOID BIOS v6.6.6 - Inicializando...', 'dim', 100],
+    ['VOID BIOS v7.0 - Inicializando...', 'dim', 100],
     ['  [OK] CPU Void Core x64 @ 3.20GHz', 'ok', 80],
     ['  [OK] Memoria ECC 128GB', 'ok', 80],
     ['  [OK] GPU Phantom Renderer', 'ok', 70],
-    ['  [OK] Red eth0 192.168.1.42/24', 'ok', 70],
+    ['  [OK] Red local activa', 'ok', 70],
     ['  [OK] Wobbly windows activado', 'ok', 60],
     ['  [OK] Asistencias moviles cargadas', 'ok', 60],
     ['', '', 60],
-    ['Cargando VOID SYSTEMS v6.4...', 'info', 200],
+    ['Cargando VOID SYSTEMS v7.0...', 'info', 200],
     ['', '', 100],
   ];
   for (const [text, cls, delay] of bootLines) {
@@ -1550,7 +1520,7 @@ async function bootSequence(isReboot = false) {
     ['  ██║  ██║███████╗██║        ██║   ', 'ok'],
     ['  ╚═╝  ╚═╝╚══════╝╚═╝        ╚═╝   ', 'ok'],
     ['', ''],
-    ['  Bienvenido a VOID SYSTEMS v6.4, muncixop.', 'accent'],
+    ['  Bienvenido a VOID SYSTEMS v7.0, muncixop.', 'accent'],
     ['  Escribe <span class="ok">help</span> para ver los comandos.', 'dim'],
     ['  Prueba <span class="ok">fastfetch</span> para ver el ojo.', 'dim'],
     ['', ''],
@@ -1561,16 +1531,11 @@ async function bootSequence(isReboot = false) {
 }
 
 /* ============================================================
-   INPUT LOOP v6.4 — con asistencias móviles
+   INPUT LOOP v7.0 — Input real + asistencias
    ============================================================ */
 let currentTerm = null;
+let currentInputLineRef = null;
 let globalKeydownInstalled = false;
-let currentInputLine = null;
-let currentTypedValue = '';
-let historyIndex = 0;
-let suggestBoxRef = null;
-let suggestItemsRef = [];
-let suggestIdxRef = 0;
 
 function startInput(term) {
   currentTerm = term;
@@ -1589,30 +1554,26 @@ function startInput(term) {
     currentLine = document.createElement('div');
     currentLine.className = 'input-line idle';
     currentLine.style.position = 'relative';
-    currentLine.innerHTML = getPromptHTML() + '<input class="ki" type="text" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="" aria-label="Terminal input">';
+    currentLine.innerHTML = getPromptHTML() + '<input class="ki" type="text" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" aria-label="Terminal input">';
     body.appendChild(currentLine);
     body.scrollTop = body.scrollHeight;
+    currentInputLineRef = currentLine;
+
+    const input = currentLine.querySelector('.ki');
 
     // Auto-focus en desktop
-    const input = currentLine.querySelector('.ki');
     if (!mob) {
       setTimeout(() => {
         try { input.focus({ preventScroll: true }); } catch (e) {}
-      }, 30);
+      }, 50);
     }
 
-    // Eventos del input real
     input.addEventListener('input', () => {
       typed = input.value;
-      currentTypedValue = typed;
       updateSuggest();
       if (currentLine.classList.contains('idle')) currentLine.classList.remove('idle');
       resetIdleTimer();
       body.scrollTop = body.scrollHeight;
-      // Si es móvil y hay sugerencia, mostrarla
-      if (mob && suggestItems.length > 0) {
-        // no-op
-      }
     });
 
     input.addEventListener('keydown', (e) => {
@@ -1630,7 +1591,6 @@ function startInput(term) {
           histIdx = Math.max(0, histIdx - 1);
           input.value = cmdHistory[histIdx] || '';
           typed = input.value;
-          currentTypedValue = typed;
         }
       } else if (e.key === 'ArrowDown') {
         e.preventDefault();
@@ -1647,28 +1607,24 @@ function startInput(term) {
           input.value = '';
         }
         typed = input.value;
-        currentTypedValue = typed;
       } else if (e.key === 'Tab') {
         e.preventDefault();
         if (suggestItems.length && suggestBox) {
           typed = suggestItems[suggestIdx] + ' ';
           input.value = typed;
-          currentTypedValue = typed;
           updateSuggest();
           return;
         }
         const partial = typed.trim();
         if (!partial) return;
         const matches = Object.keys(COMMANDS).filter(c => c.startsWith(partial));
-        if (matches.length === 1) { typed = matches[0] + ' '; input.value = typed; currentTypedValue = typed; updateSuggest(); }
+        if (matches.length === 1) { typed = matches[0] + ' '; input.value = typed; updateSuggest(); }
         else if (matches.length > 1) printLine(body, matches.join('  '), 'dim');
       } else if (e.key === 'l' && e.ctrlKey) {
         e.preventDefault();
         body.innerHTML = '';
-        currentLine = null;
         createInputLine();
       } else if (e.key.length === 1) {
-        // Sonido + glitch aleatorio
         playKey();
         if (Math.random() > 0.85) {
           input.classList.add('glitch-flash');
@@ -1677,22 +1633,13 @@ function startInput(term) {
       }
     });
 
-    // Focus on tap (móvil o desktop)
     input.addEventListener('focus', () => {
       if (currentLine) currentLine.classList.remove('idle');
-      // Detectar teclado abierto en móvil
-      if (mob) {
-        setTimeout(() => document.body.classList.add('kb-open'), 100);
-      }
+      if (mob) setTimeout(() => document.body.classList.add('kb-open'), 100);
     });
     input.addEventListener('blur', () => {
-      if (mob) {
-        setTimeout(() => document.body.classList.remove('kb-open'), 100);
-      }
+      if (mob) setTimeout(() => document.body.classList.remove('kb-open'), 100);
     });
-
-    currentLine._input = input;
-    currentInputLine = currentLine;
   };
 
   const resetIdleTimer = () => {
@@ -1726,7 +1673,6 @@ function startInput(term) {
         const input = currentLine.querySelector('.ki');
         typed = m + ' ';
         input.value = typed;
-        currentTypedValue = typed;
         input.focus();
         updateSuggest();
       });
@@ -1741,7 +1687,6 @@ function startInput(term) {
     const input = currentLine.querySelector('.ki');
     const cmd = (input.value || typed).trim();
     typed = '';
-    currentTypedValue = '';
     hideSuggest();
 
     const cmdLine = document.createElement('div');
@@ -1749,7 +1694,7 @@ function startInput(term) {
     cmdLine.innerHTML = getPromptHTML() + escapeHTML(cmd);
     currentLine.replaceWith(cmdLine);
     currentLine = null;
-    currentInputLine = null;
+    currentInputLineRef = null;
 
     if (cmd) {
       cmdHistory.push(cmd);
@@ -1764,24 +1709,27 @@ function startInput(term) {
     body.scrollTop = body.scrollHeight;
   };
 
-  // Guardar referencias globales para el mobile bar
+  // Exponer para mobile bar
   window._submitCurrent = submit;
-  window._getCurrentInput = () => currentLine ? currentLine.querySelector('.ki') : null;
+  window._getCurrentInput = () => {
+    if (!currentInputLineRef) return null;
+    return currentInputLineRef.querySelector('.ki');
+  };
 
   createInputLine();
 
-  // Click global en la terminal → focus al input
+  // Click en cualquier parte de la terminal → focus al input
   body.addEventListener('click', (e) => {
-    if (e.target.closest('a') || e.target.closest('button')) return;
-    if (currentLine) {
-      const input = currentLine.querySelector('.ki');
+    if (e.target.closest('a') || e.target.closest('button') || e.target.closest('input')) return;
+    if (currentInputLineRef) {
+      const input = currentInputLineRef.querySelector('.ki');
       if (input) {
         try { input.focus({ preventScroll: true }); } catch (err) {}
       }
     }
   });
 
-  // Atajos de teclado globales (solo cuando el input no tiene foco)
+  // Atajos globales
   if (!globalKeydownInstalled) {
     globalKeydownInstalled = true;
     window.addEventListener('keydown', (e) => {
@@ -1814,9 +1762,7 @@ function initMobileAssists() {
       const input = window._getCurrentInput ? window._getCurrentInput() : null;
       if (input) {
         input.value = cmd;
-        currentTypedValue = cmd;
         input.focus();
-        // Ejecutar tras un pequeño delay
         setTimeout(() => {
           if (window._submitCurrent) window._submitCurrent();
         }, 60);
@@ -1856,7 +1802,7 @@ function initMobileAssists() {
     });
   });
 
-  // 3. Detectar teclado virtual abierto/cerrado (visualViewport)
+  // 3. Detectar teclado virtual abierto/cerrado
   if (window.visualViewport) {
     let baseHeight = window.visualViewport.height;
     window.visualViewport.addEventListener('resize', () => {
@@ -1866,7 +1812,7 @@ function initMobileAssists() {
     });
   }
 
-  // 4. Ocultar chips cuando hay foco
+  // 4. Ocultar chips cuando no hay input-line
   const observer = new MutationObserver(() => {
     const hasInput = document.querySelector('.input-line');
     const chips = document.getElementById('quick-chips');
@@ -1876,6 +1822,33 @@ function initMobileAssists() {
     }
   });
   observer.observe(document.body, { childList: true, subtree: true });
+}
+
+/* ============================================================
+   RUN COMMAND
+   ============================================================ */
+function runCommand(input, body, win) {
+  const parts = input.split(/\s+/);
+  const cmd = parts[0].toLowerCase();
+  const args = parts.slice(1);
+
+  const command = COMMANDS[cmd];
+  if (!command) {
+    printLine(body, `voidsh: comando no encontrado: ${escapeHTML(cmd)}`, 'err');
+    printLine(body, `Escribe <span class="ok">help</span> para ver los comandos.`, 'dim');
+    playError();
+    effectGlitchSlice();
+    return;
+  }
+  try {
+    const r = command.run(body, win, args);
+    if (r && typeof r.catch === 'function') r.catch(e => {
+      printLine(body, `Error: ${escapeHTML(e.message)}`, 'err');
+    });
+  } catch (e) {
+    printLine(body, `Error al ejecutar "${cmd}": ${escapeHTML(e.message)}`, 'err');
+    playError();
+  }
 }
 
 /* ============================================================
@@ -1936,10 +1909,7 @@ document.addEventListener('touchstart', (e) => {
   if (!win) return;
   longPressTimer = setTimeout(() => {
     haptic([30, 20, 30]);
-    // Mostrar menú de acciones
     const id = win.dataset.id;
-    const entry = openWindows.get(id);
-    if (!entry) return;
     const action = confirm('Acciones de ventana:\n\nAceptar = Maximizar/Restaurar\nCancelar = Cerrar ventana');
     if (action) toggleMaximize(id);
     else closeWindow(id);
@@ -1953,6 +1923,6 @@ document.addEventListener('touchmove', () => {
   if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
 }, { passive: true });
 
-console.log('%c VOID SYSTEMS v6.4 ', 'background:#3ddc84;color:#000;font-weight:bold;padding:4px 8px;border-radius:4px;font-size:14px');
+console.log('%c VOID SYSTEMS v7.0 ', 'background:#3ddc84;color:#000;font-weight:bold;padding:4px 8px;border-radius:4px;font-size:14px');
 console.log('%c Bienvenido, muncixop. ', 'color:#3ddc84;font-weight:bold;font-size:12px');
-console.log('%c Wobbly real + asistencias móviles cargadas ', 'color:#5eaaff;font-style:italic');
+console.log('%c Input real + wobbly spring + mobile assists ', 'color:#5eaaff;font-style:italic');
