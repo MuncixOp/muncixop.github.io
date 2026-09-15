@@ -12,9 +12,7 @@
 <meta name="format-detection" content="telephone=no">
 <title>~/muncixop — VOID SYSTEMS</title>
 
-<!-- ============================================================
-     CSS CRÍTICO INLINE — Garantiza que NUNCA se vea blanco
-     ============================================================ -->
+<!-- CSS CRÍTICO INLINE — nunca fondo blanco -->
 <style>
   *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
   html,body{height:100%;overflow:hidden;background:#060606;color:#c8c8cc;
@@ -33,13 +31,17 @@
   .win.dragging{transition:box-shadow .3s ease !important;cursor:grabbing}
   .win-bar{display:flex;align-items:center;height:42px;padding:0 14px;
     background:linear-gradient(180deg,#28282c 0%,#1c1c20 100%);border-bottom:1px solid #00000090;
-    cursor:grab;flex-shrink:0;touch-action:none;position:relative;z-index:5;overflow:hidden}
+    cursor:grab;flex-shrink:0;touch-action:none;position:relative;z-index:5;overflow:hidden;
+    line-height:1;}
   .win-title{flex:1;text-align:center;font-size:12px;color:#666;letter-spacing:.03em;
-    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .btns{display:flex;gap:8px;align-items:center;position:relative;z-index:6}
-  .btns-r{width:54px}
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    line-height:1;display:flex;align-items:center;justify-content:center;
+    height:100%;padding:0 8px;}
+  .btns{display:flex;gap:8px;align-items:center;position:relative;z-index:6;height:100%;}
+  .btns-r{width:54px;height:100%;}
   .btn{width:12px;height:12px;border-radius:50%;border:none;cursor:pointer;
-    transition:all .25s cubic-bezier(.34,1.56,.64,1);font-size:0;line-height:1}
+    transition:all .25s cubic-bezier(.34,1.56,.64,1);font-size:0;line-height:1;
+    align-self:center;}
   .btn:hover{filter:brightness(1.5);transform:scale(1.35)}
   .btn:active{transform:scale(.7)}
   .close{background:#ff5f57}
@@ -125,7 +127,6 @@
   }
 </style>
 
-<!-- CSS COMPLETO EXTERNO -->
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
